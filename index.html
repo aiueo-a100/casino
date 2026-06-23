@@ -159,3 +159,27 @@ function goHome(){setState({view:"home"})}
 function goGuest(){state.myTickets.length>0?setState({view:"guest"}):setState({view:"guest_select"})}
 function goStaff(){setState({view:"staff"})}
 function pwTap(n){if(pwInput.length>=4)return;pwInput+=n;const d=document.getElementById("pw-display");if(d)d.textContent="●".repeat(pwInput.length)+"－".repeat(4-pwInput.length)}
+function pwClear(){pwInput=pwInput.slice(0,-1);const d=document.getElementById("pw-display");if(d)d.textContent="●".repeat(pwInput.length)+"－".repeat(4-pwInput.length)}
+function checkAuth(){if(pwInput===STAFF_PASSWORD){setState({staffAuthed:true})}else{const el=document.getElementById("pw-error"),d=document.getElementById("pw-display");if(el)el.style.display="block";if(d)d.classList.add("error-border");pwInput="";setTimeout(()=>{if(d){d.classList.remove("error-border");d.textContent="----"}if(el)el.style.display="none"},1000)}}
+
+async function issueTicket(booth,people=1){
+  setState({busy:true});
+  try{
+    const nextNum=await db.getNextNumber(booth);
+    const res=await db.issueTicket(nextNum,booth,people);
+    if(res&&res[0]){setState({myTickets:[...state.myTickets,{id:res[0].id,number:nextNum,booth,people}],busy:false,view:"guest"});showToast(`✅ No.${String(nextNum).padStart(3,"0")} 整理券を取得しました！`)}
+    else setState({busy:false});
+    await refresh();
+  }catch(e){setState({busy:false});showToast("⚠️ 取得に失敗しました","#e53e3e")}
+}
+
+async function callNext(boothId){setState({busy:true});const w=state.tickets.filter(t=>t.booth===boothId&&t.status==="waiting");if(!w.length){setState({busy:false});return}await db.updateState({calling_number:w[0].number,calling_booth:boothId});await refresh();setState({busy:false})}
+async function confirmEntry(){const{dbState,tickets}=state;const t=tickets.find(t=>t.number===dbState.calling_number&&t.booth===dbState.calling_booth);if(!t)return;setState({busy:true});await db.updateTicket(t.id,{status:"inside"});await db.updateState({calling_number:null,calling_booth:null});await refresh();setState({busy:false})}
+async function exitTicket(id){setState({busy:true});await db.updateTicket(id,{status:"done"});await refresh();setState({busy:false})}
+async function cancelCall(){setState({busy:true});await db.updateState({calling_number:null,calling_booth:null});await refresh();setState({busy:false})}
+async function changeCap(boothId,delta){const b=state.booths.find(b=>b.id===boothId);if(!b)return;await db.updateBooth(boothId,{capacity:Math.max(1,b.capacity+delta)});await refresh()}
+async function resetAll(){if(!confirm("全データをリセットしますか？"))return;for(const t of state.tickets)await db.updateTicket(t.id,{status:"done"});await db.updateState({calling_number:null,calling_booth:null});setState({myTickets:[]});await refresh()}
+
+initialLoad();
+setInterval(refresh,5000);
+</script></body></html>
