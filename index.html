@@ -1,15 +1,16 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>カジノ整理券</title><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#0e1f14;color:#f0e6c0;font-family:system-ui,sans-serif;min-height:100vh}#app{max-width:480px;margin:0 auto}.center{display:flex;flex-direction:column;align-items:center}.page{padding:40px 24px;min-height:100vh}.btn-primary{background:linear-gradient(135deg,#c8a84b,#e8c96b);color:#0e1f14;border:none;border-radius:14px;padding:18px 0;font-size:17px;font-weight:700;cursor:pointer;width:100%;max-width:320px;letter-spacing:1px;margin-top:8px}.btn-primary:disabled{opacity:.4;cursor:not-allowed}.btn-ghost{background:transparent;color:#c8a84b;border:1px solid rgba(200,168,75,.4);border-radius:14px;padding:12px 0;font-size:14px;font-weight:600;cursor:pointer;width:100%;max-width:320px;margin-top:8px}.btn-back{background:none;border:none;color:#4a6a4a;font-size:13px;cursor:pointer;align-self:flex-start}.btn-circle{width:44px;height:44px;border-radius:22px;background:#1a3a2a;border:1px solid #2a5a2a;color:#c8a84b;font-size:22px;cursor:pointer}.card{background:#162518;border:1px solid #2a4a2a;border-radius:14px;padding:18px 20px;margin-bottom:14px}.card-gold{border-color:#c8a84b}.label{font-size:11px;color:#4a6a4a;letter-spacing:3px;text-transform:uppercase}.big-num{font-size:80px;font-weight:900;line-height:1;letter-spacing:-4px}.muted{color:#4a6a4a;font-size:13px}.gold{color:#c8a84b}.green{color:#4caf7d}.booth-btn{background:#162518;border:1px solid #2a4a2a;border-radius:14px;padding:16px 20px;width:100%;max-width:320px;margin-top:8px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}.booth-btn:disabled{opacity:.4;cursor:not-allowed}.booth-name{font-size:16px;font-weight:700;color:#f0e6c0}.booth-info{font-size:12px;color:#4a6a4a}.booth-wait{font-size:13px;color:#c8a84b;font-weight:600}.chip-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.chip{padding:10px 18px;border-radius:10px;font-size:16px;font-weight:700}.chip-inside{background:#1a3a2a;border:1px solid #2a5a2a;color:#4caf7d;cursor:pointer}.chip-wait{background:#162518;border:1px solid #2a4a2a;color:#9a8a5a}.note{font-size:11px;color:#2a4a2a;text-align:center;margin-top:16px}.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px;margin-top:16px}.numpad-btn{background:#162518;border:1px solid #2a4a2a;border-radius:12px;color:#f0e6c0;font-size:24px;font-weight:600;padding:18px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}.numpad-btn:active{background:#1a3a2a}.pw-display{width:100%;max-width:280px;background:#162518;border:1px solid #2a4a2a;border-radius:12px;padding:16px;text-align:center;font-size:32px;letter-spacing:8px;color:#c8a84b;margin-top:8px;min-height:64px}.pw-display.error-border{border-color:#e53e3e}.capacity-row{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:8px}.capacity-val{font-size:28px;font-weight:800;color:#f0e6c0;min-width:40px;text-align:center}.capacity-unit{font-size:11px;color:#4a6a4a;font-weight:400}.header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}.header-title{font-size:13px;font-weight:700;color:#9a8a5a;letter-spacing:2px}.btn-reset{font-size:11px;color:#4a3a3a;background:none;border:none;cursor:pointer}.calling-banner{width:100%;background:#1a3a1a;border:2px solid #c8a84b;border-radius:16px;padding:16px 20px;text-align:center;margin-bottom:16px}#loading{display:flex;align-items:center;justify-content:center;min-height:100vh}.loading-text{color:#c8a84b;font-size:14px;letter-spacing:2px}.section-title{font-size:12px;color:#4a6a4a;letter-spacing:2px;margin:16px 0 8px;align-self:flex-start}</style></head><body>
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>カジノ整理券</title><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#0e1f14;color:#f0e6c0;font-family:system-ui,sans-serif;min-height:100vh}#app{max-width:480px;margin:0 auto}.center{display:flex;flex-direction:column;align-items:center}.page{padding:40px 24px;min-height:100vh}.btn-primary{background:linear-gradient(135deg,#c8a84b,#e8c96b);color:#0e1f14;border:none;border-radius:14px;padding:18px 0;font-size:17px;font-weight:700;cursor:pointer;width:100%;max-width:320px;letter-spacing:1px;margin-top:8px}.btn-primary:disabled{opacity:.4;cursor:not-allowed}.btn-ghost{background:transparent;color:#c8a84b;border:1px solid rgba(200,168,75,.4);border-radius:14px;padding:12px 0;font-size:14px;font-weight:600;cursor:pointer;width:100%;max-width:320px;margin-top:8px}.btn-back{background:none;border:none;color:#4a6a4a;font-size:13px;cursor:pointer;align-self:flex-start}.btn-circle{width:28px;height:28px;border-radius:14px;background:#1a3a2a;border:1px solid #2a5a2a;color:#c8a84b;font-size:16px;cursor:pointer}.card{background:#162518;border:1px solid #2a4a2a;border-radius:14px;padding:18px 20px;margin-bottom:14px}.card-gold{border-color:#c8a84b}.label{font-size:11px;color:#4a6a4a;letter-spacing:3px;text-transform:uppercase}.muted{color:#4a6a4a;font-size:13px}.gold{color:#c8a84b}.green{color:#4caf7d}.booth-btn{background:#162518;border:1px solid #2a4a2a;border-radius:14px;padding:16px 20px;width:100%;max-width:320px;margin-top:8px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}.booth-btn:disabled{opacity:.4;cursor:not-allowed}.booth-btn.card-zone{border-color:#c8a84b33;background:#1a2a18}.booth-name{font-size:16px;font-weight:700;color:#f0e6c0}.booth-info{font-size:12px;color:#4a6a4a;margin-top:2px}.booth-wait{font-size:13px;color:#c8a84b;font-weight:600}.chip-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.chip{padding:10px 18px;border-radius:10px;font-size:16px;font-weight:700}.chip-inside{background:#1a3a2a;border:1px solid #2a5a2a;color:#4caf7d;cursor:pointer}.chip-wait{background:#162518;border:1px solid #2a4a2a;color:#9a8a5a}.note{font-size:11px;color:#2a4a2a;text-align:center;margin-top:16px}.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px;margin-top:16px}.numpad-btn{background:#162518;border:1px solid #2a4a2a;border-radius:12px;color:#f0e6c0;font-size:24px;font-weight:600;padding:18px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}.numpad-btn:active{background:#1a3a2a}.pw-display{width:100%;max-width:280px;background:#162518;border:1px solid #2a4a2a;border-radius:12px;padding:16px;text-align:center;font-size:32px;letter-spacing:8px;color:#c8a84b;margin-top:8px;min-height:64px}.pw-display.error-border{border-color:#e53e3e}.header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}.header-title{font-size:13px;font-weight:700;color:#9a8a5a;letter-spacing:2px}.btn-reset{font-size:11px;color:#4a3a3a;background:none;border:none;cursor:pointer}.calling-banner{width:100%;background:#1a3a1a;border:2px solid #c8a84b;border-radius:16px;padding:16px 20px;text-align:center;margin-bottom:16px}#loading{display:flex;align-items:center;justify-content:center;min-height:100vh}.loading-text{color:#c8a84b;font-size:14px;letter-spacing:2px}@keyframes flash{0%,100%{background:#0e1f14}50%{background:#1a3a1a}}@keyframes calledFlash{0%,100%{background:#0e1f14}50%{background:#1a3a00}}.called-anim{animation:calledFlash 0.6s infinite}</style></head><body>
 <div id="loading"><div class="loading-text">読み込み中...</div></div>
 <div id="app" style="display:none"></div>
 <script>
 const SUPABASE_URL="https://hnrkfecbewrjwsooxvde.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhucmtmZWNiZXdyandzb294dmRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMTA2MjcsImV4cCI6MjA5NzY4NjYyN30.iTDfmIQxTFEi7013YOmvf844uf2l0XBtOyWQ2tsVeFs";
 const STAFF_PASSWORD="1234";
+const CARD_BOOTHS=["babanuki","shinkei","highandlow"];
 let pwInput="";
+let prevCalling=null;
 
 function saveMyTickets(t){try{localStorage.setItem("myTickets",JSON.stringify(t))}catch(e){}}
 function loadMyTickets(){try{const t=localStorage.getItem("myTickets");return t?JSON.parse(t):[]}catch(e){return[]}}
-
 function getViewFromURL(){const p=new URLSearchParams(location.search);return p.get("v")||"home"}
 function setURLView(v){const u=new URL(location.href);if(v==="home")u.searchParams.delete("v");else u.searchParams.set("v",v);history.replaceState(null,"",u)}
 
@@ -28,54 +29,129 @@ const db={
 
 let state={view:getViewFromURL(),staffAuthed:false,tickets:[],booths:[],dbState:{calling_number:null,calling_booth:null},myTickets:loadMyTickets(),busy:false};
 
-async function refresh(){try{const[tickets,booths,dbState]=await Promise.all([db.getTickets(),db.getBooths(),db.getState()]);state.tickets=tickets||[];state.booths=booths||[];if(dbState)state.dbState=dbState;render()}catch(e){document.getElementById("loading").innerHTML=`<div style="color:#fc8181;padding:32px;text-align:center">接続エラー: ${e.message}</div>`}}
+function vibrate(){try{if(navigator.vibrate)navigator.vibrate([200,100,200,100,200])}catch(e){}}
+
+async function refresh(){
+  try{
+    const[tickets,booths,dbState]=await Promise.all([db.getTickets(),db.getBooths(),db.getState()]);
+    state.tickets=tickets||[];state.booths=booths||[];
+    if(dbState){
+      const newCalling=dbState.calling_number;
+      if(newCalling&&newCalling!==prevCalling){
+        const myCalledTicket=state.myTickets.find(mt=>mt.number===newCalling&&mt.booth===dbState.calling_booth);
+        if(myCalledTicket){vibrate();document.body.classList.add("called-anim");setTimeout(()=>document.body.classList.remove("called-anim"),3000)}
+      }
+      prevCalling=newCalling;
+      state.dbState=dbState;
+    }
+    render();
+  }catch(e){document.getElementById("loading").innerHTML=`<div style="color:#fc8181;padding:32px;text-align:center">接続エラー: ${e.message}</div>`}
+}
 
 function setState(patch){Object.assign(state,patch);if(patch.view!==undefined)setURLView(patch.view);if(patch.myTickets!==undefined)saveMyTickets(patch.myTickets);render()}
 
-function render(){const app=document.getElementById("app");const loading=document.getElementById("loading");if(loading)loading.style.display="none";app.style.display="block";const{view,staffAuthed}=state;if(view==="home")app.innerHTML=renderHome();else if(view==="guest")app.innerHTML=renderGuest();else if(view==="staff")app.innerHTML=staffAuthed?renderStaff():renderAuth()}
-
-function renderHome(){const{tickets,booths,dbState}=state;const banner=dbState.calling_number?`<div class="calling-banner"><div style="font-size:11px;color:#c8a84b;letter-spacing:3px;margin-bottom:4px">📢 呼び出し中</div><div style="font-size:48px;font-weight:900;color:#c8a84b;line-height:1">${String(dbState.calling_number).padStart(3,"0")}</div><div style="font-size:13px;color:#9a8a5a;margin-top:4px">${booths.find(b=>b.id===dbState.calling_booth)?.name||""}</div></div>`:"";return`<div class="page center"><div style="font-size:13px;letter-spacing:5px;color:#9a8a5a;text-transform:uppercase;margin-bottom:8px">Casino</div><div style="font-size:36px;font-weight:900;letter-spacing:-1px;margin-bottom:4px">整理券</div><div class="muted" style="margin-bottom:32px">文化祭カジノ</div>${banner}<button class="btn-primary" onclick="goGuest()">整理券を取る</button><button class="btn-ghost" onclick="goStaff()">スタッフ用</button></div>`}
-
-function renderGuest(){const{tickets,booths,dbState,myTickets,busy}=state;
-if(myTickets.length>0){
-  const items=myTickets.map(mt=>{const t=tickets.find(t=>t.id===mt.id);const booth=booths.find(b=>b.id===mt.booth);const status=t?t.status:"waiting";const isCalled=dbState.calling_number===mt.number&&dbState.calling_booth===mt.booth;let statusHtml="";if(isCalled)statusHtml=`<div style="color:#c8a84b;font-weight:700;font-size:13px">📢 呼ばれています！受付へ！</div>`;else if(status==="inside")statusHtml=`<div style="color:#4caf7d;font-size:13px">✅ 入場中</div>`;else if(status==="done")statusHtml=`<div style="color:#4a6a4a;font-size:13px">退場済み</div>`;else statusHtml=`<div style="color:#9a8a5a;font-size:13px">待機中</div>`;return`<div class="card" style="border:${isCalled?"2px solid #c8a84b":"1px solid #2a4a2a"}"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;color:#4a6a4a;margin-bottom:4px">${booth?.name||mt.booth}</div><div style="font-size:40px;font-weight:900;color:${isCalled?"#c8a84b":"#f0e6c0"}">${String(mt.number).padStart(3,"0")}</div></div>${statusHtml}</div></div>`}).join("");
-  return`<div class="page"><button class="btn-back" onclick="goHome()">← ホームへ</button><div style="margin-top:24px;font-size:13px;color:#9a8a5a;letter-spacing:2px;margin-bottom:16px">あなたの整理券</div>${items}<button class="btn-ghost" style="width:100%;margin-top:8px" onclick="setState({view:'guest_select'})">別のブースの整理券を取る</button><div class="note">自動更新中（3秒ごと）</div></div>`
+function render(){
+  const app=document.getElementById("app");
+  const loading=document.getElementById("loading");
+  if(loading)loading.style.display="none";
+  app.style.display="block";
+  const{view,staffAuthed}=state;
+  if(view==="home")app.innerHTML=renderHome();
+  else if(view==="guest")app.innerHTML=renderGuest();
+  else if(view==="guest_card")app.innerHTML=renderCardSelect();
+  else if(view==="staff")app.innerHTML=staffAuthed?renderStaff():renderAuth();
 }
-return renderBoothSelect()}
 
-function renderBoothSelect(){const{tickets,booths,busy}=state;const items=booths.map(b=>{const waiting=tickets.filter(t=>t.booth===b.id&&t.status==="waiting").length;const inside=tickets.filter(t=>t.booth===b.id&&t.status==="inside").length;const full=inside>=b.capacity;return`<button class="booth-btn" onclick="issueTicket('${b.id}')" ${busy||full?"disabled":""} ><div><div class="booth-name">${b.name}</div><div class="booth-info">上限 ${b.capacity}人 / 入場中 ${inside}人</div></div><div class="booth-wait">${full?"満員":`待ち ${waiting}人`}</div></button>`}).join("");return`<div class="page center"><button class="btn-back" onclick="goHome()">← ホームへ</button><div style="margin-top:24px;font-size:15px;font-weight:700;margin-bottom:8px">ブースを選んでください</div><div style="font-size:12px;color:#4a6a4a;margin-bottom:20px">整理券を取るブースをタップ</div>${items}</div>`}
+function renderHome(){const{dbState,booths}=state;const banner=dbState.calling_number?`<div class="calling-banner"><div style="font-size:11px;color:#c8a84b;letter-spacing:3px;margin-bottom:4px">📢 呼び出し中</div><div style="font-size:48px;font-weight:900;color:#c8a84b;line-height:1">${String(dbState.calling_number).padStart(3,"0")}</div><div style="font-size:13px;color:#9a8a5a;margin-top:4px">${booths.find(b=>b.id===dbState.calling_booth)?.name||""}</div></div>`:"";return`<div class="page center"><div style="font-size:13px;letter-spacing:5px;color:#9a8a5a;text-transform:uppercase;margin-bottom:8px">Casino</div><div style="font-size:36px;font-weight:900;letter-spacing:-1px;margin-bottom:4px">整理券</div><div class="muted" style="margin-bottom:32px">文化祭カジノ</div>${banner}<button class="btn-primary" onclick="goGuest()">整理券を取る</button><button class="btn-ghost" onclick="goStaff()">スタッフ用</button></div>`}
+
+function renderGuest(){
+  const{tickets,booths,dbState,myTickets}=state;
+  const isCalled=(mt)=>dbState.calling_number===mt.number&&dbState.calling_booth===mt.booth;
+  const activeTickets=myTickets.filter(mt=>{const t=tickets.find(t=>t.id===mt.id);return!t||t.status!=="done"});
+
+  const ticketCards=activeTickets.map(mt=>{
+    const t=tickets.find(t=>t.id===mt.id);
+    const booth=booths.find(b=>b.id===mt.booth);
+    const status=t?t.status:"waiting";
+    const called=isCalled(mt);
+    let statusText="";
+    if(called)statusText=`<div style="color:#c8a84b;font-weight:700;font-size:13px;animation:calledFlash 0.6s infinite">📢 受付へ！</div>`;
+    else if(status==="inside")statusText=`<div style="color:#4caf7d;font-size:13px">✅ 入場中</div>`;
+    else statusText=`<div style="color:#9a8a5a;font-size:13px">待機中</div>`;
+    return`<div class="card" style="border:${called?"2px solid #c8a84b":"1px solid #2a4a2a"}"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;color:#4a6a4a;margin-bottom:2px">${booth?.name||mt.booth}</div><div style="font-size:40px;font-weight:900;color:${called?"#c8a84b":"#f0e6c0"}">${String(mt.number).padStart(3,"0")}</div></div>${statusText}</div></div>`
+  }).join("");
+
+  return`<div class="page"><button class="btn-back" onclick="goHome()">← ホームへ</button><div style="margin-top:24px;font-size:13px;color:#9a8a5a;letter-spacing:2px;margin-bottom:12px">あなたの整理券</div>${ticketCards||`<div class="muted" style="margin:24px 0">まだ整理券がありません</div>`}<button class="btn-primary" style="margin-top:16px" onclick="setState({view:'guest_select'})">別のブースの整理券を取る</button><div class="note">自動更新中（3秒ごと）</div></div>`
+}
+
+function renderBoothSelectPage(){
+  const{tickets,booths,busy}=state;
+  const nonCardBooths=booths.filter(b=>!CARD_BOOTHS.includes(b.id));
+  const cardWaiting=CARD_BOOTHS.reduce((sum,id)=>sum+tickets.filter(t=>t.booth===id&&t.status==="waiting").length,0);
+  const cardInside=CARD_BOOTHS.reduce((sum,id)=>sum+tickets.filter(t=>t.booth===id&&t.status==="inside").length,0);
+  const cardCapacity=booths.filter(b=>CARD_BOOTHS.includes(b.id)).reduce((sum,b)=>sum+b.capacity,0);
+  const cardFull=cardInside>=cardCapacity;
+
+  const cardBtn=`<button class="booth-btn card-zone" onclick="setState({view:'guest_card'})" ${busy?"disabled":""}><div><div class="booth-name">♠ カードゾーン</div><div class="booth-info">ババ抜き・神経衰弱・ハイアンドロー</div></div><div class="booth-wait">${cardFull?"満員":`待ち ${cardWaiting}人`}</div></button>`;
+
+  const otherBtns=nonCardBooths.map(b=>{const waiting=tickets.filter(t=>t.booth===b.id&&t.status==="waiting").length;const inside=tickets.filter(t=>t.booth===b.id&&t.status==="inside").length;const full=inside>=b.capacity;return`<button class="booth-btn" onclick="issueTicket('${b.id}')" ${busy||full?"disabled":""}><div><div class="booth-name">${b.name}</div><div class="booth-info">上限 ${b.capacity}人 / 入場中 ${inside}人</div></div><div class="booth-wait">${full?"満員":`待ち ${waiting}人`}</div></button>`}).join("");
+
+  return`<div class="page center"><button class="btn-back" onclick="setState({view:'guest'})">← 戻る</button><div style="margin-top:24px;font-size:15px;font-weight:700;margin-bottom:8px">ブースを選んでください</div><div style="font-size:12px;color:#4a6a4a;margin-bottom:20px">整理券を取るブースをタップ</div>${cardBtn}${otherBtns}</div>`
+}
+
+function renderCardSelect(){
+  const{tickets,booths,busy}=state;
+  const cardBooths=booths.filter(b=>CARD_BOOTHS.includes(b.id));
+  const btns=cardBooths.map(b=>{const waiting=tickets.filter(t=>t.booth===b.id&&t.status==="waiting").length;const inside=tickets.filter(t=>t.booth===b.id&&t.status==="inside").length;const full=inside>=b.capacity;return`<button class="booth-btn" onclick="issueTicket('${b.id}')" ${busy||full?"disabled":""}><div><div class="booth-name">${b.name}</div><div class="booth-info">上限 ${b.capacity}人 / 入場中 ${inside}人</div></div><div class="booth-wait">${full?"満員":`待ち ${waiting}人`}</div></button>`}).join("");
+  return`<div class="page center"><button class="btn-back" onclick="setState({view:'guest_select'})">← 戻る</button><div style="margin-top:24px;font-size:15px;font-weight:700;margin-bottom:8px">♠ カードゾーン</div><div style="font-size:12px;color:#4a6a4a;margin-bottom:20px">種目を選んでください</div>${btns}</div>`
+}
 
 function renderAuth(){pwInput="";return`<div class="page center"><button class="btn-back" onclick="goHome()">← ホームへ</button><div style="font-size:32px;margin:24px 0 8px">🔒</div><div class="muted" style="margin-bottom:8px">スタッフ用パスワード</div><div class="pw-display" id="pw-display">----</div><div id="pw-error" style="color:#fc8181;font-size:12px;margin-top:8px;display:none">パスワードが違います</div><div class="numpad"><button class="numpad-btn" onclick="pwTap('1')">1</button><button class="numpad-btn" onclick="pwTap('2')">2</button><button class="numpad-btn" onclick="pwTap('3')">3</button><button class="numpad-btn" onclick="pwTap('4')">4</button><button class="numpad-btn" onclick="pwTap('5')">5</button><button class="numpad-btn" onclick="pwTap('6')">6</button><button class="numpad-btn" onclick="pwTap('7')">7</button><button class="numpad-btn" onclick="pwTap('8')">8</button><button class="numpad-btn" onclick="pwTap('9')">9</button><button class="numpad-btn" onclick="pwClear()" style="font-size:16px">消去</button><button class="numpad-btn" onclick="pwTap('0')">0</button><button class="numpad-btn" onclick="checkAuth()" style="background:#c8a84b;color:#0e1f14;font-size:16px">OK</button></div></div>`}
 
 function renderStaff(){const{tickets,booths,dbState,busy}=state;
 const callingBooth=booths.find(b=>b.id===dbState.calling_booth);
-const callingBlock=dbState.calling_number?`<div class="card card-gold"><div class="label">呼び出し中</div><div style="text-align:center;margin-top:8px"><div style="font-size:13px;color:#9a8a5a;margin-bottom:4px">${callingBooth?.name||""}</div><div style="font-size:52px;font-weight:900;color:#c8a84b">${String(dbState.calling_number).padStart(3,"0")} 番</div><button class="btn-primary" style="background:linear-gradient(135deg,#4caf7d,#6dcf9d);margin-top:8px" onclick="confirmEntry()" ${busy?"disabled":""}>入場確認</button><br><button class="btn-ghost" style="border:none;margin-top:4px;font-size:12px" onclick="cancelCall()">キャンセル</button></div></div>`:`<div class="card"><div class="label">呼び出し</div><div style="text-align:center;margin-top:8px"><div class="muted" style="margin-bottom:16px">ブースを選んで呼び出す</div></div></div>`;
+const callingBlock=dbState.calling_number?`<div class="card card-gold"><div class="label">呼び出し中</div><div style="text-align:center;margin-top:8px"><div style="font-size:13px;color:#9a8a5a;margin-bottom:4px">${callingBooth?.name||""}</div><div style="font-size:52px;font-weight:900;color:#c8a84b">${String(dbState.calling_number).padStart(3,"0")} 番</div><button class="btn-primary" style="background:linear-gradient(135deg,#4caf7d,#6dcf9d);margin-top:8px" onclick="confirmEntry()" ${busy?"disabled":""}>入場確認</button><br><button class="btn-ghost" style="border:none;margin-top:4px;font-size:12px" onclick="cancelCall()">キャンセル</button></div></div>`:``;
 
-const boothBlocks=booths.map(b=>{const waiting=tickets.filter(t=>t.booth===b.id&&t.status==="waiting");const inside=tickets.filter(t=>t.booth===b.id&&t.status==="inside");const canCall=waiting.length>0&&!dbState.calling_number;const canEnter=inside.length<b.capacity;return`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:14px;font-weight:700">${b.name}</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:#4a6a4a">上限</span><button class="btn-circle" style="width:28px;height:28px;font-size:16px" onclick="changeCap('${b.id}',-1)">－</button><span style="font-size:16px;font-weight:700;color:#c8a84b;min-width:24px;text-align:center">${b.capacity}</span><button class="btn-circle" style="width:28px;height:28px;font-size:16px" onclick="changeCap('${b.id}',1)">＋</button></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">${inside.map(t=>`<button class="chip chip-inside" onclick="exitTicket(${t.id})">${String(t.number).padStart(3,"0")} <span style="font-size:10px;opacity:.6">退場</span></button>`).join("")}${inside.length===0?`<span style="font-size:12px;color:#2a4a2a">入場中なし</span>`:""}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">${waiting.map(t=>`<span class="chip chip-wait">${String(t.number).padStart(3,"0")}</span>`).join("")}${waiting.length===0?`<span style="font-size:12px;color:#2a4a2a">待機なし</span>`:""}</div><button class="btn-primary" style="font-size:13px;padding:10px 0" onclick="callNext('${b.id}')" ${!canCall||busy?"disabled":""}>${waiting.length>0?`${waiting[0].number}番を呼び出す`:"待機者なし"}</button></div>`}).join("");
+const boothBlocks=booths.map(b=>{const waiting=tickets.filter(t=>t.booth===b.id&&t.status==="waiting");const inside=tickets.filter(t=>t.booth===b.id&&t.status==="inside");const canCall=waiting.length>0&&!dbState.calling_number;return`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:14px;font-weight:700">${b.name}</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:#4a6a4a">上限</span><button class="btn-circle" onclick="changeCap('${b.id}',-1)">－</button><span style="font-size:16px;font-weight:700;color:#c8a84b;min-width:24px;text-align:center">${b.capacity}</span><button class="btn-circle" onclick="changeCap('${b.id}',1)">＋</button></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">${inside.map(t=>`<button class="chip chip-inside" onclick="exitTicket(${t.id})">${String(t.number).padStart(3,"0")} <span style="font-size:10px;opacity:.6">退場</span></button>`).join("")}${inside.length===0?`<span style="font-size:12px;color:#2a4a2a">入場中なし</span>`:""}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">${waiting.map(t=>`<span class="chip chip-wait">${String(t.number).padStart(3,"0")}</span>`).join("")}${waiting.length===0?`<span style="font-size:12px;color:#2a4a2a">待機なし</span>`:""}</div><button class="btn-primary" style="font-size:13px;padding:10px 0" onclick="callNext('${b.id}')" ${!canCall||busy?"disabled":""}>${waiting.length>0?`${waiting[0].number}番を呼び出す`:"待機者なし"}</button></div>`}).join("");
 
 return`<div style="max-width:480px;margin:0 auto;padding:24px 16px"><div class="header-row"><button class="btn-back" onclick="goHome()">← ホームへ</button><div class="header-title">スタッフ管理</div><button class="btn-reset" onclick="resetAll()">リセット</button></div>${callingBlock}${boothBlocks}<div class="note">自動更新中（3秒ごと）</div></div>`}
 
 function goHome(){setState({view:"home"})}
-function goGuest(){setState({view:"guest"})}
+function goGuest(){
+  if(state.myTickets.length>0)setState({view:"guest"});
+  else setState({view:"guest_select"});
+}
 function goStaff(){setState({view:"staff"})}
 
 function pwTap(n){if(pwInput.length>=4)return;pwInput+=n;const d=document.getElementById("pw-display");if(d)d.textContent="●".repeat(pwInput.length)+"－".repeat(4-pwInput.length)}
 function pwClear(){pwInput=pwInput.slice(0,-1);const d=document.getElementById("pw-display");if(d)d.textContent="●".repeat(pwInput.length)+"－".repeat(4-pwInput.length)}
 function checkAuth(){if(pwInput===STAFF_PASSWORD){setState({staffAuthed:true})}else{const el=document.getElementById("pw-error");const d=document.getElementById("pw-display");if(el)el.style.display="block";if(d)d.classList.add("error-border");pwInput="";setTimeout(()=>{if(d){d.classList.remove("error-border");d.textContent="----"}if(el)el.style.display="none"},1000)}}
 
-async function issueTicket(booth){setState({busy:true});const nextNum=await db.getNextNumber(booth);const res=await db.issueTicket(nextNum,booth);if(res&&res[0]){const newTicket={id:res[0].id,number:nextNum,booth};const newMyTickets=[...state.myTickets,newTicket];setState({myTickets:newMyTickets,busy:false,view:"guest"});}else{setState({busy:false})}await refresh()}
+async function issueTicket(booth){setState({busy:true});const nextNum=await db.getNextNumber(booth);const res=await db.issueTicket(nextNum,booth);if(res&&res[0]){const newTicket={id:res[0].id,number:nextNum,booth};setState({myTickets:[...state.myTickets,newTicket],busy:false,view:"guest"});}else{setState({busy:false})}await refresh()}
 
 async function callNext(boothId){setState({busy:true});const waiting=state.tickets.filter(t=>t.booth===boothId&&t.status==="waiting");if(!waiting.length){setState({busy:false});return}await db.updateState({calling_number:waiting[0].number,calling_booth:boothId});await refresh();setState({busy:false})}
 
 async function confirmEntry(){const{dbState,tickets}=state;const t=tickets.find(t=>t.number===dbState.calling_number&&t.booth===dbState.calling_booth);if(!t)return;setState({busy:true});await db.updateTicket(t.id,{status:"inside"});await db.updateState({calling_number:null,calling_booth:null});await refresh();setState({busy:false})}
 
 async function exitTicket(id){setState({busy:true});await db.updateTicket(id,{status:"done"});await refresh();setState({busy:false})}
-
 async function cancelCall(){setState({busy:true});await db.updateState({calling_number:null,calling_booth:null});await refresh();setState({busy:false})}
-
 async function changeCap(boothId,delta){const booth=state.booths.find(b=>b.id===boothId);if(!booth)return;const next=Math.max(1,booth.capacity+delta);await db.updateBooth(boothId,{capacity:next});await refresh()}
-
 async function resetAll(){if(!confirm("全データをリセットしますか？"))return;for(const t of state.tickets)await db.updateTicket(t.id,{status:"done"});await db.updateState({calling_number:null,calling_booth:null});setState({myTickets:[]});await refresh()}
+
+// guest_selectビューの処理
+const origRender=render;
+function render(){
+  const app=document.getElementById("app");
+  const loading=document.getElementById("loading");
+  if(loading)loading.style.display="none";
+  app.style.display="block";
+  const{view,staffAuthed}=state;
+  if(view==="home")app.innerHTML=renderHome();
+  else if(view==="guest")app.innerHTML=renderGuest();
+  else if(view==="guest_select")app.innerHTML=renderBoothSelectPage();
+  else if(view==="guest_card")app.innerHTML=renderCardSelect();
+  else if(view==="staff")app.innerHTML=staffAuthed?renderStaff():renderAuth();
+}
 
 refresh();setInterval(refresh,3000);
 </script></body></html>
