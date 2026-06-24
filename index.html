@@ -9,11 +9,10 @@ const STAFF_PASSWORD="1234";
 const CARD_BOOTHS=["babanuki","shinkei","highandlow"];
 let pwInput="",prevCalling=null,selectedPeople=1,pendingBooth=null,selectedRating=0,reviewBooth="";
 
-// ローカル状態（更新で消えないよう保持）
-let localAvgMinutes={};
-
 function saveMyTickets(t){try{localStorage.setItem("myTickets",JSON.stringify(t))}catch(e){}}
 function loadMyTickets(){try{const t=localStorage.getItem("myTickets");return t?JSON.parse(t):[]}catch(e){return[]}}
+function saveReviewed(r){try{localStorage.setItem("reviewed",JSON.stringify(r))}catch(e){}}
+function loadReviewed(){try{const r=localStorage.getItem("reviewed");return r?JSON.parse(r):[]}catch(e){return[]}}
 function getViewFromURL(){return new URLSearchParams(location.search).get("v")||"home"}
 function setURLView(v){const u=new URL(location.href);v==="home"?u.searchParams.delete("v"):u.searchParams.set("v",v);history.replaceState(null,"",u)}
 
@@ -40,7 +39,7 @@ const db={
   getNextNumber:async(booth)=>{const t=await apiFetch(`tickets?booth=eq.${booth}&select=number&order=number.desc&limit=1`);return t?.length?t[0].number+1:1},
 };
 
-let state={view:getViewFromURL(),staffAuthed:false,tickets:[],booths:[],reviews:[],dbState:{calling_number:null,calling_booth:null},myTickets:loadMyTickets(),busy:false,loaded:false};
+let state={view:getViewFromURL(),staffAuthed:false,tickets:[],booths:[],reviews:[],dbState:{calling_number:null,calling_booth:null},myTickets:loadMyTickets(),reviewed:loadReviewed(),busy:false,loaded:false};
 
 function showToast(msg,color="#4caf7d"){const t=document.createElement("div");t.className="toast";t.style.background=color;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
 function vibrate(){try{if(navigator.vibrate)navigator.vibrate([200,100,200,100,200])}catch(e){}}
@@ -48,10 +47,7 @@ function vibrate(){try{if(navigator.vibrate)navigator.vibrate([200,100,200,100,2
 async function initialLoad(){
   try{
     const[tickets,booths,dbState]=await Promise.all([db.getTickets(),db.getBooths(),db.getState()]);
-    state.tickets=tickets||[];
-    state.booths=booths||[];
-    // avg_minutesをローカルに初期化
-    state.booths.forEach(b=>{if(localAvgMinutes[b.id]===undefined)localAvgMinutes[b.id]=b.avg_minutes||10});
+    state.tickets=tickets||[];state.booths=booths||[];
     if(dbState)state.dbState=dbState;
     state.loaded=true;render();
     db.getReviews().then(r=>{state.reviews=r||[];render()}).catch(()=>{});
@@ -72,11 +68,24 @@ async function refresh(){
       }
       prevCalling=dbState.calling_number;state.dbState=dbState;
     }
+    // myTicketsのうちDBに存在しないものを削除（リセット・キャンセル反映）
+    const ticketIds=new Set(state.tickets.map(t=>t.id));
+    const newMyTickets=state.myTickets.filter(mt=>ticketIds.has(mt.id));
+    if(newMyTickets.length!==state.myTickets.length){
+      state.myTickets=newMyTickets;
+      saveMyTickets(newMyTickets);
+    }
     render();
   }catch(e){}
 }
 
-function setState(patch){Object.assign(state,patch);if(patch.view!==undefined)setURLView(patch.view);if(patch.myTickets!==undefined)saveMyTickets(patch.myTickets);render()}
+function setState(patch){
+  Object.assign(state,patch);
+  if(patch.view!==undefined)setURLView(patch.view);
+  if(patch.myTickets!==undefined)saveMyTickets(patch.myTickets);
+  if(patch.reviewed!==undefined)saveReviewed(patch.reviewed);
+  render();
+}
 
 function render(){
   if(!state.loaded)return;
@@ -104,19 +113,26 @@ function renderHome(){
 }
 
 function renderGuest(){
-  const{tickets,booths,dbState,myTickets}=state;
-  const activeTickets=myTickets.filter(mt=>{const t=tickets.find(t=>t.id===mt.id);return!t||t.status!=="done"});
+  const{tickets,booths,dbState,myTickets,reviewed}=state;
+  const activeTickets=myTickets.filter(mt=>{const t=tickets.find(t=>t.id===mt.id);return t&&t.status!=="done"});
   const doneTickets=myTickets.filter(mt=>{const t=tickets.find(t=>t.id===mt.id);return t&&t.status==="done"});
+
   const cards=activeTickets.map(mt=>{
     const t=tickets.find(t=>t.id===mt.id),booth=booths.find(b=>b.id===mt.booth);
     const called=dbState.calling_number===mt.number&&dbState.calling_booth===mt.booth;
-    const status=t?t.status:"waiting";
+    const status=t.status;
     const statusHtml=called?`<div style="color:#c8a84b;font-weight:700;font-size:13px">📢 受付へ！</div>`:status==="inside"?`<div style="color:#4caf7d;font-size:13px">✅ 入場中</div>`:`<div style="color:#9a8a5a;font-size:13px">待機中</div>`;
     const cancelBtn=status==="waiting"&&!called?`<button class="btn-danger" onclick="cancelTicket(${mt.id})">キャンセル</button>`:"";
     return`<div class="card" style="border:${called?"2px solid #c8a84b":"1px solid #2a4a2a"}"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;color:#4a6a4a;margin-bottom:2px">${booth?.name||mt.booth}</div><div style="font-size:40px;font-weight:900;color:${called?"#c8a84b":"#f0e6c0"}">${String(mt.number).padStart(3,"0")}</div>${mt.people>1?`<div style="font-size:11px;color:#4a6a4a">${mt.people}人</div>`:""}</div>${statusHtml}</div>${cancelBtn}</div>`
   }).join("");
-  const reviewBtns=doneTickets.map(mt=>{const booth=booths.find(b=>b.id===mt.booth);return`<button class="btn-ghost" style="margin-top:6px" onclick="openReview('${mt.booth}')">⭐ ${booth?.name||mt.booth} のレビューを書く</button>`}).join("");
-  return`<div class="page"><button class="btn-back" onclick="goHome()">← ホームへ</button><div style="margin-top:24px;font-size:13px;color:#9a8a5a;letter-spacing:2px;margin-bottom:12px">あなたの整理券</div>${cards||`<div class="muted" style="margin:24px 0">まだ整理券がありません</div>`}${reviewBtns}<button class="btn-primary" style="margin-top:16px" onclick="setState({view:'guest_select'})">別のブースの整理券を取る</button><div class="note">自動更新中（5秒ごと）</div></div>`
+
+  const reviewBtns=doneTickets.filter(mt=>!reviewed.includes(mt.booth)).map(mt=>{
+    const booth=booths.find(b=>b.id===mt.booth);
+    return`<button class="btn-ghost" style="margin-top:6px" onclick="openReview('${mt.booth}')">⭐ ${booth?.name||mt.booth} のレビューを書く</button>`
+  }).join("");
+
+  const noTickets=activeTickets.length===0&&doneTickets.length===0;
+  return`<div class="page"><button class="btn-back" onclick="goHome()">← ホームへ</button><div style="margin-top:24px;font-size:13px;color:#9a8a5a;letter-spacing:2px;margin-bottom:12px">あなたの整理券</div>${noTickets?`<div class="muted" style="margin:24px 0">まだ整理券がありません</div>`:""}${cards}${reviewBtns}<button class="btn-primary" style="margin-top:16px" onclick="setState({view:'guest_select'})">別のブースの整理券を取る</button><div class="note">自動更新中（5秒ごと）</div></div>`
 }
 
 function boothCard(b,onclick){
@@ -127,7 +143,7 @@ function boothCard(b,onclick){
   const hasTicket=myTickets.some(mt=>mt.booth===b.id&&tickets.find(t=>t.id===mt.id&&t.status!=="done"));
   const waitColor=full?"#e53e3e":hasTicket?"#4caf7d":"#c8a84b";
   const waitText=full?"満員":hasTicket?"取得済み✅":`待ち ${waiting}人`;
-  const avgMin=localAvgMinutes[b.id]||b.avg_minutes||10;
+  const avgMin=b.avg_minutes||10;
   const waitTime=!full&&!hasTicket&&waiting>0?`約${waiting*avgMin}分待ち`:"";
   const br=reviews.filter(r=>r.booth_id===b.id);
   const avgRating=br.length?Math.round(br.reduce((s,r)=>s+r.rating,0)/br.length*10)/10:null;
@@ -164,7 +180,13 @@ function renderReviewPage(){
   return`<div class="page center"><button class="btn-back" onclick="setState({view:'guest'})">← 戻る</button><div style="margin-top:32px;font-size:18px;font-weight:700;margin-bottom:4px">${booth?.name||reviewBooth}</div><div class="muted" style="margin-bottom:8px">どうでしたか？</div><div class="star-row">${[1,2,3,4,5].map(n=>`<span class="star${n<=selectedRating?" active":""}" id="star${n}" onclick="setRating(${n})">⭐</span>`).join("")}</div><div id="rating-label" style="font-size:14px;color:#9a8a5a;margin-bottom:24px">${selectedRating>0?["","😢 最悪","😐 微妙","🙂 普通","😊 良い","🎉 最高！"][selectedRating]:"タップして評価"}</div><button class="btn-primary" id="review-submit" onclick="submitReview()" ${selectedRating===0?"disabled":""}>送信する</button></div>`
 }
 function setRating(n){selectedRating=n;[1,2,3,4,5].forEach(i=>{const s=document.getElementById("star"+i);if(s)s.className="star"+(i<=n?" active":"")});const l=document.getElementById("rating-label");if(l)l.textContent=["","😢 最悪","😐 微妙","🙂 普通","😊 良い","🎉 最高！"][n];const btn=document.getElementById("review-submit");if(btn)btn.disabled=false}
-async function submitReview(){if(!selectedRating)return;await db.addReview(reviewBooth,selectedRating);showToast("⭐ レビューありがとう！");setState({view:"guest"});db.getReviews().then(r=>{state.reviews=r||[];render()}).catch(()=>{})}
+async function submitReview(){
+  if(!selectedRating)return;
+  await db.addReview(reviewBooth,selectedRating);
+  setState({reviewed:[...state.reviewed,reviewBooth],view:"guest"});
+  showToast("⭐ レビューありがとう！");
+  db.getReviews().then(r=>{state.reviews=r||[];render()}).catch(()=>{});
+}
 
 function renderAuth(){pwInput="";return`<div class="page center"><button class="btn-back" onclick="goHome()">← ホームへ</button><div style="font-size:32px;margin:24px 0 8px">🔒</div><div class="muted" style="margin-bottom:8px">スタッフ用パスワード</div><div class="pw-display" id="pw-display">----</div><div id="pw-error" style="color:#fc8181;font-size:12px;margin-top:8px;display:none">パスワードが違います</div><div class="numpad"><button class="numpad-btn" onclick="pwTap('1')">1</button><button class="numpad-btn" onclick="pwTap('2')">2</button><button class="numpad-btn" onclick="pwTap('3')">3</button><button class="numpad-btn" onclick="pwTap('4')">4</button><button class="numpad-btn" onclick="pwTap('5')">5</button><button class="numpad-btn" onclick="pwTap('6')">6</button><button class="numpad-btn" onclick="pwTap('7')">7</button><button class="numpad-btn" onclick="pwTap('8')">8</button><button class="numpad-btn" onclick="pwTap('9')">9</button><button class="numpad-btn" onclick="pwClear()" style="font-size:16px">消去</button><button class="numpad-btn" onclick="pwTap('0')">0</button><button class="numpad-btn" onclick="checkAuth()" style="background:#c8a84b;color:#0e1f14;font-size:16px">OK</button></div></div>`}
 
@@ -179,7 +201,7 @@ function renderStaff(){
     const canCall=waiting.length>0&&!dbState.calling_number;
     const br=reviews.filter(r=>r.booth_id===b.id);
     const avgRating=br.length?Math.round(br.reduce((s,r)=>s+r.rating,0)/br.length*10)/10:null;
-    const curAvg=localAvgMinutes[b.id]||b.avg_minutes||10;
+    const curAvg=b.avg_minutes||10;
     return`<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <div style="font-size:14px;font-weight:700">${b.name}</div>
@@ -190,9 +212,7 @@ function renderStaff(){
         <button class="btn-circle" onclick="changeCap('${b.id}',-1)">－</button>
         <span style="font-size:14px;font-weight:700;color:#c8a84b;min-width:20px;text-align:center">${b.capacity}</span>
         <button class="btn-circle" onclick="changeCap('${b.id}',1)">＋</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-        <span style="font-size:11px;color:#4a6a4a">平均時間</span>
+        <span style="font-size:11px;color:#4a6a4a;margin-left:6px">平均時間</span>
         ${[5,10,15,20,30].map(m=>`<button onclick="setAvgMin('${b.id}',${m})" style="padding:6px 10px;border-radius:8px;background:${curAvg===m?"#c8a84b":"#0e1f14"};color:${curAvg===m?"#0e1f14":"#9a8a5a"};border:1px solid ${curAvg===m?"#c8a84b":"#2a4a2a"};cursor:pointer;font-size:12px;font-weight:${curAvg===m?"700":"400"}">${m}分</button>`).join("")}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">${inside.map(t=>`<button class="chip chip-inside" onclick="exitTicket(${t.id})">${String(t.number).padStart(3,"0")}${t.people>1?`(${t.people})`:""} <span style="font-size:10px;opacity:.6">退場</span></button>`).join("")||`<span style="font-size:12px;color:#2a4a2a">入場中なし</span>`}</div>
@@ -205,14 +225,14 @@ function renderStaff(){
     <div class="header-row">
       <button class="btn-back" onclick="goHome()">← ホームへ</button>
       <div class="header-title">スタッフ管理</div>
-      <button onclick="resetAll()" style="font-size:11px;color:#fc8181;background:none;border:1px solid rgba(252,129,129,.3);border-radius:8px;padding:4px 10px;cursor:pointer">リセット</button>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:16px">
-      <button onclick="emergencyReset()" style="flex:1;padding:12px;background:#1a0a0a;border:1px solid #fc8181;border-radius:10px;color:#fc8181;font-size:12px;font-weight:700;cursor:pointer">🚨 緊急リセット</button>
-      <button onclick="resetTicketsOnly()" style="flex:1;padding:12px;background:#162518;border:1px solid #2a4a2a;border-radius:10px;color:#9a8a5a;font-size:12px;cursor:pointer">チケットのみリセット</button>
+      <div style="width:60px"></div>
     </div>
     ${callingBlock}${boothBlocks}
     <div class="note">自動更新中（5秒ごと）</div>
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #1a3a2a;display:flex;gap:8px">
+      <button onclick="resetTicketsOnly()" style="flex:1;padding:10px;background:#162518;border:1px solid #2a4a2a;border-radius:10px;color:#9a8a5a;font-size:11px;cursor:pointer">待機チケットをリセット</button>
+      <button onclick="emergencyReset()" style="flex:1;padding:10px;background:#1a0a0a;border:1px solid #3a1a1a;border-radius:10px;color:#fc8181;font-size:11px;cursor:pointer">🚨 全データ削除</button>
+    </div>
   </div>`
 }
 
@@ -239,7 +259,10 @@ async function cancelTicket(id){
   setState({busy:true});
   try{
     await db.deleteTicket(id);
-    setState({myTickets:state.myTickets.filter(mt=>mt.id!==id),busy:false});
+    const newMyTickets=state.myTickets.filter(mt=>mt.id!==id);
+    state.myTickets=newMyTickets;
+    saveMyTickets(newMyTickets);
+    setState({busy:false});
     showToast("整理券をキャンセルしました");
     await refresh();
   }catch(e){setState({busy:false});showToast("⚠️ キャンセルに失敗しました","#e53e3e")}
@@ -252,42 +275,34 @@ async function cancelCall(){setState({busy:true});await db.updateState({calling_
 
 async function changeCap(boothId,delta){
   const b=state.booths.find(b=>b.id===boothId);if(!b)return;
-  const next=Math.max(1,b.capacity+delta);
-  await db.updateBooth(boothId,{capacity:next});
+  await db.updateBooth(boothId,{capacity:Math.max(1,b.capacity+delta)});
   await refresh();
 }
 
 async function setAvgMin(boothId,min){
-  localAvgMinutes[boothId]=min;
   await db.updateBooth(boothId,{avg_minutes:min});
-  // booths再取得せずローカルで更新
   state.booths=state.booths.map(b=>b.id===boothId?{...b,avg_minutes:min}:b);
   render();
   showToast(`平均時間を${min}分に設定しました`);
 }
 
-async function resetAll(){
-  if(!confirm("全データをリセットしますか？"))return;
-  for(const t of state.tickets)await db.updateTicket(t.id,{status:"done"});
+async function resetTicketsOnly(){
+  if(!confirm("待機中のチケットをリセットしますか？"))return;
+  const targets=state.tickets.filter(t=>t.status==="waiting");
+  for(const t of targets)await db.deleteTicket(t.id);
   await db.updateState({calling_number:null,calling_booth:null});
-  setState({myTickets:[]});await refresh();
+  state.myTickets=[];saveMyTickets([]);
+  await refresh();
+  showToast("チケットをリセットしました");
 }
 
 async function emergencyReset(){
-  if(!confirm("🚨 緊急リセット：全チケットを削除し呼び出しをクリアします。よろしいですか？"))return;
+  if(!confirm("⚠️ 全データを削除します。本当によろしいですか？"))return;
   for(const t of state.tickets)await db.deleteTicket(t.id);
   await db.updateState({calling_number:null,calling_booth:null});
-  setState({myTickets:[]});await refresh();
-  showToast("緊急リセット完了");
-}
-
-async function resetTicketsOnly(){
-  if(!confirm("待機中・呼び出し中のチケットをリセットしますか？"))return;
-  const targets=state.tickets.filter(t=>t.status==="waiting"||t.status==="called");
-  for(const t of targets)await db.deleteTicket(t.id);
-  await db.updateState({calling_number:null,calling_booth:null});
+  state.myTickets=[];saveMyTickets([]);
   await refresh();
-  showToast("チケットをリセットしました");
+  showToast("全データを削除しました");
 }
 
 initialLoad();
