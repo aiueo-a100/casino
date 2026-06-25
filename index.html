@@ -8,6 +8,7 @@ const SUPABASE_URL="https://hnrkfecbewrjwsooxvde.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhucmtmZWNiZXdyandzb294dmRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMTA2MjcsImV4cCI6MjA5NzY4NjYyN30.iTDfmIQxTFEi7013YOmvf844uf2l0XBtOyWQ2tsVeFs";
 const STAFF_PASSWORD="1729";
 const CARD_BOOTHS=["babanuki","shinkei","highandlow"];
+const MAX_TICKETS=3; // 1人が同時に持てる整理券の上限
 let pwInput="",prevCalling=null,selectedPeople=1,pendingBooth=null,selectedRating=0,reviewBooth="";
 
 function saveMyTickets(t){try{localStorage.setItem("myTickets",JSON.stringify(t))}catch(e){}}
@@ -53,6 +54,7 @@ const db={
   deleteAllReviews:()=>apiFetch("reviews?id=gt.0",{method:"DELETE",headers:{"Content-Type":"application/json"}}),
   // 累計利用者数: done状態のチケットを件数だけ取得（Prefer:countでヘッダから件数を読む）
   getDoneTickets:()=>apiFetch("tickets?status=eq.done&select=booth,people"),
+  // 一時休止のトグルは updateBooth(id,{paused:true/false}) を使う
   getMaxNumber:async(booth)=>{const t=await apiFetch(`tickets?booth=eq.${booth}&select=number&order=number.desc&limit=1`);return t?.length?t[0].number:0},
 };
 
@@ -186,14 +188,15 @@ function boothCard(b,onclick){
   const waiting=tickets.filter(t=>t.booth===b.id&&t.status==="waiting").length;
   const inside=tickets.filter(t=>t.booth===b.id&&t.status==="inside").length;
   const full=inside>=b.capacity;
+  const paused=b.paused===true;
   const hasTicket=myTickets.some(mt=>mt.booth===b.id&&tickets.find(t=>t.id===mt.id));
-  const waitColor=full?"#e53e3e":hasTicket?"#4caf7d":"#c8a84b";
-  const waitText=full?"満員":hasTicket?"取得済み✅":`待ち ${waiting}人`;
+  const waitColor=paused?"#9a8a5a":full?"#e53e3e":hasTicket?"#4caf7d":"#c8a84b";
+  const waitText=paused?"受付停止中":full?"満員":hasTicket?"取得済み✅":`待ち ${waiting}人`;
   const avgMin=b.avg_minutes||10;
-  const waitTime=!full&&!hasTicket&&waiting>0?`約${waiting*avgMin}分待ち`:"";
+  const waitTime=!paused&&!full&&!hasTicket&&waiting>0?`約${waiting*avgMin}分待ち`:"";
   const br=reviews.filter(r=>r.booth_id===b.id);
   const avgRating=br.length?Math.round(br.reduce((s,r)=>s+r.rating,0)/br.length*10)/10:null;
-  return`<button class="booth-btn" onclick="${onclick}" ${state.busy||full||hasTicket?"disabled":""}><div style="flex:1"><div class="booth-name">${b.name}</div><div style="font-size:12px;color:#4a6a4a;margin-top:2px">${inside}/${b.capacity}人入場中${avgRating?` ⭐${avgRating}`:""}</div>${waitTime?`<div style="font-size:11px;color:#9a8a5a;margin-top:2px">${waitTime}</div>`:""} ${progressBar(inside,b.capacity)}</div><div class="booth-wait" style="color:${waitColor}">${waitText}</div></button>`
+  return`<button class="booth-btn" onclick="${onclick}" ${state.busy||full||hasTicket||paused?"disabled":""} style="${paused?"opacity:.5":""}"><div style="flex:1"><div class="booth-name">${b.name}</div><div style="font-size:12px;color:#4a6a4a;margin-top:2px">${inside}/${b.capacity}人入場中${avgRating?` ⭐${avgRating}`:""}</div>${waitTime?`<div style="font-size:11px;color:#9a8a5a;margin-top:2px">${waitTime}</div>`:""} ${progressBar(inside,b.capacity)}</div><div class="booth-wait" style="color:${waitColor}">${waitText}</div></button>`
 }
 
 function renderBoothSelectPage(){
@@ -263,9 +266,10 @@ function renderStaff(){
     const avgRating=br.length?Math.round(br.reduce((s,r)=>s+r.rating,0)/br.length*10)/10:null;
     const curAvg=b.avg_minutes||10;
     const doneCount=state.doneCounts[b.id]||0;
-    return`<div class="card">
+    const paused=b.paused===true;
+    return`<div class="card" style="${paused?"border-color:#7a5a2a":""}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <div style="font-size:14px;font-weight:700">${b.name}</div>
+        <div style="font-size:14px;font-weight:700">${b.name}${paused?` <span style="font-size:11px;color:#f5c842">⏸ 休止中</span>`:""}</div>
         <div style="font-size:12px;color:#9a8a5a">${avgRating?`⭐${avgRating}(${br.length}件) `:""}<span style="color:#4caf7d">累計${doneCount}人</span></div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">
@@ -279,6 +283,7 @@ function renderStaff(){
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">${inside.map(t=>`<button class="chip chip-inside" onclick="exitTicket(${t.id})">${String(t.number).padStart(3,"0")}${t.people>1?`(${t.people})`:""} <span style="font-size:10px;opacity:.6">退場</span></button>`).join("")||`<span style="font-size:12px;color:#2a4a2a">入場中なし</span>`}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${waiting.map(t=>`<button class="chip chip-wait" onclick="callSpecific('${b.id}',${t.number})" ${dbState.calling_number||busy?"disabled":""} style="cursor:pointer">${String(t.number).padStart(3,"0")}${t.people>1?`(${t.people})`:""}</button>`).join("")||`<span style="font-size:12px;color:#2a4a2a">待機なし</span>`}</div>
       <button class="btn-primary" style="font-size:13px;padding:10px 0" onclick="callNext('${b.id}')" ${!canCall||busy?"disabled":""}>${waiting.length>0?`${waiting[0].number}番を呼び出す（先頭）`:"待機者なし"}</button>
+      <button onclick="togglePause('${b.id}')" ${busy?"disabled":""} style="width:100%;margin-top:6px;padding:8px;border-radius:10px;background:${paused?"#3a2a0a":"#162518"};border:1px solid ${paused?"#7a5a2a":"#2a4a2a"};color:${paused?"#f5c842":"#9a8a5a"};font-size:12px;font-weight:600;cursor:pointer">${paused?"▶ 受付を再開する":"⏸ 受付を一時停止"}</button>
     </div>`
   }).join("");
 
@@ -308,6 +313,12 @@ function checkAuth(){if(pwInput===STAFF_PASSWORD){setState({staffAuthed:true});r
 // 改善1: 番号採番の衝突対策。POSTが衝突したら最大番号を取り直して最大3回リトライ
 async function issueTicket(booth,people=1){
   if(state.busy)return; // 改善2: 多重実行ガード
+  // 同時に持てる整理券の上限チェック（待機中・入場中の自分のチケット数）
+  const activeCount=state.myTickets.filter(mt=>state.tickets.find(t=>t.id===mt.id)).length;
+  if(activeCount>=MAX_TICKETS){
+    showToast(`整理券は同時に${MAX_TICKETS}枚までです`,"#e53e3e");
+    return;
+  }
   setState({busy:true});
   let lastErr=null;
   for(let attempt=0;attempt<5;attempt++){
@@ -450,6 +461,21 @@ async function setAvgMin(boothId,min){
     showToast(`平均時間を${min}分に設定しました`);
   }catch(e){showToast("⚠️ 通信エラー","#e53e3e")}
   state.busy=false;
+}
+
+async function togglePause(boothId){
+  if(state.busy)return;
+  const b=state.booths.find(b=>b.id===boothId);if(!b)return;
+  const next=!(b.paused===true);
+  state.busy=true;
+  state.booths=state.booths.map(x=>x.id===boothId?{...x,paused:next}:x);
+  render();
+  try{
+    await db.updateBooth(boothId,{paused:next});
+    showToast(next?"受付を停止しました":"受付を再開しました");
+  }catch(e){showToast("⚠️ 通信エラー","#e53e3e")}
+  state.busy=false;
+  await refresh();
 }
 
 async function resetTicketsOnly(){
