@@ -56,7 +56,7 @@ const db={
 let state={view:getViewFromURL(),staffAuthed:false,tickets:[],booths:[],reviews:[],dbState:{calling_number:null,calling_booth:null},myTickets:loadMyTickets(),reviewed:loadReviewed(),busy:false,loaded:false,offline:false};
 
 function showToast(msg,color="#4caf7d"){const t=document.createElement("div");t.className="toast";t.style.background=color;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
-function vibrate(){try{if(navigator.vibrate)navigator.vibrate([200,100,200,100,200])}catch(e){}}
+function vibrate(){try{if(navigator.vibrate)navigator.vibrate([400,150,400,150,400,150,600])}catch(e){}}
 
 // 改善3: 通信エラー時に上部へ警告バーを表示
 function renderOffline(){
@@ -86,7 +86,7 @@ async function refresh(){
     if(dbState){
       if(dbState.calling_number&&dbState.calling_number!==prevCalling){
         const hit=state.myTickets.find(mt=>mt.number===dbState.calling_number&&mt.booth===dbState.calling_booth);
-        if(hit){vibrate();document.body.classList.add("called-anim");setTimeout(()=>document.body.classList.remove("called-anim"),3000)}
+        if(hit){vibrate();document.body.classList.add("called-anim");setTimeout(()=>document.body.classList.remove("called-anim"),5000)}
       }
       prevCalling=dbState.calling_number;state.dbState=dbState;
     }
@@ -149,9 +149,14 @@ function renderGuest(){
     const t=tickets.find(t=>t.id===mt.id),booth=booths.find(b=>b.id===mt.booth);
     const called=dbState.calling_number===mt.number&&dbState.calling_booth===mt.booth;
     const status=t.status;
-    const statusHtml=called?`<div style="color:#c8a84b;font-weight:700;font-size:13px">📢 受付へ！</div>`:status==="inside"?`<div style="color:#4caf7d;font-size:13px">✅ 入場中</div>`:`<div style="color:#9a8a5a;font-size:13px">待機中</div>`;
+    // あと何人: 同じブースで自分より前の待機中の人数
+    let aheadCount=0;
+    if(status==="waiting"&&!called){
+      aheadCount=tickets.filter(x=>x.booth===mt.booth&&x.status==="waiting"&&x.number<mt.number).length;
+    }
+    const statusHtml=called?`<div style="color:#c8a84b;font-weight:700;font-size:14px">📢 受付へお越しください！</div>`:status==="inside"?`<div style="color:#4caf7d;font-size:13px">✅ 入場中</div>`:`<div style="color:#9a8a5a;font-size:13px;text-align:right">待機中<br><span style="font-size:18px;font-weight:800;color:#c8a84b">あと${aheadCount}人</span></div>`;
     const cancelBtn=status==="waiting"&&!called?`<button class="btn-danger" onclick="cancelTicket(${mt.id})" ${busy?"disabled":""}>キャンセル</button>`:"";
-    return`<div class="card" style="border:${called?"2px solid #c8a84b":"1px solid #2a4a2a"}"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;color:#4a6a4a;margin-bottom:2px">${booth?.name||mt.booth}</div><div style="font-size:40px;font-weight:900;color:${called?"#c8a84b":"#f0e6c0"}">${String(mt.number).padStart(3,"0")}</div>${mt.people>1?`<div style="font-size:11px;color:#4a6a4a">${mt.people}人</div>`:""}</div>${statusHtml}</div>${cancelBtn}</div>`
+    return`<div class="card" style="border:${called?"2px solid #c8a84b":"1px solid #2a4a2a"};${called?"background:#1a3a1a":""}"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:#4a6a4a;margin-bottom:2px">${booth?.name||mt.booth}</div><div style="font-size:${called?"72px":"56px"};font-weight:900;line-height:1;color:${called?"#c8a84b":"#f0e6c0"};letter-spacing:-2px">${String(mt.number).padStart(3,"0")}</div>${mt.people>1?`<div style="font-size:11px;color:#4a6a4a;margin-top:2px">${mt.people}人</div>`:""}</div>${statusHtml}</div>${cancelBtn}</div>`
   }).join("");
 
   // 終了済みbrooth（重複booth除去）のうち未レビューのみレビューボタンを出す
