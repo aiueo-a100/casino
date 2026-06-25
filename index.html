@@ -23,8 +23,12 @@ async function apiFetch(path,opts={}){
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{signal:ctrl.signal,headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=representation",...(opts.headers||{})},...opts});
     clearTimeout(tid);
-    if(!res.ok)throw new Error("HTTP "+res.status);
-    const text=await res.text();return text?JSON.parse(text):null;
+    const text=await res.text();
+    if(!res.ok){
+      console.error("API error",res.status,text);
+      throw new Error("HTTP "+res.status+": "+text);
+    }
+    return text?JSON.parse(text):null;
   }catch(e){clearTimeout(tid);throw e}
 }
 
@@ -283,10 +287,10 @@ async function issueTicket(booth,people=1){
   if(state.busy)return; // 改善2: 多重実行ガード
   setState({busy:true});
   let lastErr=null;
-  for(let attempt=0;attempt<4;attempt++){
+  for(let attempt=0;attempt<5;attempt++){
     try{
       const maxNum=await db.getMaxNumber(booth);
-      const nextNum=maxNum+1+attempt; // 衝突時は少しずつずらす
+      const nextNum=maxNum+1;
       const res=await db.insertTicket(nextNum,booth,people);
       if(res&&res[0]){
         const created=res[0];
@@ -295,10 +299,17 @@ async function issueTicket(booth,people=1){
         await refresh();
         return;
       }
-    }catch(e){lastErr=e;/* 衝突や通信エラー時は次のattemptへ */}
+      // resが空＝想定外。次のattemptへ
+      lastErr=new Error("空のレスポンス");
+    }catch(e){
+      lastErr=e;
+      // 番号重複(409)なら採番し直してリトライ。それ以外も一応リトライ
+      await new Promise(r=>setTimeout(r,150));
+    }
   }
   setState({busy:false});
-  showToast("⚠️ 取得に失敗しました。もう一度お試しください","#e53e3e");
+  console.error("issueTicket failed:",lastErr);
+  showToast("⚠️ 取得失敗: "+(lastErr?lastErr.message:"不明").slice(0,40),"#e53e3e");
 }
 
 async function cancelTicket(id){
