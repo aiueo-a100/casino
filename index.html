@@ -50,10 +50,13 @@ const db={
   updateBooth:(id,patch)=>apiFetch(`booths?id=eq.${id}`,{method:"PATCH",body:JSON.stringify(patch)}),
   updateState:(patch)=>apiFetch("state?id=eq.1",{method:"PATCH",body:JSON.stringify(patch)}),
   addReview:(booth_id,rating)=>apiFetch("reviews",{method:"POST",body:JSON.stringify({booth_id,rating})}),
+  deleteAllReviews:()=>apiFetch("reviews?id=gt.0",{method:"DELETE",headers:{"Content-Type":"application/json"}}),
+  // 累計利用者数: done状態のチケットを件数だけ取得（Prefer:countでヘッダから件数を読む）
+  getDoneTickets:()=>apiFetch("tickets?status=eq.done&select=booth,people"),
   getMaxNumber:async(booth)=>{const t=await apiFetch(`tickets?booth=eq.${booth}&select=number&order=number.desc&limit=1`);return t?.length?t[0].number:0},
 };
 
-let state={view:getViewFromURL(),staffAuthed:false,tickets:[],booths:[],reviews:[],dbState:{calling_number:null,calling_booth:null},myTickets:loadMyTickets(),reviewed:loadReviewed(),busy:false,loaded:false,offline:false};
+let state={view:getViewFromURL(),staffAuthed:false,tickets:[],booths:[],reviews:[],doneCounts:{},dbState:{calling_number:null,calling_booth:null},myTickets:loadMyTickets(),reviewed:loadReviewed(),busy:false,loaded:false,offline:false};
 
 function showToast(msg,color="#4caf7d"){const t=document.createElement("div");t.className="toast";t.style.background=color;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
 function vibrate(){try{if(navigator.vibrate)navigator.vibrate([400,150,400,150,400,150,600])}catch(e){}}
@@ -97,6 +100,14 @@ async function refresh(){
     // ここではactiveTicketsしかDBから来ないため、myTicketのstatusを補完する。
     state.offline=false;
     render();
+    // 累計利用者数はスタッフ画面のときだけ取得（負荷軽減）
+    if(state.staffAuthed&&state.view==="staff"){
+      db.getDoneTickets().then(rows=>{
+        const counts={};
+        (rows||[]).forEach(r=>{counts[r.booth]=(counts[r.booth]||0)+(r.people||1)});
+        state.doneCounts=counts;render();
+      }).catch(()=>{});
+    }
   }catch(e){
     // 改善3: 失敗時は古い情報のまま警告だけ出す
     state.offline=true;
@@ -242,7 +253,7 @@ function renderAuth(){pwInput="";return`<div class="page center"><button class="
 function renderStaff(){
   const{tickets,booths,dbState,busy,reviews}=state;
   const cb=booths.find(b=>b.id===dbState.calling_booth);
-  const callingBlock=dbState.calling_number?`<div class="card card-gold"><div style="font-size:11px;color:#4a6a4a;letter-spacing:3px">呼び出し中</div><div style="text-align:center;margin-top:8px"><div style="font-size:13px;color:#9a8a5a;margin-bottom:4px">${cb?.name||""}</div><div style="font-size:52px;font-weight:900;color:#c8a84b">${String(dbState.calling_number).padStart(3,"0")} 番</div><button class="btn-primary" style="background:linear-gradient(135deg,#4caf7d,#6dcf9d);margin-top:8px" onclick="confirmEntry()" ${busy?"disabled":""}>入場確認</button><br><button class="btn-ghost" style="border:none;margin-top:4px;font-size:12px" onclick="cancelCall()" ${busy?"disabled":""}>キャンセル</button></div></div>`:"";
+  const callingBlock=dbState.calling_number?`<div class="card card-gold"><div style="font-size:11px;color:#4a6a4a;letter-spacing:3px">呼び出し中</div><div style="text-align:center;margin-top:8px"><div style="font-size:13px;color:#9a8a5a;margin-bottom:4px">${cb?.name||""}</div><div style="font-size:52px;font-weight:900;color:#c8a84b">${String(dbState.calling_number).padStart(3,"0")} 番</div><button class="btn-primary" style="background:linear-gradient(135deg,#4caf7d,#6dcf9d);margin-top:8px" onclick="confirmEntry()" ${busy?"disabled":""}>入場確認</button><div style="display:flex;gap:8px;margin-top:8px"><button class="btn-ghost" style="flex:1;margin-top:0;font-size:12px" onclick="skipCall()" ${busy?"disabled":""}>来ないので飛ばす</button><button class="btn-ghost" style="flex:1;margin-top:0;font-size:12px;color:#9a8a5a;border-color:#2a4a2a" onclick="cancelCall()" ${busy?"disabled":""}>呼び出し取消</button></div></div></div>`:"";
 
   const boothBlocks=booths.map(b=>{
     const waiting=tickets.filter(t=>t.booth===b.id&&t.status==="waiting");
@@ -251,10 +262,11 @@ function renderStaff(){
     const br=reviews.filter(r=>r.booth_id===b.id);
     const avgRating=br.length?Math.round(br.reduce((s,r)=>s+r.rating,0)/br.length*10)/10:null;
     const curAvg=b.avg_minutes||10;
+    const doneCount=state.doneCounts[b.id]||0;
     return`<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <div style="font-size:14px;font-weight:700">${b.name}</div>
-        <div style="font-size:12px;color:#9a8a5a">${avgRating?`⭐${avgRating}(${br.length}件)`:""}</div>
+        <div style="font-size:12px;color:#9a8a5a">${avgRating?`⭐${avgRating}(${br.length}件) `:""}<span style="color:#4caf7d">累計${doneCount}人</span></div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">
         <span style="font-size:11px;color:#4a6a4a">上限</span>
@@ -265,8 +277,8 @@ function renderStaff(){
         ${[5,10,15,20,30].map(m=>`<button onclick="setAvgMin('${b.id}',${m})" style="padding:6px 10px;border-radius:8px;background:${curAvg===m?"#c8a84b":"#0e1f14"};color:${curAvg===m?"#0e1f14":"#9a8a5a"};border:1px solid ${curAvg===m?"#c8a84b":"#2a4a2a"};cursor:pointer;font-size:12px;font-weight:${curAvg===m?"700":"400"}">${m}分</button>`).join("")}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">${inside.map(t=>`<button class="chip chip-inside" onclick="exitTicket(${t.id})">${String(t.number).padStart(3,"0")}${t.people>1?`(${t.people})`:""} <span style="font-size:10px;opacity:.6">退場</span></button>`).join("")||`<span style="font-size:12px;color:#2a4a2a">入場中なし</span>`}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${waiting.map(t=>`<span class="chip chip-wait">${String(t.number).padStart(3,"0")}${t.people>1?`(${t.people})`:""}</span>`).join("")||`<span style="font-size:12px;color:#2a4a2a">待機なし</span>`}</div>
-      <button class="btn-primary" style="font-size:13px;padding:10px 0" onclick="callNext('${b.id}')" ${!canCall||busy?"disabled":""}>${waiting.length>0?`${waiting[0].number}番を呼び出す`:"待機者なし"}</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${waiting.map(t=>`<button class="chip chip-wait" onclick="callSpecific('${b.id}',${t.number})" ${dbState.calling_number||busy?"disabled":""} style="cursor:pointer">${String(t.number).padStart(3,"0")}${t.people>1?`(${t.people})`:""}</button>`).join("")||`<span style="font-size:12px;color:#2a4a2a">待機なし</span>`}</div>
+      <button class="btn-primary" style="font-size:13px;padding:10px 0" onclick="callNext('${b.id}')" ${!canCall||busy?"disabled":""}>${waiting.length>0?`${waiting[0].number}番を呼び出す（先頭）`:"待機者なし"}</button>
     </div>`
   }).join("");
 
@@ -278,9 +290,10 @@ function renderStaff(){
     </div>
     ${callingBlock}${boothBlocks}
     <div class="note">自動更新中（5秒ごと）</div>
-    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #1a3a2a;display:flex;gap:8px">
-      <button onclick="resetTicketsOnly()" style="flex:1;padding:10px;background:#162518;border:1px solid #2a4a2a;border-radius:10px;color:#9a8a5a;font-size:11px;cursor:pointer">待機チケットをリセット</button>
-      <button onclick="emergencyReset()" style="flex:1;padding:10px;background:#1a0a0a;border:1px solid #3a1a1a;border-radius:10px;color:#fc8181;font-size:11px;cursor:pointer">🚨 全データ削除</button>
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #1a3a2a;display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="resetTicketsOnly()" style="flex:1;min-width:120px;padding:10px;background:#162518;border:1px solid #2a4a2a;border-radius:10px;color:#9a8a5a;font-size:11px;cursor:pointer">待機チケットをリセット</button>
+      <button onclick="deleteReviews()" style="flex:1;min-width:120px;padding:10px;background:#162518;border:1px solid #2a4a2a;border-radius:10px;color:#9a8a5a;font-size:11px;cursor:pointer">レビューを削除</button>
+      <button onclick="emergencyReset()" style="flex:1;min-width:120px;padding:10px;background:#1a0a0a;border:1px solid #3a1a1a;border-radius:10px;color:#fc8181;font-size:11px;cursor:pointer">🚨 全データ削除</button>
     </div>
   </div>`
 }
@@ -290,7 +303,7 @@ function goGuest(){state.myTickets.length>0?setState({view:"guest"}):setState({v
 function goStaff(){setState({view:"staff"})}
 function pwTap(n){if(pwInput.length>=4)return;pwInput+=n;const d=document.getElementById("pw-display");if(d)d.textContent="●".repeat(pwInput.length)+"－".repeat(4-pwInput.length)}
 function pwClear(){pwInput=pwInput.slice(0,-1);const d=document.getElementById("pw-display");if(d)d.textContent="●".repeat(pwInput.length)+"－".repeat(4-pwInput.length)}
-function checkAuth(){if(pwInput===STAFF_PASSWORD){setState({staffAuthed:true})}else{const el=document.getElementById("pw-error"),d=document.getElementById("pw-display");if(el)el.style.display="block";if(d)d.classList.add("error-border");pwInput="";setTimeout(()=>{if(d){d.classList.remove("error-border");d.textContent="----"}if(el)el.style.display="none"},1000)}}
+function checkAuth(){if(pwInput===STAFF_PASSWORD){setState({staffAuthed:true});refresh()}else{const el=document.getElementById("pw-error"),d=document.getElementById("pw-display");if(el)el.style.display="block";if(d)d.classList.add("error-border");pwInput="";setTimeout(()=>{if(d){d.classList.remove("error-border");d.textContent="----"}if(el)el.style.display="none"},1000)}}
 
 // 改善1: 番号採番の衝突対策。POSTが衝突したら最大番号を取り直して最大3回リトライ
 async function issueTicket(booth,people=1){
@@ -369,6 +382,47 @@ async function cancelCall(){
   setState({busy:false});
 }
 
+// 番号を手動で指定して呼び出す
+async function callSpecific(boothId,number){
+  if(state.busy)return;
+  if(state.dbState.calling_number)return; // 既に呼び出し中なら何もしない
+  setState({busy:true});
+  try{await db.updateState({calling_number:number,calling_booth:boothId});await refresh()}
+  catch(e){showToast("⚠️ 通信エラー","#e53e3e")}
+  setState({busy:false});
+}
+
+// 来なかった人を飛ばす（チケットを削除して呼び出しをクリア）
+async function skipCall(){
+  if(state.busy)return;
+  if(!confirm("この番号の人を飛ばしますか？（整理券は無効になります）"))return;
+  const{dbState,tickets}=state;
+  const t=tickets.find(t=>t.number===dbState.calling_number&&t.booth===dbState.calling_booth);
+  setState({busy:true});
+  try{
+    if(t)await db.deleteTicket(t.id);
+    await db.updateState({calling_number:null,calling_booth:null});
+    await refresh();
+    showToast("飛ばしました");
+  }catch(e){showToast("⚠️ 通信エラー","#e53e3e")}
+  setState({busy:false});
+}
+
+// レビューを全削除
+async function deleteReviews(){
+  if(state.busy)return;
+  if(!confirm("全てのレビューを削除しますか？"))return;
+  setState({busy:true});
+  try{
+    await db.deleteAllReviews();
+    state.reviews=[];
+    setState({reviewed:[]});
+    showToast("レビューを削除しました");
+    db.getReviews().then(r=>{state.reviews=r||[];render()}).catch(()=>{});
+  }catch(e){showToast("⚠️ レビュー削除に失敗しました","#e53e3e")}
+  setState({busy:false});
+}
+
 // 上限変更のバグ修正: refreshがbooths再取得するようになったが、
 // 押した瞬間の即時反映のためローカルも先に更新してから保存
 async function changeCap(boothId,delta){
@@ -423,6 +477,7 @@ async function emergencyReset(){
     if(all)for(const t of all)await db.deleteTicket(t.id);
     await db.updateState({calling_number:null,calling_booth:null});
     state.myTickets=[];saveMyTickets([]);
+    state.doneCounts={};
     setState({reviewed:[]});
     await refresh();
     showToast("全データを削除しました");
