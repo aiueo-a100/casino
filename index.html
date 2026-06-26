@@ -7,7 +7,12 @@
 #call-overlay .co-booth{color:#0e1f14;font-size:18px;font-weight:700;margin-bottom:16px;opacity:.8}
 #call-overlay .co-number{color:#0e1f14;font-size:120px;font-weight:900;line-height:1;letter-spacing:-4px;animation:numberPop .6s infinite}
 #call-overlay .co-sub{color:#0e1f14;font-size:20px;font-weight:800;margin-top:24px}
-#call-overlay .co-close{margin-top:40px;background:#0e1f14;color:#c8a84b;border:none;border-radius:14px;padding:16px 40px;font-size:18px;font-weight:700;cursor:pointer}</style></head><body>
+#call-overlay .co-close{margin-top:40px;background:#0e1f14;color:#c8a84b;border:none;border-radius:14px;padding:16px 40px;font-size:18px;font-weight:700;cursor:pointer}
+.review-input{width:100%;max-width:320px;padding:12px 14px;border-radius:12px;background:#0e1f14;border:1px solid #2a4a2a;color:#f0e6c0;font-size:15px;resize:vertical;outline:none;margin-top:8px;font-family:inherit}
+.review-input:focus{border-color:#c8a84b}
+.comment-item{background:#0e1f14;border:1px solid #1a3a2a;border-radius:10px;padding:10px 12px;margin-top:8px;text-align:left}
+.comment-stars{font-size:12px;color:#c8a84b;margin-bottom:4px}
+.comment-text{font-size:13px;color:#d8cca0;line-height:1.4;word-break:break-word}</style></head><body>
 <div id="call-overlay"><div class="co-label">📢 呼び出し</div><div class="co-booth" id="co-booth"></div><div class="co-number" id="co-number">000</div><div class="co-sub">受付へお越しください！</div><button class="co-close" onclick="dismissCallOverlay()">確認しました</button></div>
 <div id="offline-root"></div>
 <div id="loading"><div class="loading-text">読み込み中...</div></div>
@@ -53,14 +58,15 @@ const db={
   getActiveTickets:()=>apiFetch("tickets?status=neq.done&order=number.asc"),
   getBooths:()=>apiFetch("booths?order=id.asc"),
   getState:()=>apiFetch("state?id=eq.1").then(r=>r?.[0]),
-  getReviews:()=>apiFetch("reviews?select=booth_id,rating"),
+  getReviews:()=>apiFetch("reviews?select=id,booth_id,rating,comment,created_at&order=created_at.desc"),
   // 改善1: 採番をDBに任せず、衝突したら自動リトライする方式（issueTicketWithRetryで使用）
   insertTicket:(number,booth,people)=>apiFetch("tickets",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({number,booth,status:"waiting",people})}),
   updateTicket:(id,patch)=>apiFetch(`tickets?id=eq.${id}`,{method:"PATCH",body:JSON.stringify(patch)}),
   deleteTicket:(id)=>apiFetch(`tickets?id=eq.${id}`,{method:"DELETE",headers:{"Content-Type":"application/json"}}),
   updateBooth:(id,patch)=>apiFetch(`booths?id=eq.${id}`,{method:"PATCH",body:JSON.stringify(patch)}),
   updateState:(patch)=>apiFetch("state?id=eq.1",{method:"PATCH",body:JSON.stringify(patch)}),
-  addReview:(booth_id,rating)=>apiFetch("reviews",{method:"POST",body:JSON.stringify({booth_id,rating})}),
+  addReview:(booth_id,rating,comment)=>apiFetch("reviews",{method:"POST",body:JSON.stringify({booth_id,rating,comment:comment||null})}),
+  deleteReview:(id)=>apiFetch(`reviews?id=eq.${id}`,{method:"DELETE",headers:{"Content-Type":"application/json"}}),
   deleteAllReviews:()=>apiFetch("reviews?id=gt.0",{method:"DELETE",headers:{"Content-Type":"application/json"}}),
   // 累計利用者数: done状態のチケットを件数だけ取得（Prefer:countでヘッダから件数を読む）
   getDoneTickets:()=>apiFetch("tickets?status=eq.done&select=booth,people"),
@@ -72,6 +78,12 @@ let state={view:getViewFromURL(),staffAuthed:false,tickets:[],booths:[],reviews:
 
 function showToast(msg,color="#4caf7d"){const t=document.createElement("div");t.className="toast";t.style.background=color;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
 function vibrate(){try{if(navigator.vibrate)navigator.vibrate([400,150,400,150,400,150,600])}catch(e){}}
+
+// XSS対策: ユーザーが書いたコメントを安全に表示する（タグを無効化）
+function escapeHtml(s){
+  if(s==null)return"";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
 
 function showCallOverlay(number,boothId){
   const ov=document.getElementById("call-overlay");
@@ -104,7 +116,7 @@ async function initialLoad(){
     state.tickets=tickets||[];state.booths=booths||[];
     if(dbState)state.dbState=dbState;
     state.loaded=true;state.offline=false;render();
-    db.getReviews().then(r=>{state.reviews=r||[];render()}).catch(()=>{});
+    db.getReviews().then(r=>{state.reviews=r||[];render(true)}).catch(()=>{});
   }catch(e){
     const el=document.getElementById("loading");
     if(el)el.innerHTML=`<div style="color:#fc8181;padding:32px;text-align:center;font-size:14px">接続できませんでした</div><button onclick="location.reload()" style="margin-top:16px;padding:12px 24px;background:#c8a84b;color:#0e1f14;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:15px">再読み込み</button>`;
@@ -132,19 +144,19 @@ async function refresh(){
     // activeに無いがdone扱いのものはレビュー用に残す（reviewedで管理）
     // ここではactiveTicketsしかDBから来ないため、myTicketのstatusを補完する。
     state.offline=false;
-    render();
+    render(true);
     // 累計利用者数はスタッフ画面のときだけ取得（負荷軽減）
     if(state.staffAuthed&&state.view==="staff"){
       db.getDoneTickets().then(rows=>{
         const counts={};
         (rows||[]).forEach(r=>{counts[r.booth]=(counts[r.booth]||0)+(r.people||1)});
-        state.doneCounts=counts;render();
+        state.doneCounts=counts;render(true);
       }).catch(()=>{});
     }
   }catch(e){
     // 改善3: 失敗時は古い情報のまま警告だけ出す
     state.offline=true;
-    render();
+    render(true);
   }
 }
 
@@ -156,12 +168,15 @@ function setState(patch){
   render();
 }
 
-function render(){
+function render(fromPolling){
   if(!state.loaded)return;
   renderOffline();
   const app=document.getElementById("app"),loading=document.getElementById("loading");
   if(loading)loading.style.display="none";app.style.display="block";
   const{view,staffAuthed}=state;
+  // ポーリング更新のときは、入力中の画面（パスワード入力・レビュー入力）を作り直さない
+  // → 打ちかけのパスワードや選択中の星が消えないようにする
+  if(fromPolling&&(view==="review"||(view==="staff"&&!staffAuthed)))return;
   if(view==="home")app.innerHTML=renderHome();
   else if(view==="guest")app.innerHTML=renderGuest();
   else if(view==="guest_select")app.innerHTML=renderBoothSelectPage();
@@ -263,7 +278,10 @@ async function confirmIssue(){
 function openReview(booth){reviewBooth=booth;selectedRating=0;setState({view:"review"})}
 function renderReviewPage(){
   const booth=state.booths.find(b=>b.id===reviewBooth);
-  return`<div class="page center"><button class="btn-back" onclick="setState({view:'guest'})">← 戻る</button><div style="margin-top:32px;font-size:18px;font-weight:700;margin-bottom:4px">${booth?.name||reviewBooth}</div><div class="muted" style="margin-bottom:8px">どうでしたか？</div><div class="star-row">${[1,2,3,4,5].map(n=>`<span class="star${n<=selectedRating?" active":""}" id="star${n}" onclick="setRating(${n})">⭐</span>`).join("")}</div><div id="rating-label" style="font-size:14px;color:#9a8a5a;margin-bottom:24px">${selectedRating>0?["","😢 最悪","😐 微妙","🙂 普通","😊 良い","🎉 最高！"][selectedRating]:"タップして評価"}</div><button class="btn-primary" id="review-submit" onclick="submitReview()" ${selectedRating===0?"disabled":""}>送信する</button></div>`
+  // このブースの既存コメント（最新5件）
+  const boothComments=state.reviews.filter(r=>r.booth_id===reviewBooth&&r.comment&&r.comment.trim()).slice(0,5);
+  const commentsHtml=boothComments.length?`<div style="width:100%;max-width:320px;margin-top:28px"><div style="font-size:12px;color:#9a8a5a;letter-spacing:1px;margin-bottom:4px">みんなの感想</div>${boothComments.map(r=>`<div class="comment-item"><div class="comment-stars">${"⭐".repeat(r.rating)}</div><div class="comment-text">${escapeHtml(r.comment)}</div></div>`).join("")}</div>`:"";
+  return`<div class="page center"><button class="btn-back" onclick="setState({view:'guest'})">← 戻る</button><div style="margin-top:32px;font-size:18px;font-weight:700;margin-bottom:4px">${escapeHtml(booth?.name||reviewBooth)}</div><div class="muted" style="margin-bottom:8px">どうでしたか？</div><div class="star-row">${[1,2,3,4,5].map(n=>`<span class="star${n<=selectedRating?" active":""}" id="star${n}" onclick="setRating(${n})">⭐</span>`).join("")}</div><div id="rating-label" style="font-size:14px;color:#9a8a5a;margin-bottom:8px">${selectedRating>0?["","😢 最悪","😐 微妙","🙂 普通","😊 良い","🎉 最高！"][selectedRating]:"タップして評価"}</div><textarea class="review-input" id="review-comment" rows="2" maxlength="100" placeholder="感想を書く（任意・匿名）"></textarea><div style="font-size:10px;color:#4a6a4a;max-width:320px;width:100%;text-align:left;margin-top:2px">※100文字まで・他のお客さんにも表示されます</div><button class="btn-primary" id="review-submit" style="margin-top:12px" onclick="submitReview()" ${selectedRating===0?"disabled":""}>送信する</button>${commentsHtml}</div>`
 }
 function setRating(n){selectedRating=n;[1,2,3,4,5].forEach(i=>{const s=document.getElementById("star"+i);if(s)s.className="star"+(i<=n?" active":"")});const l=document.getElementById("rating-label");if(l)l.textContent=["","😢 最悪","😐 微妙","🙂 普通","😊 良い","🎉 最高！"][n];const btn=document.getElementById("review-submit");if(btn)btn.disabled=false}
 async function submitReview(){
@@ -271,8 +289,9 @@ async function submitReview(){
   // 改善2: 送信ボタンを即ロック
   const btn=document.getElementById("review-submit");
   if(btn){if(btn.disabled)return;btn.disabled=true;btn.textContent="送信中..."}
+  const comment=(document.getElementById("review-comment")?.value||"").trim().slice(0,100);
   try{
-    await db.addReview(reviewBooth,selectedRating);
+    await db.addReview(reviewBooth,selectedRating,comment);
     setState({reviewed:[...state.reviewed,reviewBooth],view:"guest"});
     showToast("⭐ レビューありがとう！");
     db.getReviews().then(r=>{state.reviews=r||[];render()}).catch(()=>{});
@@ -315,6 +334,7 @@ function renderStaff(){
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${waiting.map(t=>`<button class="chip chip-wait" onclick="callSpecific('${b.id}',${t.number})" ${dbState.calling_number||busy?"disabled":""} style="cursor:pointer">${String(t.number).padStart(3,"0")}${t.people>1?`(${t.people})`:""}</button>`).join("")||`<span style="font-size:12px;color:#2a4a2a">待機なし</span>`}</div>
       <button class="btn-primary" style="font-size:13px;padding:10px 0" onclick="callNext('${b.id}')" ${!canCall||busy?"disabled":""}>${waiting.length>0?`${waiting[0].number}番を呼び出す（先頭）`:"待機者なし"}</button>
       <button onclick="togglePause('${b.id}')" ${busy?"disabled":""} style="width:100%;margin-top:6px;padding:8px;border-radius:10px;background:${paused?"#3a2a0a":"#162518"};border:1px solid ${paused?"#7a5a2a":"#2a4a2a"};color:${paused?"#f5c842":"#9a8a5a"};font-size:12px;font-weight:600;cursor:pointer">${paused?"▶ 受付を再開する":"⏸ 受付を一時停止"}</button>
+      ${(()=>{const bc=br.filter(r=>r.comment&&r.comment.trim());return bc.length?`<div style="margin-top:10px;padding-top:8px;border-top:1px solid #1a3a2a"><div style="font-size:11px;color:#4a6a4a;margin-bottom:4px">コメント (${bc.length}件) ※不適切なものは🗑で削除</div>${bc.map(r=>`<div class="comment-item" style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div style="flex:1"><div class="comment-stars">${"⭐".repeat(r.rating)}</div><div class="comment-text">${escapeHtml(r.comment)}</div></div><button onclick="deleteOneReview(${r.id})" ${busy?"disabled":""} style="background:none;border:none;color:#fc8181;font-size:16px;cursor:pointer;padding:2px 4px;flex-shrink:0">🗑</button></div>`).join("")}</div>`:""})()}
     </div>`
   }).join("");
 
@@ -462,6 +482,20 @@ async function deleteReviews(){
     showToast("レビューを削除しました");
     db.getReviews().then(r=>{state.reviews=r||[];render()}).catch(()=>{});
   }catch(e){showToast("⚠️ レビュー削除に失敗しました","#e53e3e")}
+  setState({busy:false});
+}
+
+// スタッフが不適切なコメントを1件だけ削除
+async function deleteOneReview(id){
+  if(state.busy)return;
+  if(!confirm("このコメントを削除しますか？"))return;
+  setState({busy:true});
+  try{
+    await db.deleteReview(id);
+    state.reviews=state.reviews.filter(r=>r.id!==id);
+    render();
+    showToast("コメントを削除しました");
+  }catch(e){showToast("⚠️ 削除に失敗しました","#e53e3e")}
   setState({busy:false});
 }
 
