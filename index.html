@@ -182,6 +182,7 @@ function render(fromPolling){
   else if(view==="guest_select")app.innerHTML=renderBoothSelectPage();
   else if(view==="guest_card")app.innerHTML=renderCardSelect();
   else if(view==="review")app.innerHTML=renderReviewPage();
+  else if(view==="booth_reviews")app.innerHTML=renderBoothReviewsPage();
   else if(view==="staff")app.innerHTML=staffAuthed?renderStaff():renderAuth();
 }
 
@@ -242,7 +243,9 @@ function boothCard(b,onclick){
   const waitTime=!paused&&!full&&!hasTicket&&waiting>0?`約${waiting*avgMin}分待ち`:"";
   const br=reviews.filter(r=>r.booth_id===b.id);
   const avgRating=br.length?Math.round(br.reduce((s,r)=>s+r.rating,0)/br.length*10)/10:null;
-  return`<button class="booth-btn" onclick="${onclick}" ${state.busy||full||hasTicket||paused?"disabled":""} style="${paused?"opacity:.5":""}"><div style="flex:1"><div class="booth-name">${b.name}</div><div style="font-size:12px;color:#4a6a4a;margin-top:2px">${inside}/${b.capacity}人入場中${avgRating?` ⭐${avgRating}`:""}</div>${waitTime?`<div style="font-size:11px;color:#9a8a5a;margin-top:2px">${waitTime}</div>`:""} ${progressBar(inside,b.capacity)}</div><div class="booth-wait" style="color:${waitColor}">${waitText}</div></button>`
+  const commentCount=br.filter(r=>r.comment&&r.comment.trim()).length;
+  const reviewLink=br.length?`<div onclick="openBoothReviews('${b.id}')" style="text-align:center;font-size:12px;color:#9a8a5a;padding:6px;margin-top:2px;cursor:pointer;text-decoration:underline">⭐${avgRating} の口コミを見る${commentCount?`（${commentCount}件）`:""}</div>`:"";
+  return`<div style="width:100%;max-width:320px"><button class="booth-btn" style="max-width:none;margin-top:8px;${paused?"opacity:.5":""}" onclick="${onclick}" ${state.busy||full||hasTicket||paused?"disabled":""}><div style="flex:1"><div class="booth-name">${escapeHtml(b.name)}</div><div style="font-size:12px;color:#4a6a4a;margin-top:2px">${inside}/${b.capacity}人入場中${avgRating?` ⭐${avgRating}`:""}</div>${waitTime?`<div style="font-size:11px;color:#9a8a5a;margin-top:2px">${waitTime}</div>`:""} ${progressBar(inside,b.capacity)}</div><div class="booth-wait" style="color:${waitColor}">${waitText}</div></button>${reviewLink}</div>`
 }
 
 function renderBoothSelectPage(){
@@ -276,6 +279,29 @@ async function confirmIssue(){
 }
 
 function openReview(booth){reviewBooth=booth;selectedRating=0;setState({view:"review"})}
+
+let viewingReviewsBooth="";
+function openBoothReviews(boothId){viewingReviewsBooth=boothId;setState({view:"booth_reviews"});db.getReviews().then(r=>{state.reviews=r||[];if(state.view==="booth_reviews")render()}).catch(()=>{})}
+function renderBoothReviewsPage(){
+  const booth=state.booths.find(b=>b.id===viewingReviewsBooth);
+  const br=state.reviews.filter(r=>r.booth_id===viewingReviewsBooth);
+  const avgRating=br.length?Math.round(br.reduce((s,r)=>s+r.rating,0)/br.length*10)/10:null;
+  // 星の分布
+  const dist=[5,4,3,2,1].map(n=>({n,count:br.filter(r=>r.rating===n).length}));
+  const maxCount=Math.max(1,...dist.map(d=>d.count));
+  const distHtml=dist.map(d=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px"><span style="font-size:11px;color:#9a8a5a;width:28px">${d.n}⭐</span><div style="flex:1;height:8px;background:#1a3a2a;border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.round(d.count/maxCount*100)}%;background:#c8a84b"></div></div><span style="font-size:11px;color:#4a6a4a;width:20px;text-align:right">${d.count}</span></div>`).join("");
+  const comments=br.filter(r=>r.comment&&r.comment.trim());
+  const commentsHtml=comments.length?comments.map(r=>`<div class="comment-item"><div class="comment-stars">${"⭐".repeat(r.rating)}</div><div class="comment-text">${escapeHtml(r.comment)}</div></div>`).join(""):`<div class="muted" style="margin:16px 0;text-align:center">まだコメントはありません</div>`;
+  return`<div class="page"><button class="btn-back" onclick="setState({view:'guest_select'})">← 戻る</button>
+    <div style="text-align:center;margin-top:20px">
+      <div style="font-size:20px;font-weight:700;margin-bottom:8px">${escapeHtml(booth?.name||viewingReviewsBooth)}</div>
+      ${avgRating?`<div style="font-size:40px;font-weight:900;color:#c8a84b;line-height:1">${avgRating}</div><div style="font-size:13px;color:#9a8a5a;margin-top:4px">${"⭐".repeat(Math.round(avgRating))} （${br.length}件の評価）</div>`:`<div class="muted">まだ評価がありません</div>`}
+    </div>
+    ${br.length?`<div style="max-width:320px;margin:20px auto 0">${distHtml}</div>`:""}
+    <div style="max-width:320px;margin:24px auto 0"><div style="font-size:13px;color:#9a8a5a;letter-spacing:1px;margin-bottom:4px">コメント${comments.length?`（${comments.length}件）`:""}</div>${commentsHtml}</div>
+    <div class="note">自動更新中（5秒ごと）</div>
+  </div>`
+}
 function renderReviewPage(){
   const booth=state.booths.find(b=>b.id===reviewBooth);
   // このブースの既存コメント（最新5件）
