@@ -30,8 +30,10 @@ function saveMyTickets(t){try{localStorage.setItem("myTickets",JSON.stringify(t)
 function loadMyTickets(){try{const t=localStorage.getItem("myTickets");return t?JSON.parse(t):[]}catch(e){return[]}}
 function saveReviewed(r){try{localStorage.setItem("reviewed",JSON.stringify(r))}catch(e){}}
 function loadReviewed(){try{const r=localStorage.getItem("reviewed");return r?JSON.parse(r):[]}catch(e){return[]}}
-function getViewFromURL(){return new URLSearchParams(location.search).get("v")||"home"}
-function setURLView(v){const u=new URL(location.href);v==="home"?u.searchParams.delete("v"):u.searchParams.set("v",v);history.replaceState(null,"",u)}
+// 一時的な画面（口コミ閲覧・レビュー入力）はURLに保存しない＝再読み込みで安全にホームに戻る
+const TRANSIENT_VIEWS=["booth_reviews","review"];
+function getViewFromURL(){const v=new URLSearchParams(location.search).get("v")||"home";return TRANSIENT_VIEWS.includes(v)?"home":v}
+function setURLView(v){const u=new URL(location.href);(v==="home"||TRANSIENT_VIEWS.includes(v))?u.searchParams.delete("v"):u.searchParams.set("v",v);history.replaceState(null,"",u)}
 
 async function apiFetch(path,opts={}){
   const ctrl=new AbortController();
