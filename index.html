@@ -71,7 +71,7 @@ const db={
   deleteReview:(id)=>apiFetch(`reviews?id=eq.${id}`,{method:"DELETE",headers:{"Content-Type":"application/json"}}),
   deleteAllReviews:()=>apiFetch("reviews?id=gt.0",{method:"DELETE",headers:{"Content-Type":"application/json"}}),
   // 累計利用者数: done状態のチケットを件数だけ取得（Prefer:countでヘッダから件数を読む）
-  getDoneTickets:()=>apiFetch("tickets?status=eq.done&select=booth,people"),
+  getDoneTickets:()=>apiFetch("tickets?status=eq.done&select=id,booth,people"),
   // 一時休止のトグルは updateBooth(id,{paused:true/false}) を使う
   getMaxNumber:async(booth)=>{const t=await apiFetch(`tickets?booth=eq.${booth}&select=number&order=number.desc&limit=1`);return t?.length?t[0].number:0},
 };
@@ -145,6 +145,14 @@ async function refresh(){
     // activeに無い & doneにも無い = 削除された → myTicketsから消す
     // activeに無いがdone扱いのものはレビュー用に残す（reviewedで管理）
     // ここではactiveTicketsしかDBから来ないため、myTicketのstatusを補完する。
+    // myTicketで「入場中(inside)」を確認したものは記録（退場後にレビュー対象とするため）
+    // 逆に、待機中のまま消えたチケットはスタッフのリセットで削除された可能性 → レビュー対象にしない
+    state.tickets.forEach(t=>{
+      const mt=state.myTickets.find(m=>m.id===t.id);
+      if(mt&&t.status==="inside"&&!mt.wasInside){
+        mt.wasInside=true;saveMyTickets(state.myTickets);
+      }
+    });
     state.offline=false;
     render(true);
     // 累計利用者数はスタッフ画面のときだけ取得（負荷軽減）
@@ -196,7 +204,7 @@ function progressBar(inside,capacity){
 
 function renderHome(){
   const{dbState,booths}=state;
-  const banner=dbState.calling_number?`<div class="calling-banner"><div style="font-size:11px;color:#c8a84b;letter-spacing:3px;margin-bottom:4px">📢 呼び出し中</div><div style="font-size:48px;font-weight:900;color:#c8a84b;line-height:1">${String(dbState.calling_number).padStart(3,"0")}</div><div style="font-size:13px;color:#9a8a5a;margin-top:4px">${booths.find(b=>b.id===dbState.calling_booth)?.name||""}</div></div>`:"";
+  const banner=dbState.calling_number?`<div class="calling-banner"><div style="font-size:11px;color:#c8a84b;letter-spacing:3px;margin-bottom:4px">📢 呼び出し中</div><div style="font-size:48px;font-weight:900;color:#c8a84b;line-height:1">${String(dbState.calling_number).padStart(3,"0")}</div><div style="font-size:13px;color:#9a8a5a;margin-top:4px">${escapeHtml(booths.find(b=>b.id===dbState.calling_booth)?.name||"")}</div></div>`:"";
   return`<div class="page center"><div style="font-size:13px;letter-spacing:5px;color:#9a8a5a;text-transform:uppercase;margin-bottom:8px">Casino</div><div style="font-size:36px;font-weight:900;letter-spacing:-1px;margin-bottom:4px">整理券</div><div class="muted" style="margin-bottom:32px">文化祭カジノ</div>${banner}<button class="btn-primary" onclick="goGuest()">整理券を取る</button><button class="btn-ghost" onclick="goStaff()">スタッフ用</button></div>`
 }
 
@@ -204,8 +212,10 @@ function renderGuest(){
   const{tickets,booths,dbState,myTickets,reviewed,busy}=state;
   // activeTicketsにあるもの＝待機/入場中
   const activeTickets=myTickets.filter(mt=>tickets.find(t=>t.id===mt.id));
-  // activeに無い＝done(終了)かキャンセル済み。レビュー用には「reviewedされてない自分のbrooth」を出す
-  const doneCandidates=myTickets.filter(mt=>!tickets.find(t=>t.id===mt.id));
+  // activeに無い＝done(終了)かキャンセル/リセット削除。
+  // 「入場中まで進んだ(wasInside)」記録があるものだけをレビュー対象にする
+  // → スタッフのリセットで消えた未入場チケットには、誤ってレビューボタンが出ない
+  const doneCandidates=myTickets.filter(mt=>!tickets.find(t=>t.id===mt.id)&&mt.wasInside);
 
   const cards=activeTickets.map(mt=>{
     const t=tickets.find(t=>t.id===mt.id),booth=booths.find(b=>b.id===mt.booth);
@@ -218,14 +228,14 @@ function renderGuest(){
     }
     const statusHtml=called?`<div style="color:#c8a84b;font-weight:700;font-size:14px">📢 受付へお越しください！</div>`:status==="inside"?`<div style="color:#4caf7d;font-size:13px">✅ 入場中</div>`:`<div style="color:#9a8a5a;font-size:13px;text-align:right">待機中<br><span style="font-size:18px;font-weight:800;color:#c8a84b">あと${aheadCount}人</span></div>`;
     const cancelBtn=status==="waiting"&&!called?`<button class="btn-danger" onclick="cancelTicket(${mt.id})" ${busy?"disabled":""}>キャンセル</button>`:"";
-    return`<div class="card" style="border:${called?"2px solid #c8a84b":"1px solid #2a4a2a"};${called?"background:#1a3a1a":""}"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:#4a6a4a;margin-bottom:2px">${booth?.name||mt.booth}</div><div style="font-size:${called?"72px":"56px"};font-weight:900;line-height:1;color:${called?"#c8a84b":"#f0e6c0"};letter-spacing:-2px">${String(mt.number).padStart(3,"0")}</div>${mt.people>1?`<div style="font-size:11px;color:#4a6a4a;margin-top:2px">${mt.people}人</div>`:""}</div>${statusHtml}</div>${cancelBtn}</div>`
+    return`<div class="card" style="border:${called?"2px solid #c8a84b":"1px solid #2a4a2a"};${called?"background:#1a3a1a":""}"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:#4a6a4a;margin-bottom:2px">${escapeHtml(booth?.name||mt.booth)}</div><div style="font-size:${called?"72px":"56px"};font-weight:900;line-height:1;color:${called?"#c8a84b":"#f0e6c0"};letter-spacing:-2px">${String(mt.number).padStart(3,"0")}</div>${mt.people>1?`<div style="font-size:11px;color:#4a6a4a;margin-top:2px">${mt.people}人</div>`:""}</div>${statusHtml}</div>${cancelBtn}</div>`
   }).join("");
 
   // 終了済みbrooth（重複booth除去）のうち未レビューのみレビューボタンを出す
   const doneBooths=[...new Set(doneCandidates.map(mt=>mt.booth))].filter(bid=>!reviewed.includes(bid));
   const reviewBtns=doneBooths.map(bid=>{
     const booth=booths.find(b=>b.id===bid);
-    return`<button class="btn-ghost" style="margin-top:6px" onclick="openReview('${bid}')">⭐ ${booth?.name||bid} のレビューを書く</button>`
+    return`<button class="btn-ghost" style="margin-top:6px" onclick="openReview('${bid}')">⭐ ${escapeHtml(booth?.name||bid)} のレビューを書く</button>`
   }).join("");
 
   const nothing=activeTickets.length===0&&reviewBtns==="";
@@ -234,9 +244,10 @@ function renderGuest(){
 
 function boothCard(b,onclick){
   const{tickets,myTickets,reviews}=state;
+  const cap=b.capacity||4;
   const waiting=tickets.filter(t=>t.booth===b.id&&t.status==="waiting").length;
   const inside=tickets.filter(t=>t.booth===b.id&&t.status==="inside").length;
-  const full=inside>=b.capacity;
+  const full=inside>=cap;
   const paused=b.paused===true;
   const hasTicket=myTickets.some(mt=>mt.booth===b.id&&tickets.find(t=>t.id===mt.id));
   const waitColor=paused?"#9a8a5a":full?"#e53e3e":hasTicket?"#4caf7d":"#c8a84b";
@@ -247,7 +258,7 @@ function boothCard(b,onclick){
   const avgRating=br.length?Math.round(br.reduce((s,r)=>s+r.rating,0)/br.length*10)/10:null;
   const commentCount=br.filter(r=>r.comment&&r.comment.trim()).length;
   const reviewLink=br.length?`<div onclick="openBoothReviews('${b.id}')" style="text-align:center;font-size:12px;color:#9a8a5a;padding:6px;margin-top:2px;cursor:pointer;text-decoration:underline">⭐${avgRating} の口コミを見る${commentCount?`（${commentCount}件）`:""}</div>`:"";
-  return`<div style="width:100%;max-width:320px"><button class="booth-btn" style="max-width:none;margin-top:8px;${paused?"opacity:.5":""}" onclick="${onclick}" ${state.busy||full||hasTicket||paused?"disabled":""}><div style="flex:1"><div class="booth-name">${escapeHtml(b.name)}</div><div style="font-size:12px;color:#4a6a4a;margin-top:2px">${inside}/${b.capacity}人入場中${avgRating?` ⭐${avgRating}`:""}</div>${waitTime?`<div style="font-size:11px;color:#9a8a5a;margin-top:2px">${waitTime}</div>`:""} ${progressBar(inside,b.capacity)}</div><div class="booth-wait" style="color:${waitColor}">${waitText}</div></button>${reviewLink}</div>`
+  return`<div style="width:100%;max-width:320px"><button class="booth-btn" style="max-width:none;margin-top:8px;${paused?"opacity:.5":""}" onclick="${onclick}" ${state.busy||full||hasTicket||paused?"disabled":""}><div style="flex:1"><div class="booth-name">${escapeHtml(b.name)}</div><div style="font-size:12px;color:#4a6a4a;margin-top:2px">${inside}/${cap}人入場中${avgRating?` ⭐${avgRating}`:""}</div>${waitTime?`<div style="font-size:11px;color:#9a8a5a;margin-top:2px">${waitTime}</div>`:""} ${progressBar(inside,cap)}</div><div class="booth-wait" style="color:${waitColor}">${waitText}</div></button>${reviewLink}</div>`
 }
 
 function renderBoothSelectPage(){
@@ -255,7 +266,7 @@ function renderBoothSelectPage(){
   const nonCard=booths.filter(b=>!CARD_BOOTHS.includes(b.id));
   const cardWaiting=CARD_BOOTHS.reduce((s,id)=>s+tickets.filter(t=>t.booth===id&&t.status==="waiting").length,0);
   const cardInside=CARD_BOOTHS.reduce((s,id)=>s+tickets.filter(t=>t.booth===id&&t.status==="inside").length,0);
-  const cardCap=booths.filter(b=>CARD_BOOTHS.includes(b.id)).reduce((s,b)=>s+b.capacity,0)||12;
+  const cardCap=booths.filter(b=>CARD_BOOTHS.includes(b.id)).reduce((s,b)=>s+(b.capacity||4),0)||12;
   const cardFull=cardInside>=cardCap;
   const cardBtn=`<button class="booth-btn card-zone" onclick="setState({view:'guest_card'})" ${state.busy?"disabled":""}><div style="flex:1"><div class="booth-name">♠ カードゾーン</div><div style="font-size:12px;color:#4a6a4a;margin-top:2px">ババ抜き・神経衰弱・ハイアンドロー</div>${progressBar(cardInside,cardCap)}</div><div class="booth-wait" style="color:${cardFull?"#e53e3e":"#c8a84b"}">${cardFull?"満員":`待ち ${cardWaiting}人`}</div></button>`;
   return`<div class="page center"><button class="btn-back" onclick="setState({view:'guest'})">← 戻る</button><div style="margin-top:24px;font-size:15px;font-weight:700;margin-bottom:8px">ブースを選んでください</div><div style="font-size:12px;color:#4a6a4a;margin-bottom:20px">整理券を取るブースをタップ</div>${cardBtn}${nonCard.map(b=>boothCard(b,`openPeopleModal('${b.id}')`)).join("")}</div>`
@@ -268,7 +279,7 @@ function renderCardSelect(){
 function openPeopleModal(booth){
   pendingBooth=booth;selectedPeople=1;
   const name=state.booths.find(b=>b.id===booth)?.name||booth;
-  document.getElementById("modal-root").innerHTML=`<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()"><div style="font-size:15px;font-weight:700;margin-bottom:4px">${name}</div><div class="muted" style="margin-bottom:16px">何人で参加しますか？</div><div class="people-select">${[1,2,3,4].map(n=>`<button class="people-btn${n===1?" selected":""}" id="pb${n}" onclick="selectPeople(${n})">${n}</button>`).join("")}</div><button class="btn-primary" style="margin-top:20px" id="modal-issue" onclick="confirmIssue()">整理券を取る</button><button class="btn-ghost" style="margin-top:4px" onclick="closeModal()">キャンセル</button></div></div>`
+  document.getElementById("modal-root").innerHTML=`<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()"><div style="font-size:15px;font-weight:700;margin-bottom:4px">${escapeHtml(name)}</div><div class="muted" style="margin-bottom:16px">何人で参加しますか？</div><div class="people-select">${[1,2,3,4].map(n=>`<button class="people-btn${n===1?" selected":""}" id="pb${n}" onclick="selectPeople(${n})">${n}</button>`).join("")}</div><button class="btn-primary" style="margin-top:20px" id="modal-issue" onclick="confirmIssue()">整理券を取る</button><button class="btn-ghost" style="margin-top:4px" onclick="closeModal()">キャンセル</button></div></div>`
 }
 function selectPeople(n){selectedPeople=n;[1,2,3,4].forEach(i=>{const b=document.getElementById("pb"+i);if(b)b.className="people-btn"+(i===n?" selected":"")})}
 function closeModal(){document.getElementById("modal-root").innerHTML=""}
@@ -334,7 +345,7 @@ function renderAuth(){pwInput="";return`<div class="page center"><button class="
 function renderStaff(){
   const{tickets,booths,dbState,busy,reviews}=state;
   const cb=booths.find(b=>b.id===dbState.calling_booth);
-  const callingBlock=dbState.calling_number?`<div class="card card-gold"><div style="font-size:11px;color:#4a6a4a;letter-spacing:3px">呼び出し中</div><div style="text-align:center;margin-top:8px"><div style="font-size:13px;color:#9a8a5a;margin-bottom:4px">${cb?.name||""}</div><div style="font-size:52px;font-weight:900;color:#c8a84b">${String(dbState.calling_number).padStart(3,"0")} 番</div><button class="btn-primary" style="background:linear-gradient(135deg,#4caf7d,#6dcf9d);margin-top:8px" onclick="confirmEntry()" ${busy?"disabled":""}>入場確認</button><div style="display:flex;gap:8px;margin-top:8px"><button class="btn-ghost" style="flex:1;margin-top:0;font-size:12px" onclick="skipCall()" ${busy?"disabled":""}>来ないので飛ばす</button><button class="btn-ghost" style="flex:1;margin-top:0;font-size:12px;color:#9a8a5a;border-color:#2a4a2a" onclick="cancelCall()" ${busy?"disabled":""}>呼び出し取消</button></div></div></div>`:"";
+  const callingBlock=dbState.calling_number?`<div class="card card-gold"><div style="font-size:11px;color:#4a6a4a;letter-spacing:3px">呼び出し中</div><div style="text-align:center;margin-top:8px"><div style="font-size:13px;color:#9a8a5a;margin-bottom:4px">${escapeHtml(cb?.name||"")}</div><div style="font-size:52px;font-weight:900;color:#c8a84b">${String(dbState.calling_number).padStart(3,"0")} 番</div><button class="btn-primary" style="background:linear-gradient(135deg,#4caf7d,#6dcf9d);margin-top:8px" onclick="confirmEntry()" ${busy?"disabled":""}>入場確認</button><div style="display:flex;gap:8px;margin-top:8px"><button class="btn-ghost" style="flex:1;margin-top:0;font-size:12px" onclick="skipCall()" ${busy?"disabled":""}>来ないので飛ばす</button><button class="btn-ghost" style="flex:1;margin-top:0;font-size:12px;color:#9a8a5a;border-color:#2a4a2a" onclick="cancelCall()" ${busy?"disabled":""}>呼び出し取消</button></div></div></div>`:"";
 
   const boothBlocks=booths.map(b=>{
     const waiting=tickets.filter(t=>t.booth===b.id&&t.status==="waiting");
@@ -343,17 +354,18 @@ function renderStaff(){
     const br=reviews.filter(r=>r.booth_id===b.id);
     const avgRating=br.length?Math.round(br.reduce((s,r)=>s+r.rating,0)/br.length*10)/10:null;
     const curAvg=b.avg_minutes||10;
+    const cap=b.capacity||4;
     const doneCount=state.doneCounts[b.id]||0;
     const paused=b.paused===true;
     return`<div class="card" style="${paused?"border-color:#7a5a2a":""}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <div style="font-size:14px;font-weight:700">${b.name}${paused?` <span style="font-size:11px;color:#f5c842">⏸ 休止中</span>`:""}</div>
+        <div style="font-size:14px;font-weight:700">${escapeHtml(b.name)}${paused?` <span style="font-size:11px;color:#f5c842">⏸ 休止中</span>`:""}</div>
         <div style="font-size:12px;color:#9a8a5a">${avgRating?`⭐${avgRating}(${br.length}件) `:""}<span style="color:#4caf7d">累計${doneCount}人</span></div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">
         <span style="font-size:11px;color:#4a6a4a">上限</span>
         <button class="btn-circle" onclick="changeCap('${b.id}',-1)" ${busy?"disabled":""}>－</button>
-        <span style="font-size:14px;font-weight:700;color:#c8a84b;min-width:20px;text-align:center">${b.capacity}</span>
+        <span style="font-size:14px;font-weight:700;color:#c8a84b;min-width:20px;text-align:center">${cap}</span>
         <button class="btn-circle" onclick="changeCap('${b.id}',1)" ${busy?"disabled":""}>＋</button>
         <span style="font-size:11px;color:#4a6a4a;margin-left:6px">平均時間</span>
         ${[5,10,15,20,30].map(m=>`<button onclick="setAvgMin('${b.id}',${m})" style="padding:6px 10px;border-radius:8px;background:${curAvg===m?"#c8a84b":"#0e1f14"};color:${curAvg===m?"#0e1f14":"#9a8a5a"};border:1px solid ${curAvg===m?"#c8a84b":"#2a4a2a"};cursor:pointer;font-size:12px;font-weight:${curAvg===m?"700":"400"}">${m}分</button>`).join("")}
@@ -392,6 +404,11 @@ function checkAuth(){if(pwInput===STAFF_PASSWORD){setState({staffAuthed:true});r
 // 改善1: 番号採番の衝突対策。POSTが衝突したら最大番号を取り直して最大3回リトライ
 async function issueTicket(booth,people=1){
   if(state.busy)return; // 改善2: 多重実行ガード
+  // オフライン時は10秒待たせず即座に知らせる
+  if(state.offline){
+    showToast("⚠️ 通信が不安定です。電波の良い場所で再度お試しください","#e53e3e");
+    return;
+  }
   // 同時に持てる整理券の上限チェック（待機中・入場中の自分のチケット数）
   const activeCount=state.myTickets.filter(mt=>state.tickets.find(t=>t.id===mt.id)).length;
   if(activeCount>=MAX_TICKETS){
@@ -532,7 +549,7 @@ async function deleteOneReview(id){
 async function changeCap(boothId,delta){
   if(state.busy)return; // 改善2
   const b=state.booths.find(b=>b.id===boothId);if(!b)return;
-  const next=Math.max(1,b.capacity+delta);
+  const next=Math.max(1,(b.capacity||4)+delta);
   state.busy=true;
   // 即時にローカル反映
   state.booths=state.booths.map(x=>x.id===boothId?{...x,capacity:next}:x);
