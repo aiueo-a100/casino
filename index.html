@@ -239,7 +239,7 @@ function renderGuest(){
   }).join("");
 
   const nothing=activeTickets.length===0&&reviewBtns==="";
-  return`<div class="page"><button class="btn-back" onclick="goHome()">← ホームへ</button><div style="margin-top:24px;font-size:13px;color:#9a8a5a;letter-spacing:2px;margin-bottom:12px">あなたの整理券</div>${nothing?`<div class="muted" style="margin:24px 0">まだ整理券がありません</div>`:""}${cards}${reviewBtns}<button class="btn-primary" style="margin-top:16px" onclick="setState({view:'guest_select'})">別のブースの整理券を取る</button><div class="note">自動更新中（5秒ごと）</div></div>`
+  return`<div class="page"><button class="btn-back" onclick="goHome()">← ホームへ</button><div style="margin-top:24px;font-size:13px;color:#9a8a5a;letter-spacing:2px;margin-bottom:12px">あなたの整理券</div>${nothing?`<div class="muted" style="margin:24px 0">まだ整理券がありません</div>`:""}${cards}${reviewBtns}<button class="btn-primary" style="margin-top:16px" onclick="setState({view:'guest_select'})">別のブースの整理券を取る</button><div class="note">自動更新中（10秒ごと）</div></div>`
 }
 
 function boothCard(b,onclick){
@@ -312,7 +312,7 @@ function renderBoothReviewsPage(){
     </div>
     ${br.length?`<div style="max-width:320px;margin:20px auto 0">${distHtml}</div>`:""}
     <div style="max-width:320px;margin:24px auto 0"><div style="font-size:13px;color:#9a8a5a;letter-spacing:1px;margin-bottom:4px">コメント${comments.length?`（${comments.length}件）`:""}</div>${commentsHtml}</div>
-    <div class="note">自動更新中（5秒ごと）</div>
+    <div class="note">自動更新中（10秒ごと）</div>
   </div>`
 }
 function renderReviewPage(){
@@ -385,7 +385,7 @@ function renderStaff(){
       <div style="width:60px"></div>
     </div>
     ${callingBlock}${boothBlocks}
-    <div class="note">自動更新中（5秒ごと）</div>
+    <div class="note">自動更新中（10秒ごと）</div>
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid #1a3a2a;display:flex;gap:8px;flex-wrap:wrap">
       <button onclick="resetTicketsOnly()" style="flex:1;min-width:120px;padding:10px;background:#162518;border:1px solid #2a4a2a;border-radius:10px;color:#9a8a5a;font-size:11px;cursor:pointer">待機チケットをリセット</button>
       <button onclick="deleteReviews()" style="flex:1;min-width:120px;padding:10px;background:#162518;border:1px solid #2a4a2a;border-radius:10px;color:#9a8a5a;font-size:11px;cursor:pointer">レビューを削除</button>
@@ -622,5 +622,5 @@ async function emergencyReset(){
 }
 
 initialLoad();
-setInterval(()=>{if(!state.busy)refresh()},5000); // 改善2: 処理中は自動更新しない
+setInterval(()=>{if(!state.busy)refresh()},10000); // 改善2: 処理中は自動更新しない
 </script></body></html>
