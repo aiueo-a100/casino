@@ -72,8 +72,11 @@ const db={
   deleteAllReviews:()=>apiFetch("reviews?id=gt.0",{method:"DELETE",headers:{"Content-Type":"application/json"}}),
   // 累計利用者数: done状態のチケットを件数だけ取得（Prefer:countでヘッダから件数を読む）
   getDoneTickets:()=>apiFetch("tickets?status=eq.done&select=id,booth,people"),
+  // 指定したIDの整理券のうち、done状態のものを返す（レビュー対象判定用）
+  getDoneByIds:(ids)=>apiFetch(`tickets?id=in.(${ids})&status=eq.done&select=id`),
   // 一時休止のトグルは updateBooth(id,{paused:true/false}) を使う
-  getMaxNumber:async(booth)=>{const t=await apiFetch(`tickets?booth=eq.${booth}&select=number&order=number.desc&limit=1`);return t?.length?t[0].number:0},
+  // 通し番号: 全ブース共通の最大番号を取得（ブースをまたいで番号が重複しないように）
+  getMaxNumber:async()=>{const t=await apiFetch(`tickets?select=number&order=number.desc&limit=1`);return t?.length?t[0].number:0},
 };
 
 let state={view:getViewFromURL(),staffAuthed:false,tickets:[],booths:[],reviews:[],doneCounts:{},dbState:{calling_number:null,calling_booth:null},myTickets:loadMyTickets(),reviewed:loadReviewed(),busy:false,loaded:false,offline:false};
@@ -140,19 +143,29 @@ async function refresh(){
       if(!stillMine)dismissCallOverlay();
       prevCalling=dbState.calling_number;state.dbState=dbState;
     }
-    // myTicketsのうち、待機/入場中チケットに無いものはdoneかキャンセル済み。
-    // ただしdoneはレビュー用に残したいので「キャンセル(=DBから完全削除)」だけを除外する。
-    // activeに無い & doneにも無い = 削除された → myTicketsから消す
-    // activeに無いがdone扱いのものはレビュー用に残す（reviewedで管理）
-    // ここではactiveTicketsしかDBから来ないため、myTicketのstatusを補完する。
-    // myTicketで「入場中(inside)」を確認したものは記録（退場後にレビュー対象とするため）
-    // 逆に、待機中のまま消えたチケットはスタッフのリセットで削除された可能性 → レビュー対象にしない
+    // 自分の整理券が「入場中(inside)」になったら記録（その瞬間を捉えられたとき）
     state.tickets.forEach(t=>{
       const mt=state.myTickets.find(m=>m.id===t.id);
       if(mt&&t.status==="inside"&&!mt.wasInside){
         mt.wasInside=true;saveMyTickets(state.myTickets);
       }
     });
+    // activeから消えた自分の整理券について、DBでdone(=遊び終わった)か確認する。
+    // 10秒更新だと「入場中」の瞬間を捉え損ねることがあるため、消えたら必ずdoneを確認してレビュー対象を確定する。
+    const goneUnknown=state.myTickets.filter(mt=>!mt.wasInside&&!mt.checkedDone&&!state.tickets.find(t=>t.id===mt.id));
+    if(goneUnknown.length){
+      const ids=goneUnknown.map(mt=>mt.id).join(",");
+      db.getDoneByIds(ids).then(doneRows=>{
+        const doneIds=new Set((doneRows||[]).map(r=>r.id));
+        let changed=false;
+        goneUnknown.forEach(mt=>{
+          mt.checkedDone=true; // 二重チェック防止
+          if(doneIds.has(mt.id)){mt.wasInside=true} // 遊び終わった → レビュー対象
+          changed=true;
+        });
+        if(changed){saveMyTickets(state.myTickets);render()}
+      }).catch(()=>{});
+    }
     state.offline=false;
     render(true);
     // 累計利用者数はスタッフ画面のときだけ取得（負荷軽減）
@@ -401,7 +414,8 @@ function pwTap(n){if(pwInput.length>=4)return;pwInput+=n;const d=document.getEle
 function pwClear(){pwInput=pwInput.slice(0,-1);const d=document.getElementById("pw-display");if(d)d.textContent="●".repeat(pwInput.length)+"－".repeat(4-pwInput.length)}
 function checkAuth(){if(pwInput===STAFF_PASSWORD){setState({staffAuthed:true});refresh()}else{const el=document.getElementById("pw-error"),d=document.getElementById("pw-display");if(el)el.style.display="block";if(d)d.classList.add("error-border");pwInput="";setTimeout(()=>{if(d){d.classList.remove("error-border");d.textContent="----"}if(el)el.style.display="none"},1000)}}
 
-// 改善1: 番号採番の衝突対策。POSTが衝突したら最大番号を取り直して最大3回リトライ
+// 改善1: 番号採番の衝突対策。POSTが衝突したら最大番号を取り直してリトライ
+// 通し番号化: 番号は全ブース共通で1ずつ増える（UNIQUE制約はnumber単独）
 async function issueTicket(booth,people=1){
   if(state.busy)return; // 改善2: 多重実行ガード
   // オフライン時は10秒待たせず即座に知らせる
@@ -419,7 +433,7 @@ async function issueTicket(booth,people=1){
   let lastErr=null;
   for(let attempt=0;attempt<5;attempt++){
     try{
-      const maxNum=await db.getMaxNumber(booth);
+      const maxNum=await db.getMaxNumber();
       const nextNum=maxNum+1;
       const res=await db.insertTicket(nextNum,booth,people);
       if(res&&res[0]){
