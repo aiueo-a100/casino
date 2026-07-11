@@ -135,11 +135,12 @@ async function refresh(){
     state.booths=booths||[];
     if(dbState){
       if(dbState.calling_number&&dbState.calling_number!==prevCalling){
-        const hit=state.myTickets.find(mt=>mt.number===dbState.calling_number&&mt.booth===dbState.calling_booth);
+        // 誤爆防止: 番号+ブースが一致しても、そのIDの整理券がDBに現存しなければ無視（リセット後に残った古いlocalStorage記録への対策）
+        const hit=state.myTickets.find(mt=>mt.number===dbState.calling_number&&mt.booth===dbState.calling_booth&&state.tickets.find(t=>t.id===mt.id));
         if(hit){vibrate();showCallOverlay(dbState.calling_number,dbState.calling_booth)}
       }
       // 呼び出しが終わった/自分宛てでなくなったらオーバーレイを消す
-      const stillMine=dbState.calling_number&&state.myTickets.find(mt=>mt.number===dbState.calling_number&&mt.booth===dbState.calling_booth);
+      const stillMine=dbState.calling_number&&state.myTickets.find(mt=>mt.number===dbState.calling_number&&mt.booth===dbState.calling_booth&&state.tickets.find(t=>t.id===mt.id));
       if(!stillMine)dismissCallOverlay();
       prevCalling=dbState.calling_number;state.dbState=dbState;
     }
