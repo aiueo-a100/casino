@@ -196,6 +196,53 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
 .dx b{display:block;font-size:13.5px;font-weight:900;margin-bottom:2px}
 .dx span{font-size:12.5px;color:#B9CDC0;line-height:1.8}
 
+
+/* 追加画面 */
+.mo{position:relative;height:100%;background:var(--felt)}
+.mo .dim{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+.mo .sheet{position:absolute;left:12px;right:12px;bottom:14px;background:var(--paper);color:var(--ink);border-radius:14px;padding:16px 15px;text-align:center}
+.mo .sheet .bn{font-size:15px;font-weight:900}
+.mo .sheet .q{font-size:11.5px;color:var(--inks);margin-bottom:13px}
+.psel{display:flex;gap:7px}
+.psel button{flex:1;background:var(--paper2);border:2px solid transparent;border-radius:11px;padding:13px 0;font-family:var(--num);font-size:21px;color:var(--ink)}
+.psel button.on{background:var(--felt5);border-color:var(--ink);color:#fff}
+.mo .go{width:100%;background:var(--brass);color:#1A1206;border:none;border-radius:11px;padding:14px 0;font-weight:900;font-size:15px;margin-top:13px;font-family:var(--jp)}
+.mo .cx{width:100%;background:none;border:none;color:var(--inks);font-size:12px;font-weight:700;padding:9px 0;font-family:var(--jp)}
+
+.rv{background:var(--felt);height:100%;padding:15px 13px;display:flex;flex-direction:column;text-align:center}
+.rv .bo{font-size:17px;font-weight:900;margin-top:8px}
+.rv .q{font-size:12px;color:#9DD3B4;margin-bottom:14px}
+.rv .stars{font-size:31px;letter-spacing:.1em}
+.rv .stars .off{opacity:.28}
+.rv .lb{font-size:14px;font-weight:900;color:var(--amber);margin:7px 0 13px}
+.rv .ta{background:var(--paper);color:var(--ink);border-radius:11px;padding:11px;font-size:12.5px;text-align:left;min-height:62px}
+.rv .ta .ph2{color:#9AA69D}
+.rv .cnt{font-size:9.5px;color:#7FA48F;text-align:right;margin-top:4px}
+.rv .send{background:var(--brass);color:#1A1206;border-radius:11px;padding:13px 0;font-weight:900;font-size:14.5px;margin-top:11px}
+.rv .past{margin-top:16px;text-align:left}
+.rv .past .h{font-size:10px;letter-spacing:.14em;color:var(--brass);font-weight:900;margin-bottom:6px}
+.rv .ci{background:rgba(246,241,225,.08);border-radius:9px;padding:9px 11px;margin-bottom:6px}
+.rv .ci .s{font-size:10px}
+.rv .ci .t{font-size:11.5px;color:var(--txt);line-height:1.6;margin-top:2px}
+
+.rl{background:var(--felt);height:100%;padding:15px 13px;display:flex;flex-direction:column}
+.rl .bk{font-size:10.5px;color:#9DD3B4}
+.rl .hd2{background:var(--paper);color:var(--ink);border-radius:12px;padding:13px;text-align:center;margin-top:11px}
+.rl .hd2 .bo{font-size:14px;font-weight:900}
+.rl .hd2 .av{font-family:var(--num);font-size:38px;line-height:1.05;color:var(--ink)}
+.rl .hd2 .st{font-size:13px;color:var(--brass);letter-spacing:.06em}
+.rl .hd2 .ct{font-size:10.5px;color:var(--inks);margin-top:2px}
+.rl .bars{margin-top:9px}
+.rl .br{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.rl .br .k{font-size:9.5px;color:var(--inks);width:26px;text-align:right;flex-shrink:0}
+.rl .br .g{flex:1;height:6px;background:var(--paper2);border-radius:4px;overflow:hidden}
+.rl .br .g i{display:block;height:100%;background:var(--brass)}
+.rl .br .c{font-size:9.5px;color:var(--inks);width:14px;flex-shrink:0}
+.rl .list{margin-top:12px;overflow:hidden}
+.rl .ci{background:rgba(246,241,225,.08);border-radius:10px;padding:10px 12px;margin-bottom:7px}
+.rl .ci .s{font-size:10.5px}
+.rl .ci .t{font-size:12px;color:var(--txt);line-height:1.65;margin-top:3px}
+
 /* まとめ */
 .diff{display:flex;flex-direction:column;gap:10px;margin-top:16px}
 @media(min-width:620px){.diff{flex-direction:row}.diff>div{flex:1}}
@@ -261,7 +308,7 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
   </div>
 
   <h2><i>2</i>ブースをえらぶ</h2>
-  <p class="lead">混み具合バーは消した(当日の設定だとずっと空表示になって嘘になるから)。かわりに「何組待ちか」をでかい数字で。</p>
+  <p class="lead">混み具合バーは消した(当日の設定だとずっと空表示になって嘘になるから)。かわりに「何組待ちか」をでかい数字で。★の部分を押すと口コミが読める。</p>
   <div class="cmp">
     <div class="col"><div class="tag t-old">い ま</div>
       <div class="ph"><div class="vp"><div class="o">
@@ -373,7 +420,120 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
     </div>
   </div>
 
-  <h2><i>6</i>統括だけが見る画面</h2>
+
+  <h2><i>6</i>人数をえらぶ</h2>
+  <p class="lead">ブースを押したときに下から出る。ボタンを大きくして、片手で押しやすい位置(画面の下側)に置いた。</p>
+  <div class="cmp">
+    <div class="col"><div class="tag t-old">い ま</div>
+      <div class="ph"><div class="vp"><div class="o" style="position:relative">
+        <div class="bk">← 戻る</div>
+        <div style="font-size:12.5px;font-weight:700;margin:14px 0 10px">ブースを選んでください</div>
+        <div class="bb"><span class="wt">待ち 6人</span><div class="nm">♠ カードゾーン</div><div class="sm">ババ抜き・神経衰弱・ハイアンドロー</div><div class="pg"><i></i></div></div>
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px">
+          <div style="background:#162518;border:1px solid #2a4a2a;border-radius:14px;padding:16px;width:100%;text-align:center">
+            <div style="font-size:15px;font-weight:700">ババ抜き</div>
+            <div style="font-size:11px;color:#4a6a4a;margin-bottom:14px">何人で参加しますか？</div>
+            <div style="display:flex;gap:6px">
+              <div style="flex:1;background:#c8a84b;color:#0e1f14;border-radius:9px;padding:11px 0;font-weight:700">1</div>
+              <div style="flex:1;background:#0e1f14;border:1px solid #2a4a2a;color:#f0e6c0;border-radius:9px;padding:11px 0">2</div>
+              <div style="flex:1;background:#0e1f14;border:1px solid #2a4a2a;color:#f0e6c0;border-radius:9px;padding:11px 0">3</div>
+              <div style="flex:1;background:#0e1f14;border:1px solid #2a4a2a;color:#f0e6c0;border-radius:9px;padding:11px 0">4</div>
+            </div>
+            <div style="background:linear-gradient(135deg,#c8a84b,#e8c96b);color:#0e1f14;border-radius:10px;padding:11px 0;font-size:12px;font-weight:700;margin-top:16px">整理券を取る</div>
+            <div style="font-size:11px;color:#9a8a5a;padding:8px 0">キャンセル</div>
+          </div>
+        </div>
+      </div></div></div>
+    </div>
+    <div class="col"><div class="tag t-new">新しい案</div>
+      <div class="ph"><div class="vp"><div class="mo">
+        <div class="n" style="height:100%">
+          <div class="bar"><b>♣ CASINO</b><span>1-E</span></div>
+          <div class="ttl">どれで遊ぶ？</div>
+          <div class="sb">タップすると人数を選べます</div>
+          <div class="brow"><div class="m"><b>ババ抜き</b><span>約6分待ち ・ ★4.6</span></div><div class="w2"><i>2</i><em>組まち</em></div></div>
+          <div class="brow"><div class="m"><b>神経衰弱</b><span>約12分待ち ・ ★4.2</span></div><div class="w2"><i>4</i><em>組まち</em></div></div>
+        </div>
+        <div class="dim"></div>
+        <div class="sheet">
+          <div class="bn">ババ抜き</div>
+          <div class="q">何人で参加しますか？</div>
+          <div class="psel"><button>1</button><button class="on">2</button><button>3</button><button>4</button></div>
+          <button class="go">整理券を取る</button>
+          <button class="cx">やめる</button>
+        </div>
+      </div></div></div>
+    </div>
+  </div>
+
+  <h2><i>7</i>レビューを書く</h2>
+  <p class="lead">遊び終わると出る画面。星をタップして、ひとこと書けば送信。書いた感想は他のお客さんにも見える。</p>
+  <div class="cmp">
+    <div class="col"><div class="tag t-old">い ま</div>
+      <div class="ph"><div class="vp"><div class="o" style="text-align:center">
+        <div class="bk" style="text-align:left">← 戻る</div>
+        <div style="font-size:18px;font-weight:700;margin-top:26px">ババ抜き</div>
+        <div style="font-size:12px;color:#4a6a4a;margin-bottom:8px">どうでしたか？</div>
+        <div style="font-size:26px;letter-spacing:2px">⭐⭐⭐⭐<span style="opacity:.3">⭐</span></div>
+        <div style="font-size:13px;color:#9a8a5a;margin:6px 0 10px">😊 良い</div>
+        <div style="background:#162518;border:1px solid #2a4a2a;border-radius:10px;padding:10px;color:#4a6a4a;font-size:11.5px;text-align:left;min-height:52px">感想を書く（任意・匿名）</div>
+        <div style="font-size:9px;color:#2a4a2a;text-align:left;margin-top:3px">※100文字まで・他のお客さんにも表示されます</div>
+        <div style="background:linear-gradient(135deg,#c8a84b,#e8c96b);color:#0e1f14;border-radius:11px;padding:12px 0;font-size:12px;font-weight:700;margin-top:11px">送信する</div>
+        <div style="font-size:11px;color:#9a8a5a;letter-spacing:1px;text-align:left;margin-top:20px">みんなの感想</div>
+        <div style="background:#162518;border:1px solid #2a4a2a;border-radius:9px;padding:8px 10px;text-align:left;margin-top:5px">
+          <div style="font-size:9px">⭐⭐⭐⭐⭐</div>
+          <div style="font-size:11px;color:#f0e6c0;margin-top:2px">最後の1枚まで盛り上がった</div>
+        </div>
+      </div></div></div>
+    </div>
+    <div class="col"><div class="tag t-new">新しい案</div>
+      <div class="ph"><div class="vp"><div class="rv">
+        <div style="font-size:10.5px;color:#9DD3B4;text-align:left">← もどる</div>
+        <div class="bo">ババ抜き</div>
+        <div class="q">どうでしたか？</div>
+        <div class="stars">⭐⭐⭐⭐<span class="off">⭐</span></div>
+        <div class="lb">😊 良い</div>
+        <div class="ta"><span class="ph2">感想を書く（任意・匿名）</span></div>
+        <div class="cnt">0 / 100文字</div>
+        <div class="send">送信する</div>
+        <div class="past">
+          <div class="h">みんなの感想</div>
+          <div class="ci"><div class="s">⭐⭐⭐⭐⭐</div><div class="t">最後の1枚まで盛り上がった</div></div>
+          <div class="ci"><div class="s">⭐⭐⭐⭐</div><div class="t">ディーラーの人がおもしろい</div></div>
+        </div>
+      </div></div></div>
+    </div>
+  </div>
+
+  <h2><i>8</i>口コミを見る</h2>
+  <p class="lead">ブース選択の★を押すと開く。前のページの一覧では★を押せる場所にしてあるので、書いた感想がちゃんと読まれる。</p>
+  <div class="cmp">
+    <div class="col"><div class="tag t-new">新しい案</div>
+      <div class="ph"><div class="vp"><div class="rl">
+        <div class="bk">← もどる</div>
+        <div class="hd2">
+          <div class="bo">ババ抜き</div>
+          <div class="av">4.6</div>
+          <div class="st">★★★★★</div>
+          <div class="ct">5件の口コミ</div>
+        </div>
+        <div class="bars">
+          <div class="br"><span class="k">★5</span><span class="g"><i style="width:80%"></i></span><span class="c">4</span></div>
+          <div class="br"><span class="k">★4</span><span class="g"><i style="width:20%"></i></span><span class="c">1</span></div>
+          <div class="br"><span class="k">★3</span><span class="g"><i style="width:0"></i></span><span class="c">0</span></div>
+          <div class="br"><span class="k">★2</span><span class="g"><i style="width:0"></i></span><span class="c">0</span></div>
+          <div class="br"><span class="k">★1</span><span class="g"><i style="width:0"></i></span><span class="c">0</span></div>
+        </div>
+        <div class="list">
+          <div class="ci"><div class="s">⭐⭐⭐⭐⭐</div><div class="t">最後の1枚まで盛り上がった</div></div>
+          <div class="ci"><div class="s">⭐⭐⭐⭐</div><div class="t">ディーラーの人がおもしろい</div></div>
+          <div class="ci"><div class="s">⭐⭐⭐⭐⭐</div><div class="t">友達と4人でできて楽しかった</div></div>
+        </div>
+      </div></div></div>
+    </div>
+  </div>
+
+  <h2><i>9</i>統括だけが見る画面</h2>
   <p class="lead">これは俺が当日ずっと開いてるやつ。みんなの画面には出ないから、当日の作業は増えません。</p>
   <div class="dash">
     <div class="dgrid">
@@ -419,7 +579,7 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
   <div class="dx"><b>景品が尽きる時間が分かる</b><span>会計として一番怖いのが昼で景品がなくなること。当たった数から「何時になくなるか」を出す。</span></div>
   <div class="dx"><b>全員にお知らせを出せる</b><span>「まもなく受付終了」を客の画面に一斉表示。廊下で叫ぶより確実で、ボードに書くより速い。</span></div>
 
-  <h2><i>7</i>変わること・変わらないこと</h2>
+  <h2><i>10</i>変わること・変わらないこと</h2>
   <div class="diff">
     <div class="dc k"><h4>変わらない</h4>
       <p>整理券を取る流れ</p><p>URL・パスワード</p><p>レビューと口コミ</p><p>当日の運用ルール</p><p>裏側の仕組み(データ)</p>
