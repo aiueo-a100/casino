@@ -621,7 +621,7 @@ let S={
   lastCalled:null, justIssued:false,
   role:LS.get("role2",null),      // null | "reception" | booth id | "exchange" | "admin"
   sub:null,   // 統括の下位画面: settings / announce / record / paper
-  authed:false, adminOK:false, giveN:0, prizeLog:[], now:Date.now()
+  authed:LS.get("authed2",false), adminOK:LS.get("adminok2",false), giveN:0, prizeLog:[], now:Date.now()
 };
 function set(p){Object.assign(S,p); if(p.mine)LS.set("mine2",S.mine); if(p.reviewed)LS.set("reviewed2",S.reviewed); render();}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -944,12 +944,7 @@ function renderStaff(){
   if(S.role==="reception") return renderReception();
   if(S.role==="exchange")  return renderExchange();
   if(S.role==="admin"){
-    if(!S.adminOK) return `<div class="staff">
-      <div class="shd"><span>統括</span><button class="sw" onclick="setRole(null)">担当を変更</button></div>
-      <div class="sjob">統括のパスワード</div>
-      <div class="ssub">この画面は統括だけが使います</div>
-      <input class="pw" id="apwin" type="tel" inputmode="numeric" maxlength="4" placeholder="----">
-      <button class="gold" style="margin-top:12px" onclick="tryAdmin()">入る</button></div>`;
+    if(!S.adminOK){ setRole(null); return renderRolePick(); }
     return renderAdmin();
   }
   return renderTable(S.role);
@@ -1117,19 +1112,15 @@ function renderExchange(){
 /* ---------- スタッフ操作 ---------- */
 function tryAuth(){
   const v=(document.getElementById("pwin")||{}).value||"";
-  if(v===PW_ADMIN){ set({authed:true,adminOK:true}); }
-  else if(v===PW_STAFF){ set({authed:true,adminOK:false}); }
+  if(v===PW_ADMIN){ LS.set("authed2",true); LS.set("adminok2",true); set({authed:true,adminOK:true}); }
+  else if(v===PW_STAFF){ LS.set("authed2",true); set({authed:true,adminOK:false}); }
   else { toast("パスワードが違います"); }
 }
 function setRole(r){ LS.set("role2",r); set({role:r,giveN:0,sub:null}); }
-function tryAdmin(){
-  const v=(document.getElementById("apwin")||{}).value||"";
-  if(v===PW_ADMIN){ set({adminOK:true}); } else { toast("パスワードが違います"); }
-}
 function pickAdmin(){
   if(S.adminOK){ setRole("admin"); return }
   const v=prompt("統括のパスワードを入れてください");
-  if(v===PW_ADMIN){ S.adminOK=true; setRole("admin"); }
+  if(v===PW_ADMIN){ S.adminOK=true; LS.set("adminok2",true); setRole("admin"); }
   else if(v!==null) toast("パスワードが違います");
 }
 function goStaff(){ set({view:"staff"}); }
