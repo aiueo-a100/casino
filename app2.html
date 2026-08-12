@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0A4530">
+<title>整理券 | 1-E CASINO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --felt:#0A4530;--felt9:#062B1D;--felt8:#0A3626;--felt5:#0F6144;
+  --paper:#F6F1E1;--paper2:#E7DFC8;--ink:#0B2E1E;--inks:#5A6B60;
+  --brass:#B98A2A;--amber:#FFC300;--red:#C4392C;--go:#1E8A5A;
+  --txt:#EDE7D6;--txts:#9DB8A8;
+  --jp:"Zen Kaku Gothic New",system-ui,-apple-system,sans-serif;
+  --num:"Archivo Black",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--felt);min-height:100%}
+body{font-family:var(--jp);font-weight:500;color:var(--txt);line-height:1.8;
+  padding:calc(14px + env(safe-area-inset-top)) 13px calc(24px + env(safe-area-inset-bottom));
+  overflow-x:hidden;-webkit-text-size-adjust:100%}
+.wrap{max-width:460px;margin:0 auto}
+button{font-family:var(--jp);font-weight:900;border:none;cursor:pointer}
+
+/* 上のバー */
+.bar{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#9DD3B4;
+  border-bottom:1px solid rgba(246,241,225,.2);padding-bottom:9px}
+.bar b{color:var(--brass);letter-spacing:.14em;font-size:11px}
+.bar .back{color:#9DD3B4;font-size:12px;background:none;padding:0}
+
+/* お知らせ */
+.announce{background:var(--amber);color:#160E00;border-radius:10px;padding:10px 12px;margin-top:11px;
+  display:flex;gap:8px;align-items:flex-start}
+.announce .ic{font-size:14px;flex-shrink:0}
+.announce .tx{font-size:12.5px;font-weight:900;line-height:1.55}
+
+/* ホーム */
+.home{text-align:center;padding:36px 4px 0}
+.home .suit{font-size:26px;letter-spacing:.16em;color:var(--brass)}
+.home h1{font-size:36px;font-weight:900;letter-spacing:.04em;margin-top:12px}
+.home .en{font-size:11px;letter-spacing:.36em;color:var(--txts);margin-top:8px}
+.now{background:var(--paper);color:var(--ink);border-radius:11px;padding:14px;margin:26px 0}
+.now .k{font-size:10px;letter-spacing:.2em;color:var(--brass);font-weight:900}
+.now .n{font-family:var(--num);font-size:44px;line-height:1.05;font-variant-numeric:tabular-nums}
+.now .b{font-size:12px;color:var(--inks)}
+.now .none{font-size:14px;font-weight:900;color:var(--inks);padding:10px 0}
+.gold{width:100%;background:var(--brass);color:#1A1206;border-radius:11px;padding:15px 0;font-size:15px}
+.ghost{width:100%;background:transparent;border:1.5px solid rgba(246,241,225,.35);color:var(--txt);
+  border-radius:11px;padding:13px 0;font-size:14px;font-weight:700;margin-top:9px}
+
+/* ブース選択 */
+.ttl{font-size:17px;font-weight:900;margin-top:14px}
+.sb{font-size:11px;color:#9DD3B4;margin:2px 0 12px}
+.brow{background:var(--paper);color:var(--ink);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.brline{display:flex;align-items:center;gap:8px;padding-right:10px}
+.bmain{display:flex;align-items:center;gap:8px;padding:11px 10px;flex:1;min-width:0;background:none;text-align:left}
+.bmain .m{flex:1;min-width:0;line-height:1.35}
+.bmain .m b{display:block;font-size:15px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bmain .m span{font-size:10.5px;color:var(--inks);font-weight:500}
+.bmain .w2{text-align:center;flex-shrink:0;white-space:nowrap}
+.bmain .w2 i{display:block;font-family:var(--num);font-size:24px;color:var(--felt5);font-style:normal;line-height:1}
+.bmain .w2 em{display:block;font-size:9px;color:var(--inks);font-style:normal;margin-top:2px}
+.sbtn{background:var(--paper2);border:1px solid rgba(11,46,30,.16);border-radius:8px;padding:7px 7px;
+  text-align:center;flex-shrink:0;line-height:1.25;white-space:nowrap}
+.sbtn .s{font-size:10px;color:var(--brass);font-weight:900}
+.sbtn .v{font-size:13px;font-weight:900;color:var(--ink)}
+.sbtn .k{font-size:8px;color:var(--inks);font-weight:500}
+.sbtn.dim{opacity:.35}
+.seat{padding:0 10px 9px;margin-top:-2px}
+.seat .g{height:6px;background:var(--paper2);border-radius:4px;overflow:hidden}
+.seat .g i{display:block;height:100%;background:var(--go);border-radius:4px}
+.seat .g i.full{background:var(--red)}
+.seat .sl{display:flex;justify-content:space-between;font-size:9px;color:var(--inks);margin-top:3px;font-weight:700}
+.brow.stop{opacity:.55}
+.brow.got .bmain{opacity:.75}
+
+/* 券 */
+.tk{background:var(--paper);border-radius:12px;margin-top:14px;position:relative}
+.tk .tp{padding:18px 14px 14px;text-align:center;color:var(--ink)}
+.tk .bo{font-size:17px;font-weight:900}
+.tk .nu{font-family:var(--num);font-size:74px;line-height:.95;font-variant-numeric:tabular-nums;margin:8px 0 3px}
+.tk .pe{font-size:11.5px;color:var(--inks)}
+.tk .stt{margin-top:12px;background:var(--felt);border-radius:9px;padding:10px}
+.tk .stt .k{font-size:9.5px;letter-spacing:.14em;color:#9DD3B4;font-weight:900}
+.tk .stt .v{font-size:22px;font-weight:900;color:var(--paper)}
+.tk .stt .v small{font-size:11px;color:#9DD3B4;margin-left:5px}
+.pf{position:relative;height:0;border-top:2px dashed rgba(11,46,30,.32);margin:0 12px}
+.pf::before,.pf::after{content:"";position:absolute;top:-11px;width:21px;height:21px;border-radius:50%;background:var(--felt)}
+.pf::before{left:-23px}.pf::after{right:-23px}
+.tk .bt{padding:12px 14px 14px;text-align:center}
+.tk .hint{font-size:11px;color:var(--inks);line-height:1.65}
+.cancel{width:100%;margin-top:10px;background:transparent;border:2px solid rgba(196,57,44,.45);
+  color:var(--red);border-radius:9px;padding:9px 0;font-size:12px}
+.fn{text-align:center;font-size:10px;color:#7FA48F;margin-top:10px}
+
+/* 終了・無効 */
+.doneno{font-family:var(--num);font-size:60px;line-height:.95;color:#A9B4AC;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.doneno.bad{color:var(--red)}
+.donemsg{font-size:16px;font-weight:900;color:var(--ink);margin-top:4px}
+.donemsg.bad{color:var(--red)}
+.donestt{font-size:11px;color:var(--inks);margin-top:2px}
+.revbtn{width:100%;background:var(--brass);color:#1A1206;border-radius:10px;padding:13px 0;font-size:14px}
+
+/* 人数シート */
+.dim{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20}
+.sheet{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));
+  background:var(--paper);color:var(--ink);border-radius:14px;padding:16px 15px;text-align:center;z-index:21;
+  max-width:436px;margin:0 auto}
+.sheet .bn{font-size:16px;font-weight:900}
+.sheet .q{font-size:11.5px;color:var(--inks);margin-bottom:13px}
+.psel{display:flex;gap:7px}
+.psel button{flex:1;background:var(--paper2);border:2px solid transparent;border-radius:11px;padding:14px 0;
+  font-family:var(--num);font-size:22px;color:var(--ink)}
+.psel button.on{background:var(--felt5);border-color:var(--ink);color:#fff}
+.sheet .go{width:100%;background:var(--brass);color:#1A1206;border-radius:11px;padding:14px 0;font-size:15px;margin-top:13px}
+.sheet .cx{width:100%;background:none;color:var(--inks);font-size:12px;font-weight:700;padding:9px 0}
+.pnote{font-size:9.5px;color:var(--inks);line-height:1.55;margin-top:9px}
+
+/* 呼び出し */
+#callscr{position:fixed;inset:0;background:var(--amber);z-index:50;display:none;flex-direction:column;text-align:center}
+#callscr.on{display:flex}
+.stripe{height:15px;flex-shrink:0;
+  background:repeating-linear-gradient(-45deg,#160E00 0 12px,var(--amber) 12px 24px)}
+#callscr .in{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px}
+#callscr .yt{font-size:11px;letter-spacing:.4em;font-weight:900;color:#160E00}
+#callscr .yb{font-size:26px;font-weight:900;color:#160E00;margin-top:2px}
+.plate{background:var(--paper);border:3px solid #160E00;border-radius:16px;width:240px;padding:14px 12px 16px;
+  margin-top:16px;position:relative;box-shadow:7px 7px 0 rgba(22,14,0,.28)}
+.plate .nt{position:absolute;top:50%;margin-top:-11px;width:22px;height:22px;border-radius:50%;
+  background:var(--amber);border:3px solid #160E00}
+.plate .nt.l{left:-13px}.plate .nt.r{right:-13px}
+.plate .rib{background:#160E00;color:var(--amber);border-radius:7px;display:inline-block;padding:4px 16px;
+  font-size:12.5px;font-weight:900}
+.plate .nu{font-family:var(--num);font-size:96px;color:#160E00;line-height:1;margin-top:8px;font-variant-numeric:tabular-nums}
+.plate .su{font-size:12px;color:var(--brass);letter-spacing:.5em;margin-top:6px}
+#callscr .go2{font-size:19px;font-weight:900;color:#160E00;margin-top:16px}
+#callscr .ok{background:#160E00;color:var(--amber);border-radius:12px;padding:13px 34px;font-size:15px;margin-top:18px}
+
+/* レビュー */
+.rv{text-align:center}
+.rv .bo2{font-size:18px;font-weight:900;margin-top:10px}
+.rv .q2{font-size:12px;color:#9DD3B4;margin-bottom:12px}
+.stars{font-size:32px;letter-spacing:.08em;background:none;padding:0}
+.stars span{cursor:pointer;opacity:.28}
+.stars span.on{opacity:1}
+.rvlb{font-size:14px;font-weight:900;color:var(--amber);margin:6px 0 12px;min-height:22px}
+textarea{width:100%;background:var(--paper);color:var(--ink);border:none;border-radius:11px;padding:12px;
+  font-family:var(--jp);font-size:13px;height:74px;resize:none}
+.cnt{font-size:10px;color:#7FA48F;text-align:right;margin-top:4px}
+.send{width:100%;background:var(--brass);color:#1A1206;border-radius:11px;padding:13px 0;font-size:15px;margin-top:10px}
+.send:disabled{background:#123C2A;color:#6E8C7C}
+
+/* 口コミ */
+.rhead{background:var(--paper);color:var(--ink);border-radius:12px;padding:13px;text-align:center;margin-top:11px}
+.rhead .av{font-family:var(--num);font-size:38px;line-height:1.05}
+.rhead .st{font-size:14px;color:var(--brass);letter-spacing:.06em}
+.rhead .ct{font-size:11px;color:var(--inks);margin-top:2px}
+.ci{background:rgba(246,241,225,.08);border-radius:10px;padding:10px 12px;margin-top:7px;text-align:left}
+.ci .s{font-size:11px;color:var(--brass)}
+.ci .t{font-size:12.5px;color:var(--txt);line-height:1.65;margin-top:3px;word-break:break-word}
+.empty{text-align:center;font-size:12px;color:var(--txts);padding:26px 0}
+
+/* トースト */
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom));
+  background:var(--go);color:#fff;border-radius:10px;padding:11px 18px;font-size:13px;font-weight:900;
+  z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%;text-align:center}
+#toast.on{opacity:1}
+#offline{background:var(--red);color:#fff;text-align:center;font-size:12px;font-weight:900;padding:8px;
+  border-radius:9px;margin-top:10px;display:none}
+#offline.on{display:block}
+.load{text-align:center;color:var(--txts);font-size:13px;padding:40px 0}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="load">読み込み中…</div></div>
+
+<div id="callscr">
+  <div class="stripe"></div>
+  <div class="in">
+    <div class="yt">YOUR TURN</div>
+    <div class="yb">お呼び出し</div>
+    <div class="plate">
+      <span class="nt l"></span><span class="nt r"></span>
+      <div class="rib" id="callBooth">—</div>
+      <div class="nu" id="callNum">000</div>
+      <div class="su">♠ ♥ ♦ ♣</div>
+    </div>
+    <div class="go2">受付までお越しください</div>
+    <button class="ok" onclick="closeCall()">確認しました</button>
+  </div>
+  <div class="stripe"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const URL_="https://hnrkfecbewrjwsooxvde.supabase.co";
+const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhucmtmZWNiZXdyandzb294dmRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMTA2MjcsImV4cCI6MjA5NzY4NjYyN30.iTDfmIQxTFEi7013YOmvf844uf2l0XBtOyWQ2tsVeFs";
+const MAX_TICKETS=1;   // 1組1枚（動線が一方通行なので）
+
+/* ---------- 通信 ---------- */
+async function api(path,opt={}){
+  const c=new AbortController(); const to=setTimeout(()=>c.abort(),10000);
+  try{
+    const r=await fetch(`${URL_}/rest/v1/${path}`,{...opt,signal:c.signal,
+      headers:{apikey:KEY,Authorization:`Bearer ${KEY}`,"Content-Type":"application/json",...(opt.headers||{})}});
+    if(!r.ok){const t=await r.text();const e=new Error(t||r.status);e.status=r.status;throw e;}
+    if(r.status===204)return null;
+    const t=await r.text(); return t?JSON.parse(t):null;
+  } finally{ clearTimeout(to); }
+}
+const db={
+  booths:()=>api("booths?select=*&order=id"),
+  tickets:()=>api("tickets?select=*"),
+  reviews:()=>api("reviews?select=*&order=created_at.desc"),
+  settings:()=>api("settings?select=*&id=eq.1"),
+  maxNumber:async()=>{const t=await api("tickets?select=number&order=number.desc&limit=1");return t&&t.length?t[0].number:0},
+  addTicket:(number,booth,people)=>api("tickets",{method:"POST",headers:{Prefer:"return=representation"},
+    body:JSON.stringify({number,booth,people,status:"waiting"})}),
+  delTicket:(id)=>api(`tickets?id=eq.${id}`,{method:"DELETE"}),
+  addReview:(booth_id,rating,comment)=>api("reviews",{method:"POST",body:JSON.stringify({booth_id,rating,comment})}),
+};
+
+/* ---------- 端末の保存 ---------- */
+const LS={
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+
+/* ---------- 状態 ---------- */
+let S={
+  view:"home", booths:[], tickets:[], reviews:[], settings:{},
+  mine:LS.get("mine2",[]),          // [{id,number,booth,people}]
+  reviewed:LS.get("reviewed2",[]),  // [booth_id]
+  busy:false, loaded:false, offline:false,
+  pickBooth:null, pickPeople:2, revBooth:null, revRating:0, seeBooth:null,
+  lastCalled:null
+};
+function set(p){Object.assign(S,p); if(p.mine)LS.set("mine2",S.mine); if(p.reviewed)LS.set("reviewed2",S.reviewed); render();}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function pad(n){return String(n).padStart(3,"0")}
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),2200)}
+
+/* ---------- 読み込み ---------- */
+async function refresh(){
+  try{
+    const [b,t,r,st]=await Promise.all([db.booths(),db.tickets(),db.reviews(),db.settings()]);
+    S.booths=b||[]; S.tickets=t||[]; S.reviews=r||[]; S.settings=(st&&st[0])||{};
+    S.offline=false;
+    // DBに無い券は端末からも消す（前日の券が残るのを防ぐ）
+    const ids=new Set(S.tickets.map(x=>x.id));
+    const kept=S.mine.filter(m=>ids.has(m.id));
+    if(kept.length!==S.mine.length){S.mine=kept;LS.set("mine2",kept)}
+    // 呼ばれたか判定
+    checkCall();
+  }catch(e){ S.offline=true; }
+  S.loaded=true; render();
+}
+function checkCall(){
+  for(const b of S.booths){
+    if(!b.calling_number)continue;
+    const hit=S.mine.find(m=>m.number===b.calling_number&&m.booth===b.id);
+    if(hit&&S.lastCalled!==b.calling_number){
+      S.lastCalled=b.calling_number;
+      showCall(b.calling_number,b.name);
+    }
+  }
+}
+function showCall(num,name){
+  document.getElementById("callNum").textContent=pad(num);
+  document.getElementById("callBooth").textContent=name;
+  document.getElementById("callscr").classList.add("on");
+  try{navigator.vibrate&&navigator.vibrate([400,150,400,150,400])}catch(e){}
+}
+function closeCall(){document.getElementById("callscr").classList.remove("on")}
+
+/* ---------- 集計 ---------- */
+function waitGroups(bid){return S.tickets.filter(t=>t.booth===bid&&t.status==="waiting").length}
+function inside(bid){return S.tickets.filter(t=>t.booth===bid&&t.status==="inside").reduce((a,t)=>a+(t.people||1),0)}
+function myTicket(bid){return S.mine.find(m=>m.booth===bid)}
+function ticketOf(m){return S.tickets.find(t=>t.id===m.id)}
+function starsOf(bid){
+  const rs=S.reviews.filter(r=>r.booth_id===bid);
+  if(!rs.length)return null;
+  return {avg:(rs.reduce((a,r)=>a+r.rating,0)/rs.length), n:rs.length, list:rs};
+}
+function aheadOf(m){
+  const t=ticketOf(m); if(!t)return 0;
+  return S.tickets.filter(x=>x.booth===m.booth&&x.status==="waiting"&&x.number<m.number).length;
+}
+
+/* ---------- 画面 ---------- */
+function render(){
+  const el=document.getElementById("app");
+  if(!S.loaded){el.innerHTML='<div class="load">読み込み中…</div>';return}
+  let h="";
+  const ann=S.settings.announce;
+  const annHtml=ann?`<div class="announce"><span class="ic">📣</span><span class="tx">${esc(ann)}</span></div>`:"";
+  const off=`<div id="offline" class="${S.offline?"on":""}">接続できません。少し待ってください</div>`;
+
+  if(S.view==="home"){
+    const calling=S.booths.find(b=>b.calling_number);
+    h=`<div class="bar"><b>♣ CASINO</b><span>1-E</span></div>${annHtml}${off}
+    <div class="home">
+      <div class="suit">♠ ♥ ♦ ♣</div>
+      <h1>整理券</h1>
+      <div class="en">1-E CASINO</div>
+      <div class="now">
+        <div class="k">ただいま呼び出し中</div>
+        ${calling?`<div class="n">${pad(calling.calling_number)}</div><div class="b">${esc(calling.name)}</div>`
+                 :`<div class="none">まだありません</div>`}
+      </div>
+      <button class="gold" onclick="go('pick')">整理券を取る</button>
+      ${S.mine.length?`<button class="ghost" onclick="go('mine')">自分の整理券を見る</button>`:""}
+    </div>`;
+  }
+
+  else if(S.view==="pick"){
+    h=`<div class="bar"><button class="back" onclick="go('home')">← 戻る</button><span>1-E</span></div>${annHtml}${off}
+    <div class="ttl">ブースを選ぶ</div><div class="sb">タップすると人数を選べます</div>`;
+    for(const b of S.booths){
+      const w=waitGroups(b.id), ins=inside(b.id), cap=b.capacity||4;
+      const st=starsOf(b.id);
+      const mine=myTicket(b.id);
+      const full=ins>=cap;
+      const pct=Math.min(100,Math.round(ins/cap*100));
+      const mins=w*(b.avg_minutes||6);
+      const sub=b.paused?"受付を止めています":mine?"整理券を持っています":w?`約${mins}分待ち`:"待ちなし";
+      const star=st
+        ?`<button class="sbtn" onclick="seeReviews('${b.id}')"><span class="s">★</span><span class="v">${st.avg.toFixed(1)}</span><span class="k">口コミ</span></button>`
+        :`<span class="sbtn dim"><span class="s">★</span><span class="v">―</span><span class="k">なし</span></span>`;
+      h+=`<div class="brow${b.paused?" stop":""}${mine?" got":""}">
+        <div class="brline">
+          <button class="bmain" ${b.paused||mine?"disabled":""} onclick="openPeople('${b.id}')">
+            <span class="m"><b>${esc(b.name)}</b><span>${sub}</span></span>
+            <span class="w2"><i>${w}</i><em>組待ち</em></span>
+          </button>
+          ${star}
+        </div>
+        <div class="seat"><div class="g"><i class="${full?"full":""}" style="width:${pct}%"></i></div>
+          <div class="sl"><span>${full?"満席":ins?"空きあり":"すぐ座れます"}</span><span>${ins} / ${cap}席</span></div></div>
+      </div>`;
+    }
+  }
+
+  else if(S.view==="mine"){
+    h=`<div class="bar"><button class="back" onclick="go('home')">← 戻る</button><span>1-E</span></div>${annHtml}${off}`;
+    if(!S.mine.length){h+=`<div class="empty">整理券を持っていません</div><button class="gold" onclick="go('pick')">整理券を取る</button>`}
+    for(const m of S.mine){
+      const t=ticketOf(m); const b=S.booths.find(x=>x.id===m.booth);
+      const name=b?b.name:m.booth;
+      if(!t){ continue }
+      if(t.status==="done"){
+        const done=S.reviewed.includes(m.booth);
+        h+=`<div class="tk"><div class="tp">
+          <div class="bo">${esc(name)}</div>
+          <div class="doneno">${pad(m.number)}</div>
+          <div class="donemsg">ありがとうございました</div>
+          <div class="donestt">この番号は終了しました</div>
+        </div><div class="pf"></div><div class="bt">
+          ${done?`<div class="hint">感想をありがとうございました</div>`
+                :`<button class="revbtn" onclick="openReview('${m.booth}')">★ 感想を書く</button>
+                  <div class="hint" style="margin-top:8px">書かなくても大丈夫です</div>`}
+        </div></div>
+        <button class="gold" style="margin-top:12px" onclick="dropMine(${m.id});go('pick')">次のブースの整理券を取る</button>`;
+      } else {
+        const ahead=aheadOf(m); const mins=ahead*((b&&b.avg_minutes)||6);
+        h+=`<div class="tk"><div class="tp">
+          <div class="bo">${esc(name)}</div>
+          <div class="nu">${pad(m.number)}</div>
+          <div class="pe">${m.people}人で参加</div>
+          <div class="stt"><div class="k">順番</div>
+            <div class="v">${t.status==="inside"?"ご案内中":`あと${ahead}組`}${t.status==="inside"?"":`<small>約${mins}分</small>`}</div></div>
+        </div><div class="pf"></div><div class="bt">
+          <div class="hint">呼ばれるとこの画面が金色になります。<br>受付のボードでも番号を出しています。</div>
+          ${t.status==="waiting"?`<button class="cancel" onclick="cancelTicket(${m.id})">整理券を取り消す</button>`:""}
+        </div></div>`;
+      }
+    }
+    h+=`<div class="fn">10秒ごとに自動で更新</div>`;
+  }
+
+  else if(S.view==="review"){
+    const b=S.booths.find(x=>x.id===S.revBooth); const name=b?b.name:S.revBooth;
+    const labels=["","うーん","もう少し","ふつう","良い","최高"];
+    const lb=["","😐 うーん","🙂 もう少し","😊 ふつう","😄 良い","🤩 最高"][S.revRating]||"";
+    h=`<div class="bar"><button class="back" onclick="go('mine')">← もどる</button><span>1-E</span></div>${off}
+    <div class="rv">
+      <div class="bo2">${esc(name)}</div>
+      <div class="q2">評価をお願いします</div>
+      <div class="stars">${[1,2,3,4,5].map(i=>`<span class="${i<=S.revRating?"on":""}" onclick="setRating(${i})">⭐</span>`).join("")}</div>
+      <div class="rvlb">${lb}</div>
+      <textarea id="rvText" maxlength="100" placeholder="感想（任意・匿名）" oninput="cntUp()"></textarea>
+      <div class="cnt"><span id="cnt">0</span> / 100文字</div>
+      <button class="send" id="sendBtn" ${S.revRating?"":"disabled"} onclick="sendReview()">送信する</button>
+    </div>`;
+  }
+
+  else if(S.view==="reviews"){
+    const b=S.booths.find(x=>x.id===S.seeBooth); const name=b?b.name:S.seeBooth;
+    const st=starsOf(S.seeBooth);
+    h=`<div class="bar"><button class="back" onclick="go('pick')">← もどる</button><span>1-E</span></div>${off}`;
+    if(!st){h+=`<div class="empty">まだ口コミがありません</div>`}
+    else{
+      const cnt=[5,4,3,2,1].map(n=>st.list.filter(r=>r.rating===n).length);
+      const mx=Math.max(...cnt,1);
+      h+=`<div class="rhead"><div style="font-size:15px;font-weight:900;color:var(--ink)">${esc(name)}</div>
+        <div class="av" style="color:var(--ink)">${st.avg.toFixed(1)}</div>
+        <div class="st">${"★".repeat(Math.round(st.avg))}${"☆".repeat(5-Math.round(st.avg))}</div>
+        <div class="ct">${st.n}件の口コミ</div></div>`;
+      st.list.forEach(r=>{
+        h+=`<div class="ci"><div class="s">${"⭐".repeat(r.rating)}</div>
+          ${r.comment?`<div class="t">${esc(r.comment)}</div>`:""}</div>`;
+      });
+    }
+  }
+
+  el.innerHTML=h;
+  // 人数シート
+  if(S.pickBooth){
+    const b=S.booths.find(x=>x.id===S.pickBooth);
+    el.insertAdjacentHTML("beforeend",`
+      <div class="dim" onclick="closePeople()"></div>
+      <div class="sheet">
+        <div class="bn">${esc(b?b.name:"")}</div>
+        <div class="q">人数を選んでください</div>
+        <div class="psel">${[1,2,3,4].map(n=>`<button class="${n===S.pickPeople?"on":""}" onclick="setPeople(${n})">${n}</button>`).join("")}</div>
+        <div class="pnote">何人で来ても1枚の券で一緒に呼ばれます</div>
+        <button class="go" ${S.busy?"disabled":""} onclick="issue()">${S.busy?"発行中…":"整理券を取る"}</button>
+        <button class="cx" onclick="closePeople()">キャンセル</button>
+      </div>`);
+  }
+}
+
+/* ---------- 操作 ---------- */
+function go(v){set({view:v})}
+function openPeople(id){set({pickBooth:id,pickPeople:2})}
+function closePeople(){set({pickBooth:null})}
+function setPeople(n){set({pickPeople:n})}
+function seeReviews(id){set({seeBooth:id,view:"reviews"})}
+function setRating(n){set({revRating:n})}
+function cntUp(){document.getElementById("cnt").textContent=document.getElementById("rvText").value.length}
+function openReview(bid){set({revBooth:bid,revRating:0,view:"review"})}
+function dropMine(id){set({mine:S.mine.filter(m=>m.id!==id)})}
+
+async function issue(){
+  if(S.busy)return;
+  if(S.mine.length>=MAX_TICKETS){toast("整理券は1枚までです");return}
+  set({busy:true});
+  const booth=S.pickBooth, people=S.pickPeople;
+  let ok=false;
+  for(let i=0;i<8;i++){
+    try{
+      const max=await db.maxNumber();
+      const res=await db.addTicket(max+1,booth,people);
+      if(res&&res[0]){
+        const t=res[0];
+        S.mine.push({id:t.id,number:t.number,booth,people});
+        LS.set("mine2",S.mine);
+        ok=true; break;
+      }
+    }catch(e){ await new Promise(r=>setTimeout(r,100+Math.random()*400)); }
+  }
+  S.busy=false; S.pickBooth=null;
+  if(ok){ await refresh(); set({view:"mine"}); toast("整理券を取りました"); }
+  else { render(); toast("取得できませんでした。もう一度お試しください"); }
+}
+
+async function cancelTicket(id){
+  if(!confirm("この整理券を取り消しますか？"))return;
+  set({busy:true});
+  try{ await db.delTicket(id); set({mine:S.mine.filter(m=>m.id!==id)}); toast("取り消しました"); }
+  catch(e){ toast("取り消せませんでした"); }
+  S.busy=false; await refresh();
+  if(!S.mine.length)set({view:"home"});
+}
+
+async function sendReview(){
+  if(!S.revRating||S.busy)return;
+  set({busy:true});
+  const txt=(document.getElementById("rvText")||{}).value||"";
+  try{
+    await db.addReview(S.revBooth,S.revRating,txt.slice(0,100)||null);
+    S.reviewed.push(S.revBooth); LS.set("reviewed2",S.reviewed);
+    toast("ありがとうございました");
+    S.busy=false; await refresh(); set({view:"mine"});
+  }catch(e){ S.busy=false; toast("送信できませんでした"); render(); }
+}
+
+/* ---------- 起動 ---------- */
+refresh();
+setInterval(()=>{ if(!S.busy&&!S.pickBooth) refresh(); },10000);
+</script>
+</body>
+</html>
