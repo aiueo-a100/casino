@@ -300,6 +300,18 @@ textarea{width:100%;background:var(--paper);color:var(--ink);border:none;border-
 const URL_="https://hnrkfecbewrjwsooxvde.supabase.co";
 const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhucmtmZWNiZXdyandzb294dmRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMTA2MjcsImV4cCI6MjA5NzY4NjYyN30.iTDfmIQxTFEi7013YOmvf844uf2l0XBtOyWQ2tsVeFs";
 const MAX_TICKETS=1;   // 1組1枚（動線が一方通行なので）
+// お知らせの文はコードに持ち、DBには番号だけ入れる
+// （DBを直接書き換えられても、決まった文しか出せない）
+const ANNOUNCES=[
+  "現在混雑しています",
+  "まもなく受付を終了します",
+  "本日の受付を終了しました",
+  "一時的に受付を止めています"
+];
+function announceText(v){
+  const n=parseInt(v,10);
+  return (Number.isInteger(n)&&n>=0&&n<ANNOUNCES.length)?ANNOUNCES[n]:null;
+}
 
 /* ---------- 通信 ---------- */
 async function api(path,opt={}){
@@ -410,6 +422,14 @@ function elapsed(iso){
   return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}`;
 }
 function elapsedSec(iso){ return iso? Math.max(0,Math.floor((S.now-new Date(iso).getTime())/1000)) : 0 }
+// 待ち時間 = 前に並んでいる組が終わるのにかかる時間
+// 席数が少ない卓は、1組でも人数ぶん回転が要る
+function waitMinutes(b, tickets){
+  const cap=b.capacity||4, turn=b.avg_minutes||6;
+  let rounds=0;
+  for(const t of tickets) rounds += Math.ceil((t.people||1)/cap);
+  return rounds*turn;
+}
 function aheadOf(m){
   const t=ticketOf(m); if(!t)return 0;
   return S.tickets.filter(x=>x.booth===m.booth&&x.status==="waiting"&&x.number<m.number).length;
@@ -420,7 +440,7 @@ function render(){
   const el=document.getElementById("app");
   if(!S.loaded){el.innerHTML='<div class="load">読み込み中…</div>';return}
   let h="";
-  const ann=S.settings.announce;
+  const ann=announceText(S.settings.announce);
   const annHtml=ann?`<div class="announce"><span class="ic">📣</span><span class="tx">${esc(ann)}</span></div>`:"";
   const off=`<div id="offline" class="${S.offline?"on":""}">接続できません。少し待ってください</div>`;
 
@@ -451,7 +471,7 @@ function render(){
       const mine=myTicket(b.id);
       const full=ins>=cap;
       const pct=Math.min(100,Math.round(ins/cap*100));
-      const mins=w*(b.avg_minutes||6);
+      const mins=waitMinutes(b, waitingTickets(b.id));
       const sub=b.paused?"受付を止めています":mine?"整理券を持っています":w?`約${mins}分待ち`:"待ちなし";
       const star=st
         ?`<button class="sbtn" onclick="event.stopPropagation();seeReviews('${b.id}')"><span class="s">★</span><span class="v">${st.avg.toFixed(1)}</span><span class="k">口コミ</span></button>`
@@ -491,7 +511,9 @@ function render(){
         </div></div>
         <button class="gold" style="margin-top:12px" onclick="dropMine(${m.id});go('pick')">次のブースの整理券を取る</button>`;
       } else {
-        const ahead=aheadOf(m); const mins=ahead*((b&&b.avg_minutes)||6);
+        const ahead=aheadOf(m);
+        const front=S.tickets.filter(x=>x.booth===m.booth&&x.status==="waiting"&&x.number<m.number);
+        const mins=b?waitMinutes(b,front):ahead*6;
         h+=`<div class="tk"><div class="tp">
           <div class="bo">${esc(name)}</div>
           <div class="nu">${pad(m.number)}</div>
@@ -671,7 +693,7 @@ function renderReception(){
       </div>`;
     }
   } else {
-    h+=`<div class="sjob">番号を呼ぶ</div><div class="ssub">空いている卓だけ押せます</div>`;
+    h+=`<div class="sjob">番号を呼ぶ</div><div class="ssub">もうすぐ終わりそうなら先に呼べます</div>`;
   }
 
   for(const b of S.booths){
@@ -682,19 +704,20 @@ function renderReception(){
     const paused=b.paused;
     let cls="rrow", right="", sub="";
     if(paused){ cls+=" none"; right=`<span class="rlock">停止中</span>`; sub="受付を止めています"; }
-    else if(full){ cls+=" busy"; right=`<span class="rlock">使用中</span>`;
-      const it=insideTickets(b.id);
-      sub=`使用中 ${it.map(t=>pad(t.number)).join(" ")}`; }
     else if(!wait.length){ cls+=" none"; right=`<span class="rlock">―</span>`; sub="待機なし"; }
+    else if(full){ cls+=" busy"; right=`<span class="rbtn">${pad(wait[0].number)}</span>`;
+      const it=insideTickets(b.id);
+      const el=it.length?elapsed(it[0].inside_at):"";
+      sub=`使用中 ${it.map(t=>pad(t.number)).join(" ")}${el?" ・ "+el:""} ・ ${wait.length}組待ち`; }
     else { right=`<span class="rbtn">${pad(wait[0].number)}</span>`; sub=`空席 ・ ${wait.length}組待ち`; }
-    const dis=(paused||full||!wait.length);
+    const dis=(paused||!wait.length);
     h+=`<button class="${cls}" ${dis?"disabled":""} onclick="callNext('${b.id}')">
       <span class="lamp"></span>
       <span class="rm"><b>${esc(b.name)}</b><span>${sub}</span></span>
       ${right}</button>`;
   }
   h+=`<button class="callsp" onclick="callByNumber()">番号を指定して呼ぶ</button>
-    <div class="rlg">● 緑＝空席　● 灰＝使用中<br>飛ばした人が来たら「番号を指定して呼ぶ」</div></div>`;
+    <div class="rlg">● 緑＝空席　● 灰＝使用中（先に呼ぶと確認が出ます）<br>飛ばした人が来たら「番号を指定して呼ぶ」</div></div>`;
   return h;
 }
 
@@ -791,6 +814,12 @@ async function callNext(bid){
   if(S.busy)return;
   const wait=waitingTickets(bid);
   if(!wait.length){toast("待っている人がいません");return}
+  const b0=S.booths.find(x=>x.id===bid);
+  const ins=insideTickets(bid);
+  if(ins.length && inside(bid)>=(b0.capacity||4)){
+    const el=elapsed(ins[0].inside_at)||"—";
+    if(!confirm(`${b0.name}はまだ使用中です（${el}）。\n先に呼んでおきますか？`))return;
+  }
   set({busy:true});
   try{
     await db.upBooth(bid,{calling_number:wait[0].number,calling_at:new Date().toISOString()});
