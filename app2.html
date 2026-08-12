@@ -330,7 +330,7 @@ function render(){
       const mins=w*(b.avg_minutes||6);
       const sub=b.paused?"受付を止めています":mine?"整理券を持っています":w?`約${mins}分待ち`:"待ちなし";
       const star=st
-        ?`<button class="sbtn" onclick="seeReviews('${b.id}')"><span class="s">★</span><span class="v">${st.avg.toFixed(1)}</span><span class="k">口コミ</span></button>`
+        ?`<button class="sbtn" onclick="event.stopPropagation();seeReviews('${b.id}')"><span class="s">★</span><span class="v">${st.avg.toFixed(1)}</span><span class="k">口コミ</span></button>`
         :`<span class="sbtn dim"><span class="s">★</span><span class="v">―</span><span class="k">なし</span></span>`;
       h+=`<div class="brow${b.paused?" stop":""}${mine?" got":""}">
         <div class="brline">
@@ -419,10 +419,11 @@ function render(){
   }
 
   el.innerHTML=h;
-  // 人数シート
+  // 人数シート（bodyの直下に出す）
+  document.querySelectorAll(".dim,.sheet").forEach(x=>x.remove());
   if(S.pickBooth){
     const b=S.booths.find(x=>x.id===S.pickBooth);
-    el.insertAdjacentHTML("beforeend",`
+    document.body.insertAdjacentHTML("beforeend",`
       <div class="dim" onclick="closePeople()"></div>
       <div class="sheet">
         <div class="bn">${esc(b?b.name:"")}</div>
