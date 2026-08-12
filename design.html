@@ -102,10 +102,10 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
 .tk .cn{margin-top:9px;border:2px solid rgba(196,57,44,.45);color:var(--red);border-radius:9px;padding:8px 0;font-size:11px;font-weight:900}
 .n .gold{background:var(--brass);color:#1A1206;border-radius:11px;padding:13px 0;text-align:center;font-weight:900;font-size:13.5px;margin-top:auto}
 .n .fn{text-align:center;font-size:9.5px;color:#7FA48F;margin-top:9px}
-.n .ttl{font-size:16px;font-weight:900;margin-top:13px}
-.n .sb{font-size:10.5px;color:#9DD3B4;margin:2px 0 11px}
+.n .ttl{font-size:15px;font-weight:900;margin-top:11px}
+.n .sb{font-size:10px;color:#9DD3B4;margin:1px 0 9px}
 .brow{display:flex;align-items:center;gap:9px;background:var(--paper);border-radius:10px;padding:11px 12px;margin-bottom:7px}
-.brow .m{flex:1;min-width:0}
+.brow .m{flex:1;min-width:0;overflow:hidden}
 .brow .m b{display:block;font-size:14px;font-weight:900;color:var(--ink);line-height:1.35}
 .brow .m span{font-size:10px;color:var(--inks)}
 .brow .w2{text-align:center;flex-shrink:0}
@@ -142,8 +142,8 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
 .stf .big{background:var(--go);color:#fff;border-radius:12px;padding:15px 0;text-align:center;font-weight:900;font-size:17px;margin-top:auto}
 .stf .nx{text-align:center;font-size:11px;color:var(--txts);margin-top:11px}
 .stf .rw{display:flex;align-items:center;gap:9px;background:var(--paper);color:var(--ink);border-radius:10px;padding:11px 12px;margin-top:7px}
-.stf .rw .m{flex:1}
-.stf .rw .m b{display:block;font-size:13.5px;font-weight:900}
+.stf .rw .m{flex:1;min-width:0}
+.stf .rw .m b{display:block;font-size:13.5px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .stf .rw .m span{font-size:10px;color:var(--inks)}
 .stf .rw .no{font-family:var(--num);font-size:26px;color:var(--felt5);font-variant-numeric:tabular-nums}
 .stf .rw.off{background:rgba(246,241,225,.08)}
@@ -197,6 +197,163 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
 .dx span{font-size:12.5px;color:#B9CDC0;line-height:1.8}
 
 
+
+.brow2{background:var(--paper);color:var(--ink);border-radius:9px;margin-bottom:5px;overflow:hidden}
+.bmain{display:flex;align-items:center;gap:7px;padding:7px 9px}
+.bmain .m{flex:1;min-width:0;line-height:1.35}
+.bmain .m b{display:block;font-size:13px;font-weight:900;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bmain .m span{font-size:9.5px;color:var(--inks);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bmain .w2{text-align:center;flex-shrink:0;white-space:nowrap}
+.bmain .w2 i{display:block;font-family:var(--num);font-size:22px;color:var(--felt5);font-style:normal;line-height:1}
+.bmain .w2 em{display:block;font-size:8.5px;color:var(--inks);font-style:normal;margin-top:1px}
+.sbtn{background:var(--paper2);border:1px solid rgba(11,46,30,.16);border-radius:8px;padding:6px 6px;text-align:center;flex-shrink:0;line-height:1.25;white-space:nowrap}
+.sbtn .s{font-size:9.5px;color:var(--brass);font-weight:900}
+.sbtn .v{font-size:12px;font-weight:900;color:var(--ink)}
+.sbtn .k{font-size:7.5px;color:var(--inks)}
+.sbtn.dim{opacity:.35}
+.seat{padding:0 9px 6px}
+.seat .g{height:6px;background:var(--paper2);border-radius:4px;overflow:hidden}
+.seat .g i{display:block;height:100%;background:var(--go);border-radius:4px}
+.seat .g i.full{background:var(--red)}
+.seat .sl{display:flex;justify-content:space-between;font-size:8.5px;color:var(--inks);margin-top:2px;font-weight:700}
+
+
+.trows{margin-top:14px}
+.trow{background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 11px;margin-bottom:7px;display:flex;align-items:center;gap:9px}
+.trow .tn{font-family:var(--num);font-size:25px;line-height:1;flex-shrink:0}
+.trow .tm{flex:1;min-width:0;line-height:1.4;overflow:hidden}
+.trow .tp{font-size:10px;color:var(--inks)}
+.trow .tt{font-family:var(--num);font-size:12px;color:var(--felt5)}
+.trow .tt.hot{color:#9A6A00}
+.trow .tb{background:var(--felt5);color:#fff;border-radius:7px;padding:8px 11px;font-weight:900;font-size:11px;flex-shrink:0}
+.rrow{display:flex;align-items:center;gap:9px;border-radius:10px;padding:10px 11px;margin-bottom:7px;background:var(--paper);color:var(--ink)}
+.rrow .lamp{width:9px;height:9px;border-radius:50%;flex-shrink:0;background:var(--go)}
+.rrow .rm{flex:1;min-width:0;line-height:1.4;overflow:hidden}
+.rrow .rm b{display:block;font-size:13px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow .rm span{font-size:10px;color:var(--inks)}
+.rrow .rbtn{background:var(--brass);color:#1A1206;border-radius:8px;padding:9px 11px;font-family:var(--num);font-size:17px;flex-shrink:0}
+.rrow.busy{background:rgba(246,241,225,.09);color:var(--txt)}
+.rrow.busy .lamp{background:#5E7A6B}
+.rrow.busy .rm b{color:var(--txt)}
+.rrow.busy .rm span{color:var(--txts)}
+.rrow .rlock{background:#123C2A;color:#6E8C7C;border-radius:8px;padding:8px 11px;font-size:10.5px;font-weight:700;flex-shrink:0}
+.rrow.none{background:rgba(246,241,225,.05)}
+.rrow.none .lamp{background:#3E5A4B}
+.rrow.none .rm b{color:var(--txts)}
+.rrow.none .rm span{color:#6E8C7C}
+.rlg{margin-top:auto;font-size:9.5px;color:#7FA48F;line-height:1.65;border-top:1px solid rgba(246,241,225,.13);padding-top:9px}
+
+
+.krest{text-align:center;margin-top:14px}
+.krest .kk{font-size:10px;letter-spacing:.16em;color:var(--brass);font-weight:900}
+.krest .kn{font-family:var(--num);font-size:58px;line-height:.95;color:var(--paper)}
+.krest .ku{font-size:11px;color:var(--txts)}
+.kbar{height:6px;background:rgba(246,241,225,.15);border-radius:4px;margin:9px 4px 0;overflow:hidden}
+.kbar i{display:block;height:100%;background:linear-gradient(90deg,var(--brass),var(--amber))}
+.kcnt{display:flex;align-items:center;gap:9px;margin-top:14px;background:var(--paper);border-radius:12px;padding:10px}
+.kcnt .kb{width:50px;height:50px;border-radius:11px;background:var(--paper2);color:var(--ink);font-family:var(--num);font-size:25px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kcnt .kb.dim{opacity:.35}
+.kcnt .kv{flex:1;min-width:0;text-align:center;line-height:1}
+.kcnt .knum{font-family:var(--num);font-size:38px;color:var(--ink)}
+.kcnt .knum.zero{color:#B4BDB6}
+.kcnt .kv small{display:block;font-size:10px;color:var(--inks);font-weight:700;margin-top:3px}
+.kfoot{margin-top:auto}
+.kbig{border-radius:12px;padding:15px 0;text-align:center;font-weight:900;font-size:17px}
+.kbig.on{background:var(--brass);color:#1A1206}
+.kbig.off{background:#123C2A;color:#6E8C7C}
+.kundo{border:1.5px solid rgba(246,241,225,.28);color:var(--txts);border-radius:10px;padding:9px 0;font-size:11px;font-weight:700;text-align:center;margin-top:7px}
+.dsec2{font-size:9px;letter-spacing:.14em;font-weight:900;color:var(--brass);margin:9px 0 5px;border-bottom:1px solid rgba(185,138,42,.28);padding-bottom:2px}
+.pre{background:var(--paper);color:var(--ink);border-radius:10px;padding:9px 10px;margin-bottom:6px}
+.pre.now{border:2px solid var(--go)}
+.pre .pt{font-size:12.5px;font-weight:900}
+.pbadge{display:inline-block;background:var(--go);color:#fff;border-radius:5px;padding:1px 7px;font-size:9px;font-weight:900;margin-left:5px}
+.plist{font-size:9px;color:var(--inks);line-height:1.55;margin-top:3px}
+.pbtn{background:var(--brass);color:#1A1206;border-radius:8px;padding:8px 0;text-align:center;font-weight:900;font-size:12px;margin-top:6px}
+.pbtn.sub{background:var(--paper2);color:var(--inks)}
+.cfg{background:var(--paper);color:var(--ink);border-radius:9px;padding:8px 9px}
+.prehint{font-size:9px;color:var(--txts);line-height:1.5;margin:6px 0 2px}
+.cpz{background:var(--paper2);border-radius:7px;padding:6px 0;text-align:center;font-size:9.5px;font-weight:900;color:var(--inks);margin-top:6px}
+.cfgmore{font-size:9px;color:var(--txts);line-height:1.5;margin-top:6px}
+.cnm{font-size:12.5px;font-weight:900}
+.cln{display:flex;align-items:center;gap:6px;margin-top:6px}
+.clb{font-size:9.5px;color:var(--inks);width:40px;flex-shrink:0}
+.cst{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+.cbtn{width:25px;height:25px;border-radius:7px;background:var(--paper2);color:var(--ink);font-family:var(--num);font-size:13px;display:flex;align-items:center;justify-content:center}
+.cv{flex:1;min-width:0;text-align:center;font-family:var(--num);font-size:14px}
+.dng{margin-top:auto;padding-top:8px}
+.dng b{display:inline;font-size:11px;font-weight:900;color:#F09A90}
+.dng span{font-size:9px;color:#C8A8A4;line-height:1.6}
+.dbtn{background:#2A1512;border:1.5px solid #5C2621;color:#F09A90;border-radius:8px;padding:9px 0;text-align:center;font-weight:900;font-size:10.5px}
+.nowb{background:#3A2400;border-left:4px solid var(--amber);border-radius:0 9px 9px 0;padding:9px 11px;margin-bottom:10px}
+.nowb .nk{font-size:9px;letter-spacing:.14em;color:var(--amber);font-weight:900}
+.nowb .nv{font-size:12px;font-weight:900;color:var(--paper);margin-top:2px}
+.nowb .nt{font-size:9px;color:#C8BFA8;margin-top:2px}
+.aopt{background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 11px;margin-bottom:6px;display:flex;align-items:center;gap:9px}
+.aopt .amk{width:15px;height:15px;border-radius:8px;border:2px solid var(--inks);flex-shrink:0}
+.aopt.on{border:2px solid var(--go)}
+.aopt.on .amk{border-color:var(--go);background:var(--go)}
+.aopt .atx{flex:1;min-width:0;font-size:11.5px;font-weight:700;line-height:1.5}
+.asend{background:var(--brass);color:#1A1206;border-radius:11px;padding:13px 0;text-align:center;font-weight:900;font-size:14px;margin-top:9px}
+.astop{border:1.5px solid rgba(246,241,225,.28);color:var(--txts);border-radius:10px;padding:9px 0;text-align:center;font-size:11px;font-weight:700;margin-top:7px}
+.abanner{background:var(--amber);color:#160E00;border-radius:10px;padding:10px 11px;margin-top:11px;display:flex;gap:8px;align-items:flex-start}
+.abanner .ai{font-size:13px;flex-shrink:0}
+.abanner .at{font-size:11.5px;font-weight:900;line-height:1.5}
+
+
+.doneno{font-family:var(--num);font-size:56px;line-height:.95;color:#A9B4AC;margin:6px 0 2px}
+.donemsg{font-size:15px;font-weight:900;color:var(--ink);margin-top:4px}
+.donestt{font-size:10.5px;color:var(--inks);margin-top:2px}
+.revbtn{background:var(--brass);color:#1A1206;border-radius:10px;padding:12px 0;text-align:center;font-weight:900;font-size:14px}
+
+
+.gadd{background:var(--felt5);color:#fff;border-radius:8px;padding:8px 0;text-align:center;font-weight:900;font-size:11.5px;margin-top:8px}
+.zero{text-align:center;margin-top:16px}
+.zero .zn{font-family:var(--num);font-size:56px;line-height:.95;color:var(--red)}
+.zero .zk{font-size:10px;letter-spacing:.16em;color:var(--red);font-weight:900}
+.zero .zu{font-size:11px;color:var(--txts)}
+.zmsg{background:#3A1512;border-left:4px solid var(--red);border-radius:0 9px 9px 0;padding:11px 12px;margin-top:14px}
+.zmsg b{display:block;font-size:12.5px;font-weight:900;color:#FC8181;margin-bottom:3px}
+.zmsg span{font-size:10.5px;color:#F0D0D0;line-height:1.65}
+.addsheet{position:absolute;left:12px;right:12px;bottom:14px;background:var(--paper);color:var(--ink);border-radius:14px;padding:15px 14px;text-align:center}
+.addsheet .at2{font-size:14px;font-weight:900}
+.addsheet .ad{font-size:10.5px;color:var(--inks);margin-bottom:12px}
+.addsheet .go2{background:var(--felt5);color:#fff;border-radius:10px;padding:13px 0;font-weight:900;font-size:14px;margin-top:12px}
+.addsheet .cx2{color:var(--inks);font-size:11.5px;font-weight:700;padding:8px 0}
+
+
+.kadd{background:var(--felt5);color:#fff;border-radius:10px;padding:11px 0;text-align:center;font-weight:900;font-size:13px;margin-top:8px}
+.btn2{display:inline-block;background:transparent;border:1px solid rgba(246,241,225,.3);color:#C8BFA8;border-radius:5px;padding:4px 9px;font-size:9px;font-weight:900;margin-top:6px;margin-left:5px}
+.allstop{background:var(--felt8);border:1.5px solid var(--brass);color:var(--brass);border-radius:9px;padding:10px 0;text-align:center;font-weight:900;font-size:11.5px;margin-top:10px}
+
+
+.impl{display:flex;flex-direction:column;gap:11px;margin-top:14px}
+.ib{background:var(--felt8);border-left:4px solid var(--brass);border-radius:0 11px 11px 0;padding:14px 17px}
+.ib.danger{border-left-color:var(--red);background:#2A1512}
+.ib b{display:block;font-size:14px;font-weight:900;color:var(--paper);margin-bottom:5px}
+.ib.danger b{color:#FC8181}
+.ib p{font-size:12.5px;color:#B9CDC0;line-height:1.85;margin-bottom:7px}
+.ib p:last-child{margin-bottom:0}
+.ib.danger p{color:#F0D8D4}
+
+
+.callsp{background:var(--felt8);border:1.5px solid var(--brass);color:var(--brass);border-radius:9px;padding:10px 0;text-align:center;font-weight:900;font-size:12px;margin-top:8px}
+.pnote{font-size:9.5px;color:var(--inks);line-height:1.55;margin-top:8px}
+
+
+.callnow{background:var(--amber);color:#160E00;border-radius:12px;padding:14px 12px;text-align:center;margin-bottom:9px}
+.callnow .cnb{font-size:12px;font-weight:900}
+.callnow .cnn{font-family:var(--num);font-size:52px;line-height:1;margin:3px 0}
+.callnow .cnp{font-size:10.5px;font-weight:700}
+.callnow .cnt2{font-family:var(--num);font-size:12px;margin-top:5px}
+.cnrow{display:flex;gap:7px;margin-top:10px}
+.cnrow span{flex:1;border-radius:9px;padding:11px 0;font-weight:900;font-size:13.5px}
+.cnrow .cy{background:#160E00;color:var(--amber)}
+.cnrow .cn{background:rgba(22,14,0,.16);color:#160E00}
+
+
+.total2{font-size:10px;color:var(--txts);text-align:center;margin-top:6px}
+.total2 b{color:var(--paper);font-family:var(--num);font-size:12px}
+
 /* 追加画面 */
 .mo{position:relative;height:100%;background:var(--felt)}
 .mo .dim{position:absolute;inset:0;background:rgba(0,0,0,.55)}
@@ -211,15 +368,15 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
 
 .rv{background:var(--felt);height:100%;padding:15px 13px;display:flex;flex-direction:column;text-align:center}
 .rv .bo{font-size:17px;font-weight:900;margin-top:8px}
-.rv .q{font-size:12px;color:#9DD3B4;margin-bottom:14px}
-.rv .stars{font-size:31px;letter-spacing:.1em}
+.rv .q{font-size:11.5px;color:#9DD3B4;margin-bottom:10px}
+.rv .stars{font-size:27px;letter-spacing:.08em}
 .rv .stars .off{opacity:.28}
-.rv .lb{font-size:14px;font-weight:900;color:var(--amber);margin:7px 0 13px}
-.rv .ta{background:var(--paper);color:var(--ink);border-radius:11px;padding:11px;font-size:12.5px;text-align:left;min-height:62px}
+.rv .lb{font-size:13px;font-weight:900;color:var(--amber);margin:5px 0 10px}
+.rv .ta{background:var(--paper);color:var(--ink);border-radius:10px;padding:10px;font-size:12px;text-align:left;min-height:48px}
 .rv .ta .ph2{color:#9AA69D}
 .rv .cnt{font-size:9.5px;color:#7FA48F;text-align:right;margin-top:4px}
-.rv .send{background:var(--brass);color:#1A1206;border-radius:11px;padding:13px 0;font-weight:900;font-size:14.5px;margin-top:11px}
-.rv .past{margin-top:16px;text-align:left}
+.rv .send{background:var(--brass);color:#1A1206;border-radius:10px;padding:11px 0;font-weight:900;font-size:14px;margin-top:9px}
+.rv .past{margin-top:12px;text-align:left}
 .rv .past .h{font-size:10px;letter-spacing:.14em;color:var(--brass);font-weight:900;margin-bottom:6px}
 .rv .ci{background:rgba(246,241,225,.08);border-radius:9px;padding:9px 11px;margin-bottom:6px}
 .rv .ci .s{font-size:10px}
@@ -227,19 +384,19 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
 
 .rl{background:var(--felt);height:100%;padding:15px 13px;display:flex;flex-direction:column}
 .rl .bk{font-size:10.5px;color:#9DD3B4}
-.rl .hd2{background:var(--paper);color:var(--ink);border-radius:12px;padding:13px;text-align:center;margin-top:11px}
+.rl .hd2{background:var(--paper);color:var(--ink);border-radius:11px;padding:11px;text-align:center;margin-top:9px}
 .rl .hd2 .bo{font-size:14px;font-weight:900}
-.rl .hd2 .av{font-family:var(--num);font-size:38px;line-height:1.05;color:var(--ink)}
+.rl .hd2 .av{font-family:var(--num);font-size:33px;line-height:1.05;color:var(--ink)}
 .rl .hd2 .st{font-size:13px;color:var(--brass);letter-spacing:.06em}
 .rl .hd2 .ct{font-size:10.5px;color:var(--inks);margin-top:2px}
 .rl .bars{margin-top:9px}
 .rl .br{display:flex;align-items:center;gap:7px;margin-bottom:3px}
 .rl .br .k{font-size:9.5px;color:var(--inks);width:26px;text-align:right;flex-shrink:0}
-.rl .br .g{flex:1;height:6px;background:var(--paper2);border-radius:4px;overflow:hidden}
+.rl .br .g{flex:1;min-width:0;height:6px;background:var(--paper2);border-radius:4px;overflow:hidden}
 .rl .br .g i{display:block;height:100%;background:var(--brass)}
 .rl .br .c{font-size:9.5px;color:var(--inks);width:14px;flex-shrink:0}
-.rl .list{margin-top:12px;overflow:hidden}
-.rl .ci{background:rgba(246,241,225,.08);border-radius:10px;padding:10px 12px;margin-bottom:7px}
+.rl .list{margin-top:9px;overflow:hidden}
+.rl .ci{background:rgba(246,241,225,.08);border-radius:9px;padding:8px 11px;margin-bottom:6px}
 .rl .ci .s{font-size:10.5px}
 .rl .ci .t{font-size:12px;color:var(--txt);line-height:1.65;margin-top:3px}
 
@@ -296,19 +453,19 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
             <div class="bo">ハイアンドロー</div>
             <div class="nu">047</div>
             <div class="pe">2人で参加</div>
-            <div class="stt"><div class="k">じゅんばん</div><div class="v">あと 3 組<small>約9分</small></div></div>
+            <div class="stt"><div class="k">順番</div><div class="v">あと3組<small>約18分</small></div></div>
           </div>
           <div class="pf"></div>
-          <div class="bt"><div class="hint">呼ばれるとこの画面が金色になります</div><div class="cn">この券をやめる</div></div>
+          <div class="bt"><div class="hint">呼ばれるとこの画面が金色になります</div><div class="cn">整理券を取り消す</div></div>
         </div>
-        <div class="gold">ほかのブースの券も取る</div>
+        <div class="gold">ホームに戻る</div>
         <div class="fn">10秒ごとに自動で更新</div>
       </div></div></div>
     </div>
   </div>
 
-  <h2><i>2</i>ブースをえらぶ</h2>
-  <p class="lead">混み具合バーは消した(当日の設定だとずっと空表示になって嘘になるから)。かわりに「何組待ちか」をでかい数字で。★の部分を押すと口コミが読める。</p>
+  <h2><i>2</i>ブースを選ぶ</h2>
+  <p class="lead">「何組待ちか」を大きい数字に。★を押すと口コミが読める（ここを押したときだけ口コミ、それ以外は発券）。下のバーは席の埋まり具合。</p>
   <div class="cmp">
     <div class="col"><div class="tag t-old">い ま</div>
       <div class="ph"><div class="vp"><div class="o">
@@ -323,17 +480,45 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
     <div class="col"><div class="tag t-new">新しい案</div>
       <div class="ph"><div class="vp"><div class="n">
         <div class="bar"><b>♣ CASINO</b><span>1-E</span></div>
-        <div class="ttl">どれで遊ぶ？</div>
+        <div class="ttl">ブースを選ぶ</div>
         <div class="sb">タップすると人数を選べます</div>
-        <div class="brow"><div class="m"><b>ババ抜き</b><span>約6分待ち ・ ★4.6</span></div><div class="w2"><i>2</i><em>組まち</em></div></div>
-        <div class="brow"><div class="m"><b>神経衰弱</b><span>約12分待ち ・ ★4.2</span></div><div class="w2"><i>4</i><em>組まち</em></div></div>
-        <div class="brow got"><div class="m"><b>ハイアンドロー</b><span>券を持っています</span></div><div class="w2"><i>取得済</i></div></div>
-        <div class="brow"><div class="m"><b>チンチロ</b><span>すぐ遊べます ・ ★4.0</span></div><div class="w2"><i>0</i><em>組まち</em></div></div>
+        <div class="brow2">
+          <div class="bmain">
+            <div class="m"><b>ババ抜き</b><span>約12分待ち</span></div>
+            <div class="w2"><i>2</i><em>組待ち</em></div>
+            <div class="sbtn"><div class="s">★</div><div class="v">4.6</div><div class="k">口コミ</div></div>
+          </div>
+          <div class="seat"><div class="g"><i class="full" style="width:100%"></i></div><div class="sl"><span>満席</span><span>4 / 4席</span></div></div>
+        </div>
+        <div class="brow2">
+          <div class="bmain">
+            <div class="m"><b>神経衰弱</b><span>約24分待ち</span></div>
+            <div class="w2"><i>4</i><em>組待ち</em></div>
+            <div class="sbtn"><div class="s">★</div><div class="v">4.2</div><div class="k">口コミ</div></div>
+          </div>
+          <div class="seat"><div class="g"><i style="width:50%"></i></div><div class="sl"><span>空きあり</span><span>2 / 4席</span></div></div>
+        </div>
+        <div class="brow2">
+          <div class="bmain">
+            <div class="m"><b>ハイアンドロー</b><span>約6分待ち</span></div>
+            <div class="w2"><i>1</i><em>組待ち</em></div>
+            <div class="sbtn"><div class="s">★</div><div class="v">4.0</div><div class="k">口コミ</div></div>
+          </div>
+          <div class="seat"><div class="g"><i class="full" style="width:100%"></i></div><div class="sl"><span>満席</span><span>1 / 1席</span></div></div>
+        </div>
+        <div class="brow2">
+          <div class="bmain">
+            <div class="m"><b>チンチロ</b><span>待ちなし</span></div>
+            <div class="w2"><i>0</i><em>組待ち</em></div>
+            <div class="sbtn dim"><div class="s">★</div><div class="v">―</div><div class="k">なし</div></div>
+          </div>
+          <div class="seat"><div class="g"><i style="width:0"></i></div><div class="sl"><span>すぐ座れます</span><span>0 / 5席</span></div></div>
+        </div>
       </div></div></div>
     </div>
   </div>
 
-  <h2><i>3</i>よばれた画面</h2>
+  <h2><i>3</i>呼び出しの画面</h2>
   <p class="lead">一番目立つ画面だから気合いを入れた。工事現場みたいなストライプ＋当たり券みたいなプレート。遠くからでも「呼ばれた」って分かる。</p>
   <div class="cmp">
     <div class="col"><div class="tag t-old">い ま</div>
@@ -350,14 +535,14 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
         <div class="stripe"></div>
         <div class="in">
           <div class="yt">YOUR TURN</div>
-          <div class="yb">よばれました！</div>
+          <div class="yb">お呼び出し</div>
           <div class="plate">
             <span class="nt l"></span><span class="nt r"></span>
             <div class="rib">ハイアンドロー</div>
             <div class="nu">047</div>
             <div class="su">♠ ♥ ♦ ♣</div>
           </div>
-          <div class="go">受付へどうぞ</div>
+          <div class="go">受付までお越しください</div>
           <div class="ok">確認しました</div>
         </div>
         <div class="stripe"></div>
@@ -366,7 +551,7 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
   </div>
 
   <h2><i>4</i>スタッフ：卓の担当</h2>
-  <p class="lead">今は全部入りの管理画面をみんなで見てる。新しい案は最初に自分の担当を選ぶと、やることだけが出る。卓の人は「終わった」を押すだけ。</p>
+  <p class="lead">最初に自分の担当を選ぶと、やることだけが出る。1組のときは番号が大きく1つ、2組入ったら自動でリストになる。</p>
   <div class="cmp">
     <div class="col"><div class="tag t-old">い ま</div>
       <div class="ph"><div class="vp"><div class="o">
@@ -392,36 +577,66 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
         </div>
       </div></div></div>
     </div>
-    <div class="col"><div class="tag t-new">新しい案</div>
+    <div class="col"><div class="tag t-new">新しい案 ・ 1組</div>
       <div class="ph"><div class="vp"><div class="stf">
-        <div class="hd">ババ抜き の卓<span>担当をかえる</span></div>
+        <div class="hd">ババ抜き の卓<span>担当を変更</span></div>
         <div class="job">ゲーム中</div>
-        <div class="sub">終わったら下のボタンを押します</div>
+        <div class="sub">終了したらボタンを押す</div>
         <div class="ctr"><div class="nu">046</div><div class="me">2人で参加</div><div class="el">5:12</div></div>
-        <div class="big">終わった</div>
-        <div class="nx">つぎは 048 → 051 → 055</div>
+        <div class="big">終了</div>
+        <div class="nx">次 048 → 051 → 055</div>
+      </div></div></div>
+    </div>
+    <div class="col"><div class="tag t-new">新しい案 ・ 2組</div>
+      <div class="ph"><div class="vp"><div class="stf">
+        <div class="hd">ババ抜き の卓<span>担当を変更</span></div>
+        <div class="job">ゲーム中 ・ 2組</div>
+        <div class="sub">終了した組からボタンを押す</div>
+        <div class="trows">
+          <div class="trow"><span class="tn">046</span><span class="tm"><span class="tp">2人</span><br><span class="tt hot">5:12</span></span><span class="tb">終了</span></div>
+          <div class="trow"><span class="tn">049</span><span class="tm"><span class="tp">2人</span><br><span class="tt">3:40</span></span><span class="tb">終了</span></div>
+        </div>
+        <div class="big">全員終了</div>
+        <div class="nx">次 051 → 055</div>
       </div></div></div>
     </div>
   </div>
 
   <h2><i>5</i>スタッフ：受付</h2>
-  <p class="lead">呼ぶ番号がボタンにそのまま書いてあるから、押してボードに書き写すだけ。押せないときは理由が出る。</p>
+  <p class="lead">左の緑の丸が空席のしるし。空いている卓だけ押せる。呼び出しは卓ごとに持つので、複数の卓を同時に呼べる。</p>
   <div class="cmp">
-    <div class="col"><div class="tag t-new">新しい案</div>
+    <div class="col"><div class="tag t-new">呼べる状態</div>
       <div class="ph"><div class="vp"><div class="stf">
-        <div class="hd">受付<span>担当をかえる</span></div>
+        <div class="hd">受付<span>担当を変更</span></div>
         <div class="job">番号を呼ぶ</div>
-        <div class="sub">押すとお客さんに通知されます</div>
-        <div class="rw"><div class="m"><b>ババ抜き</b><span>3組が待っています</span></div><div class="no">048</div></div>
-        <div class="rw"><div class="m"><b>神経衰弱</b><span>4組が待っています</span></div><div class="no">049</div></div>
-        <div class="rw"><div class="m"><b>ハイアンドロー</b><span>2組が待っています</span></div><div class="no">053</div></div>
-        <div class="rw off"><div class="m"><b>チンチロ</b><span>待っている人がいません</span></div><div class="no">なし</div></div>
+        <div class="sub">空いている卓だけ押せます</div>
+        <div class="rrow"><span class="lamp"></span><span class="rm"><b>ババ抜き</b><span>空席 ・ 3組待ち</span></span><span class="rbtn">048</span></div>
+        <div class="rrow busy"><span class="lamp"></span><span class="rm"><b>神経衰弱</b><span>使用中 049 ・ 4:20</span></span><span class="rlock">使用中</span></div>
+        <div class="rrow"><span class="lamp"></span><span class="rm"><b>ハイアンドロー</b><span>空席 ・ 2組待ち</span></span><span class="rbtn">053</span></div>
+        <div class="rrow none"><span class="lamp"></span><span class="rm"><b>チンチロ</b><span>待機なし</span></span><span class="rlock">―</span></div>
+        <div class="callsp">番号を指定して呼ぶ</div>
+        <div class="rlg">● 緑＝空席　● 灰＝使用中</div>
+      </div></div></div>
+    </div>
+    <div class="col"><div class="tag t-new">呼び出し中</div>
+      <div class="ph"><div class="vp"><div class="stf">
+        <div class="hd">受付<span>担当を変更</span></div>
+        <div class="job">ババ抜きは呼び出し中</div>
+        <div class="sub">来たら「到着」、来なければ「不在」</div>
+        <div class="callnow">
+          <div class="cnb">ババ抜き</div>
+          <div class="cnn">048</div>
+          <div class="cnp">2人で参加</div>
+          <div class="cnt2">呼び出しから 0:38</div>
+          <div class="cnrow"><span class="cy">到着</span><span class="cn">不在</span></div>
+        </div>
+        <div class="rrow"><span class="lamp"></span><span class="rm"><b>ハイアンドロー</b><span>空席 ・ 2組待ち</span></span><span class="rbtn">053</span></div>
+        <div class="rlg">呼び出し中の卓は「到着」か「不在」を押すまで次を呼べません。<br>他の卓は同時に呼べます。</div>
       </div></div></div>
     </div>
   </div>
 
-
-  <h2><i>6</i>人数をえらぶ</h2>
+  <h2><i>6</i>人数を選ぶ</h2>
   <p class="lead">ブースを押したときに下から出る。ボタンを大きくして、片手で押しやすい位置(画面の下側)に置いた。</p>
   <div class="cmp">
     <div class="col"><div class="tag t-old">い ま</div>
@@ -432,7 +647,7 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
         <div style="position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px">
           <div style="background:#162518;border:1px solid #2a4a2a;border-radius:14px;padding:16px;width:100%;text-align:center">
             <div style="font-size:15px;font-weight:700">ババ抜き</div>
-            <div style="font-size:11px;color:#4a6a4a;margin-bottom:14px">何人で参加しますか？</div>
+            <div style="font-size:11px;color:#4a6a4a;margin-bottom:14px">人数を選んでください</div>
             <div style="display:flex;gap:6px">
               <div style="flex:1;background:#c8a84b;color:#0e1f14;border-radius:9px;padding:11px 0;font-weight:700">1</div>
               <div style="flex:1;background:#0e1f14;border:1px solid #2a4a2a;color:#f0e6c0;border-radius:9px;padding:11px 0">2</div>
@@ -449,37 +664,87 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
       <div class="ph"><div class="vp"><div class="mo">
         <div class="n" style="height:100%">
           <div class="bar"><b>♣ CASINO</b><span>1-E</span></div>
-          <div class="ttl">どれで遊ぶ？</div>
+          <div class="ttl">ブースを選ぶ</div>
           <div class="sb">タップすると人数を選べます</div>
-          <div class="brow"><div class="m"><b>ババ抜き</b><span>約6分待ち ・ ★4.6</span></div><div class="w2"><i>2</i><em>組まち</em></div></div>
-          <div class="brow"><div class="m"><b>神経衰弱</b><span>約12分待ち ・ ★4.2</span></div><div class="w2"><i>4</i><em>組まち</em></div></div>
+          <div class="brow"><div class="m"><b>ババ抜き</b><span>約6分待ち ・ ★4.6</span></div><div class="w2"><i>2</i><em>組待ち</em></div></div>
+          <div class="brow"><div class="m"><b>神経衰弱</b><span>約12分待ち ・ ★4.2</span></div><div class="w2"><i>4</i><em>組待ち</em></div></div>
         </div>
         <div class="dim"></div>
         <div class="sheet">
           <div class="bn">ババ抜き</div>
-          <div class="q">何人で参加しますか？</div>
+          <div class="q">人数を選んでください</div>
           <div class="psel"><button>1</button><button class="on">2</button><button>3</button><button>4</button></div>
+          <div class="pnote">何人で来ても1枚の券で一緒に呼ばれます</div>
           <button class="go">整理券を取る</button>
-          <button class="cx">やめる</button>
+          <button class="cx">キャンセル</button>
         </div>
       </div></div></div>
     </div>
   </div>
 
-  <h2><i>7</i>レビューを書く</h2>
+  <h2><i>7</i>呼ばれたのに行けなかったとき</h2>
+  <p class="lead">受付が「不在」を押すと整理券が無効になる。今のアプリは何も出ずに券が消えるだけなので、理由が分かるようにした。</p>
+  <div class="cmp">
+    <div class="col"><div class="tag t-new">新しい案</div>
+      <div class="ph"><div class="vp"><div class="n">
+        <div class="bar"><b>♣ CASINO</b><span>1-E</span></div>
+        <div class="tk">
+          <div class="tp">
+            <div class="bo">ハイアンドロー</div>
+            <div class="doneno" style="color:#C4392C">047</div>
+            <div class="donemsg" style="color:#C4392C">この整理券は無効になりました</div>
+            <div class="donestt">呼び出しから2分以内に来られなかったため</div>
+          </div>
+          <div class="pf"></div>
+          <div class="bt">
+            <div class="hint">また取り直していただけます。<br>ごめんなさい。</div>
+          </div>
+        </div>
+        <div class="gold">整理券を取り直す</div>
+        <div class="fn">列の最後尾からになります</div>
+      </div></div></div>
+    </div>
+  </div>
+
+  <h2><i>8</i>遊び終わったあと</h2>
+  <p class="lead">卓の担当が「終了」を押すと、客の画面がこれに変わる。ここからレビューを書ける。整理券は自分のスマホに残るので、あとから書くこともできる。</p>
+  <div class="cmp">
+    <div class="col"><div class="tag t-new">新しい案</div>
+      <div class="ph"><div class="vp"><div class="n">
+        <div class="bar"><b>♣ CASINO</b><span>1-E</span></div>
+        <div class="tk">
+          <div class="tp">
+            <div class="bo">ババ抜き</div>
+            <div class="doneno">046</div>
+            <div class="donemsg">ありがとうございました</div>
+            <div class="donestt">この番号は終了しました</div>
+          </div>
+          <div class="pf"></div>
+          <div class="bt">
+            <div class="revbtn">★ 感想を書く</div>
+            <div class="hint" style="margin-top:8px">書かなくても大丈夫です</div>
+          </div>
+        </div>
+        <div class="gold">次のブースの整理券を取る</div>
+        <div class="fn">感想はあとからでも書けます</div>
+      </div></div></div>
+    </div>
+  </div>
+
+  <h2><i>9</i>レビューを書く</h2>
   <p class="lead">遊び終わると出る画面。星をタップして、ひとこと書けば送信。書いた感想は他のお客さんにも見える。</p>
   <div class="cmp">
     <div class="col"><div class="tag t-old">い ま</div>
       <div class="ph"><div class="vp"><div class="o" style="text-align:center">
         <div class="bk" style="text-align:left">← 戻る</div>
         <div style="font-size:18px;font-weight:700;margin-top:26px">ババ抜き</div>
-        <div style="font-size:12px;color:#4a6a4a;margin-bottom:8px">どうでしたか？</div>
+        <div style="font-size:12px;color:#4a6a4a;margin-bottom:8px">評価をお願いします</div>
         <div style="font-size:26px;letter-spacing:2px">⭐⭐⭐⭐<span style="opacity:.3">⭐</span></div>
         <div style="font-size:13px;color:#9a8a5a;margin:6px 0 10px">😊 良い</div>
-        <div style="background:#162518;border:1px solid #2a4a2a;border-radius:10px;padding:10px;color:#4a6a4a;font-size:11.5px;text-align:left;min-height:52px">感想を書く（任意・匿名）</div>
+        <div style="background:#162518;border:1px solid #2a4a2a;border-radius:10px;padding:10px;color:#4a6a4a;font-size:11.5px;text-align:left;min-height:52px">感想（任意・匿名）</div>
         <div style="font-size:9px;color:#2a4a2a;text-align:left;margin-top:3px">※100文字まで・他のお客さんにも表示されます</div>
         <div style="background:linear-gradient(135deg,#c8a84b,#e8c96b);color:#0e1f14;border-radius:11px;padding:12px 0;font-size:12px;font-weight:700;margin-top:11px">送信する</div>
-        <div style="font-size:11px;color:#9a8a5a;letter-spacing:1px;text-align:left;margin-top:20px">みんなの感想</div>
+        <div style="font-size:11px;color:#9a8a5a;letter-spacing:1px;text-align:left;margin-top:20px">他の人の感想</div>
         <div style="background:#162518;border:1px solid #2a4a2a;border-radius:9px;padding:8px 10px;text-align:left;margin-top:5px">
           <div style="font-size:9px">⭐⭐⭐⭐⭐</div>
           <div style="font-size:11px;color:#f0e6c0;margin-top:2px">最後の1枚まで盛り上がった</div>
@@ -490,14 +755,14 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
       <div class="ph"><div class="vp"><div class="rv">
         <div style="font-size:10.5px;color:#9DD3B4;text-align:left">← もどる</div>
         <div class="bo">ババ抜き</div>
-        <div class="q">どうでしたか？</div>
+        <div class="q">評価をお願いします</div>
         <div class="stars">⭐⭐⭐⭐<span class="off">⭐</span></div>
         <div class="lb">😊 良い</div>
-        <div class="ta"><span class="ph2">感想を書く（任意・匿名）</span></div>
+        <div class="ta"><span class="ph2">感想（任意・匿名）</span></div>
         <div class="cnt">0 / 100文字</div>
         <div class="send">送信する</div>
         <div class="past">
-          <div class="h">みんなの感想</div>
+          <div class="h">他の人の感想</div>
           <div class="ci"><div class="s">⭐⭐⭐⭐⭐</div><div class="t">最後の1枚まで盛り上がった</div></div>
           <div class="ci"><div class="s">⭐⭐⭐⭐</div><div class="t">ディーラーの人がおもしろい</div></div>
         </div>
@@ -505,7 +770,7 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
     </div>
   </div>
 
-  <h2><i>8</i>口コミを見る</h2>
+  <h2><i>10</i>口コミを見る</h2>
   <p class="lead">ブース選択の★を押すと開く。前のページの一覧では★を押せる場所にしてあるので、書いた感想がちゃんと読まれる。</p>
   <div class="cmp">
     <div class="col"><div class="tag t-new">新しい案</div>
@@ -533,59 +798,279 @@ h2 i{font-style:normal;background:var(--brass);color:#1A1206;border-radius:8px;p
     </div>
   </div>
 
-  <h2><i>9</i>統括だけが見る画面</h2>
-  <p class="lead">これは俺が当日ずっと開いてるやつ。みんなの画面には出ないから、当日の作業は増えません。</p>
+  <h2><i>11</i>スタッフ：交換所</h2>
+  <p class="lead">景品を渡す担当の画面。＋−で渡す数を合わせて確定する。押した数がそのまま在庫から引かれるので、残りが何個かリアルタイムで分かる。</p>
+  <div class="cmp">
+    <div class="col"><div class="tag t-new">待機中</div>
+      <div class="ph"><div class="vp"><div class="stf">
+        <div class="hd">交換所<span>担当を変更</span></div>
+        <div class="job">景品交換</div>
+        <div class="sub">渡す数を合わせて確定する</div>
+        <div class="krest">
+          <div class="kk">残り</div><div class="kn">53</div><div class="ku">用意 100個</div>
+          <div class="kbar"><i style="width:53%"></i></div>
+        </div>
+        <div class="kcnt"><span class="kb dim">−</span><span class="kv"><span class="knum zero">0</span><small>渡す数</small></span><span class="kb">＋</span></div>
+        <div class="kfoot"><div class="kbig off">交換する</div><div class="kundo">直前の交換を取り消す</div></div>
+      </div></div></div>
+    </div>
+    <div class="col"><div class="tag t-new">2個に合わせた</div>
+      <div class="ph"><div class="vp"><div class="stf">
+        <div class="hd">交換所<span>担当を変更</span></div>
+        <div class="job">景品交換</div>
+        <div class="sub">渡す数を合わせて確定する</div>
+        <div class="krest">
+          <div class="kk">残り</div><div class="kn">53</div><div class="ku">用意 100個</div>
+          <div class="kbar"><i style="width:53%"></i></div>
+        </div>
+        <div class="kcnt"><span class="kb">−</span><span class="kv"><span class="knum">2</span><small>渡す数</small></span><span class="kb">＋</span></div>
+        <div class="kfoot"><div class="kbig on">2個 交換する</div><div class="kundo">直前の交換を取り消す</div></div>
+      </div></div></div>
+    </div>
+    <div class="col"><div class="tag t-new">在庫切れ</div>
+      <div class="ph"><div class="vp"><div class="stf">
+        <div class="hd">交換所<span>担当を変更</span></div>
+        <div class="job">景品交換</div>
+        <div class="sub">渡す数を合わせて確定する</div>
+        <div class="zero">
+          <div class="zk">残り</div><div class="zn">0</div><div class="zu">用意 130個</div>
+        </div>
+        <div class="zmsg"><b>景品がなくなりました</b><span>追加で景品を出したら、下のボタンで数を入れてください。</span></div>
+        <div class="kfoot"><div class="kbig off">交換する</div><div class="kadd">＋ 景品を補充する</div></div>
+      </div></div></div>
+    </div>
+    <div class="col"><div class="tag t-new">統括：補充する</div>
+      <div class="ph"><div class="vp" style="position:relative"><div class="stf">
+        <div class="hd">ダッシュボード<span>閉じる</span></div>
+        <div class="dsec" style="margin-top:0">景品</div>
+        <div class="gft">
+          <div class="r"><i>用意</i> 100個　<i>補充</i> 0個</div>
+          <div class="r"><i>渡した数</i> 100個</div>
+          <div class="bar"><i style="width:0"></i></div>
+          <div class="r"><i>残り</i> 0 / 100</div>
+        </div>
+        </div>
+        <div class="dim"></div>
+        <div class="addsheet">
+          <div class="at2">景品を補充する</div>
+          <div class="ad">追加で出した数を入れてください</div>
+          <div class="kcnt"><span class="kb">−</span><span class="kv"><span class="knum">30</span><small>補充する数</small></span><span class="kb">＋</span></div>
+          <div class="go2">30個 補充する</div>
+          <div class="cx2">キャンセル</div>
+        </div>
+      </div></div>
+    </div>
+
+  </div>
+
+  <h2><i>12</i>統括：設定</h2>
+  <p class="lead">開場前に1回だけ使う画面。「本番」を押すと4卓ぶんの席数と時間がまとめて入るので、数字を覚えていなくていい。※縦に長いのでスクロールします。</p>
+  <div class="cmp">
+    <div class="col"><div class="tag t-new">① まとめて設定</div>
+      <div class="ph"><div class="vp"><div class="stf">
+        <div class="hd">設定<span>閉じる</span></div>
+        <div class="job">設定</div>
+        <div class="sub">開場前に1回だけ使う</div>
+        <div class="dsec2">まとめて設定</div>
+        <div class="pre now">
+          <div class="pt">本番<span class="pbadge">適用中</span></div>
+          <div class="plist">ババ抜き 4席／神経衰弱 4席<br>ハイアンドロー 1席／チンチロ 5席<br>1回転はすべて6分</div>
+          <div class="pbtn">この設定にする</div>
+        </div>
+        <div class="pre">
+          <div class="pt">リハーサル</div>
+          <div class="plist">全卓 2席・1回転2分</div>
+          <div class="pbtn sub">この設定にする</div>
+        </div>
+        <div class="dsec2">今日の営業</div>
+        <div class="cfg">
+          <div class="cln"><span class="clb">開場</span><span class="cst"><span class="cbtn">−</span><span class="cv">10:00</span><span class="cbtn">＋</span></span></div>
+          <div class="cln"><span class="clb">閉場</span><span class="cst"><span class="cbtn">−</span><span class="cv">16:00</span><span class="cbtn">＋</span></span></div>
+        </div>
+      </div></div></div>
+    </div>
+    <div class="col"><div class="tag t-new">② 目標と景品</div>
+      <div class="ph"><div class="vp"><div class="stf">
+        <div class="hd">設定<span>閉じる</span></div>
+        <div class="dsec2" style="margin-top:0">今日の目標</div>
+        <div class="cfg">
+          <div class="cln"><span class="clb">目標</span><span class="cst"><span class="cbtn">−</span><span class="cv">340人</span><span class="cbtn">＋</span></span></div>
+          <div class="cln"><span class="clb">景品数</span><span class="cst"><span class="cbtn">−</span><span class="cv">100個</span><span class="cbtn">＋</span></span></div>
+        </div>
+        <div class="cfgmore">2日目の朝に入れ直す</div>
+        <div class="dsec2">卓ごとに変える</div>
+        <div class="cfg">
+          <div class="cnm">ババ抜き</div>
+          <div class="cln"><span class="clb">席数</span><span class="cst"><span class="cbtn">−</span><span class="cv">4</span><span class="cbtn">＋</span></span></div>
+          <div class="cln"><span class="clb">1回転</span><span class="cst"><span class="cbtn">−</span><span class="cv">6分</span><span class="cbtn">＋</span></span></div>
+          <div class="cpz">受付を止める</div>
+        </div>
+        <div class="cfgmore">他の3卓も同様に並びます</div>
+      </div></div></div>
+    </div>
+    <div class="col"><div class="tag t-new">③ 片づけ</div>
+      <div class="ph"><div class="vp"><div class="stf">
+        <div class="hd">設定<span>閉じる</span></div>
+        <div class="dsec2" style="margin-top:0">営業の終了</div>
+        <div class="allstop">すべての卓の受付を止める</div>
+        <div class="cfgmore">閉場のときに1回押せば、4卓ぶんまとめて止まります</div>
+        <div class="dsec2">片づけ</div>
+        <div class="op1"><b>整理券だけ消す</b><span>2日目の朝に使う。口コミは残る</span></div>
+        <div class="op1"><b>口コミを1件ずつ消す</b><span>不適切な書き込みがあったとき</span></div>
+        <div class="dng"><div class="dbtn">データ初期化（開場前のみ）</div>
+          <div class="cfgmore" style="margin-top:5px">整理券・レビュー・景品数・アナウンスがすべて消えます</div>
+        </div>
+      </div></div></div>
+    </div>
+  </div>
+
+  <h2><i>13</i>統括：一斉アナウンス</h2>
+  <p class="lead">決まった文から選んで、客側の画面に一斉に出す。自由に文章は書けない仕様にした（誰かにいたずらされる余地をなくすため）。</p>
+  <div class="cmp">
+    <div class="col"><div class="tag t-new">統括の画面</div>
+      <div class="ph"><div class="vp"><div class="stf">
+        <div class="hd">お知らせ<span>閉じる</span></div>
+        <div class="job">一斉アナウンス</div>
+        <div class="sub">客側の画面に表示されます</div>
+        <div class="nowb"><div class="nk">表示中</div><div class="nv">現在混雑しています</div><div class="nt">14:12から表示中</div></div>
+        <div class="dsec2">出す内容を選ぶ</div>
+        <div class="aopt on"><span class="amk"></span><span class="atx">現在混雑しています</span></div>
+        <div class="aopt"><span class="amk"></span><span class="atx">まもなく受付を終了します</span></div>
+        <div class="aopt"><span class="amk"></span><span class="atx">本日の受付を終了しました</span></div>
+        <div class="asend">この内容で表示する</div>
+        <div class="astop">お知らせを消す</div>
+      </div></div></div>
+    </div>
+    <div class="col"><div class="tag t-new">客側の見え方</div>
+      <div class="ph"><div class="vp"><div class="n">
+        <div class="bar"><b>♣ CASINO</b><span>1-E</span></div>
+        <div class="abanner"><span class="ai">📣</span><span class="at">現在混雑しています</span></div>
+        <div class="tk">
+          <div class="tp">
+            <div class="bo">ハイアンドロー</div>
+            <div class="nu">047</div>
+            <div class="pe">2人で参加</div>
+            <div class="stt"><div class="k">順番</div><div class="v">あと3組<small>約18分</small></div></div>
+          </div>
+          <div class="pf"></div>
+          <div class="bt"><div class="hint">呼ばれるとこの画面が金色になります</div></div>
+        </div>
+      </div></div></div>
+    </div>
+  </div>
+
+  <h2><i>14</i>統括：ダッシュボード</h2>
+  <p class="lead">統括だけが開く画面。他の人の画面には出ないので、当日の作業は増えません。</p>
   <div class="dash">
     <div class="dgrid">
       <div>
-        <div class="dsec">いまの数字</div>
+        <div class="dsec">現在の状況</div>
         <div class="kpr">
-          <div><div class="a">128</div><div class="b">遊んだ人</div></div>
-          <div><div class="a">11</div><div class="b">待ち組数</div></div>
+          <div><div class="a">128</div><div class="b">今日</div></div>
+          <div><div class="a">11</div><div class="b">待ち組</div></div>
           <div><div class="a">92</div><div class="b">人/時</div></div>
         </div>
+        <div class="total2">2日合計 <b>431人</b>（金曜 303人）</div>
         <div class="goal">
           <div class="t">目標 340人 ・ 38%</div>
           <div class="bar"><i></i></div>
-          <div class="f">このペースなら閉場までに322人。目標にとどきません</div>
+          <div class="f">このペースなら閉場までに322人。目標にとどきません<br><span style="color:#7FA48F">※開場30分は「計測中」と表示</span></div>
         </div>
-        <div class="dsec">卓のようす</div>
-        <div class="tbr"><b>♠ ババ抜き</b><div class="v">046番が遊び中 ・ <em>5:12</em> ・ 3組まち</div></div>
-        <div class="tbr hot"><b>♦ ハイアンドロー</b><div class="v">047番が遊び中 ・ <em>13:40</em> ・ 2組まち</div></div>
-        <div class="tbr idle"><b>♥ 神経衰弱</b><div class="v">空いています ・ 4組まち</div></div>
+        <div class="dsec">各卓の状況</div>
+        <div class="tbr"><b>♠ ババ抜き</b><div class="v">046 使用中 ・ <em>5:12</em> ・ 3組待ち</div></div>
+        <div class="tbr hot"><b>♦ ハイアンドロー</b><div class="v">047 使用中 ・ <em>13:40</em> ・ 2組待ち</div></div>
+        <div class="tbr idle"><b>♥ 神経衰弱</b><div class="v">空いています ・ 4組待ち</div></div>
       </div>
       <div>
-        <div class="dsec">気をつけること（2件）</div>
-        <div class="alr bad"><b>⏱ ハイアンドローが13分すぎ</b><p>「終わった」の押し忘れかも。まだ遊んでるなら放置でOK。</p><span class="btn">終わったことにする</span></div>
-        <div class="alr wn"><b>▲ 神経衰弱に4組が待ち</b><p>卓が空いてるので受付に呼ぶよう伝えて。</p></div>
-        <div class="dsec">沼パチと景品</div>
+        <div class="dsec">要確認（2件）</div>
+        <div class="alr bad"><b>⏱ ハイアンドロー 13分経過</b><p>終了の押し忘れの可能性。継続中なら操作不要。</p><span class="btn">強制終了</span><span class="btn2">直前の操作を取り消す</span></div>
+        <div class="alr wn"><b>▲ 神経衰弱 4組待ち</b><p>空席あり。受付に呼び出しを依頼。</p></div>
+        <div class="alr wn"><b>🕐 閉場30分前</b><p>「まもなく受付を終了します」のアナウンスを出す頃です。</p></div>
+        <div class="dsec">景品</div>
         <div class="gft">
-          <div class="r"><i>挑戦した人</i> 34　<i>当たった人</i> 7</div>
-          <div class="bar"><i></i></div>
-          <div class="r"><i>景品のこり</i> 53 / 100</div>
-          <div class="fo">このままだと <b>15:40ごろ</b> になくなります（閉場16:00）</div>
+          <div class="r"><i>用意</i> 100個　<i>補充</i> 30個</div>
+          <div class="r"><i>渡した数</i> 77個</div>
+          <div class="bar"><i style="width:41%"></i></div>
+          <div class="r"><i>残り</i> 53 / 130</div>
+          <div class="fo">このペースで <b>15:40</b> に在庫切れ（閉場16:00）</div>
+          <div class="gadd">＋ 景品を補充する</div>
         </div>
-        <div class="dsec">できること</div>
-        <div class="op1"><b>お知らせを出す</b><span>客の画面に一斉表示</span></div>
-        <div class="op1"><b>紙モード</b><span>アプリが落ちたとき用に番号一覧を出す</span></div>
-        <div class="op1 dg"><b>データを消す</b><span>朝の準備のときだけ</span></div>
+        <div class="dsec">操作</div>
+        <div class="op1"><b>一斉アナウンス</b><span>客側の画面に表示</span></div>
+        <div class="op1"><b>紙モード</b><span>アプリ停止時に番号一覧を表示</span></div>
+        <div class="op1 dg"><b>データ初期化</b><span>開場前のみ使用</span></div>
       </div>
     </div>
   </div>
 
-  <h2 style="margin-top:30px"><i>＊</i>この画面がいる理由</h2>
-  <div class="dx"><b>目標に届くか、その場で分かる</b><span>遊んだ人数だけ見ても多いか少ないか分からない。ペースから閉場までの見込みを出して、届かないなら1ゲームを短くする判断ができる。</span></div>
+  <h2 style="margin-top:30px"><i>＊</i>ダッシュボードがいる理由</h2>
+  <div class="dx"><b>目標に届くか、その場で分かる</b><span>利用者数数だけ見ても多いか少ないか分からない。ペースから閉場までの見込みを出して、届かないなら1ゲームを短くする判断ができる。</span></div>
   <div class="dx"><b>「終わった」の押し忘れを見つける</b><span>一番起きやすい事故。押し忘れると待ち人数がずっと減らず、お客さんが理由もなく待たされる。</span></div>
   <div class="dx"><b>景品が尽きる時間が分かる</b><span>会計として一番怖いのが昼で景品がなくなること。当たった数から「何時になくなるか」を出す。</span></div>
-  <div class="dx"><b>全員にお知らせを出せる</b><span>「まもなく受付終了」を客の画面に一斉表示。廊下で叫ぶより確実で、ボードに書くより速い。</span></div>
+  <div class="dx"><b>全員にお知らせを出せる</b><span>「まもなく受付終了」を客側の画面に表示。廊下で叫ぶより確実で、ボードに書くより速い。</span></div>
 
-  <h2><i>10</i>変わること・変わらないこと</h2>
+  <h2><i>15</i>作るときの注意</h2>
+  <p class="lead">画面ではなく中身の話。ここを外すとデータが壊れるので、実装するときに必ず守る。</p>
+  <div class="impl">
+    <div class="ib danger">
+      <b>景品の数は「残り」を書き換えない</b>
+      <p>残りの数を直接更新すると、交換所と統括が同時に押したときに片方が消える。<br>
+      例：残り53のとき、交換所が「2個交換」（53→51）と統括が「30個補充」（53→83）を同時に押すと、後に届いた方だけが残って83になる。渡した2個が消える。</p>
+      <p><b>正しいやり方：</b>操作を1件ずつ記録する。「+100（用意）」「−2（交換）」「+30（補充）」を別々の行として保存し、残りは毎回その合計から計算する。同時に押されても両方の記録が残る。</p>
+    </div>
+    <div class="ib">
+      <b>入場した時刻を保存する</b>
+      <p>経過時間・押し忘れの検知・時間帯ごとの人数が、すべてこれを使う。「到着」を押したときに時刻を記録しておく。今のデータには発券した時刻しかない。</p>
+    </div>
+    <div class="ib">
+      <b>設定を保存する場所を用意する</b>
+      <p>開場・閉場・目標人数・景品の用意数・アナウンスの内容と表示時刻。今はどこにも保存する場所がない。</p>
+    </div>
+    <div class="ib">
+      <b>満席でも整理券は取れるようにする</b>
+      <p>今は入場中の人数が席数に達すると発券が止まる。満席のときこそ並びたいので、この制限を外す。席数は「今その卓が埋まっているか」の判定にだけ使う。</p>
+    </div>
+    <div class="ib">
+      <b>「当たったか」はアプリでは分からない</b>
+      <p>沼パチは整理券の対象外なので、誰が当たったかの情報はアプリに入らない。交換所は口頭を信じるしかない。</p>
+      <p><b>運用で決めること：</b>当たった人に札やチップを渡して、交換所がそれと引き換える。アプリ側は渡した数を数えるだけと割り切る。<b>この運用が決まっていないと当日困る。</b></p>
+    </div>
+    <div class="ib">
+      <b>券の人数と席数は別のもの</b>
+      <p>席数は「その卓で同時に何人遊べるか」でゲームのルールで決まる。券の人数は「何人で来たか」で客の都合で決まる。<b>席数で券の人数を制限しない。</b>ハイアンドローが1席でも、2人組は「2人」の券を取れる（順番に遊べばいいだけ）。</p>
+    </div>
+    <div class="ib danger">
+      <b>呼び出しは卓ごとに持つ</b>
+      <p>今は「呼び出し中の番号」をカジノ全体で1件しか持てない。4卓が回っていると、卓が空いても他の卓の呼び出しが終わるまで呼べない場面が出る（実測：4回に1回は30秒以上待つ、3時間で28分の損失）。</p>
+      <p>さらに、前の呼び出しが上書きされて消える問題もこれが原因。<b>卓ごとに1件ずつ持つように変える。</b>この構造はコード内の41箇所で使われているので、<b>書き始める前に決めておく必要がある。</b>後から変えると客側とスタッフ側の両方を作り直すことになる。</p>
+    </div>
+    <div class="ib">
+      <b>2日目も番号は続きから</b>
+      <p>土曜の朝は「整理券だけ消す」を使う。遊び終わった券は残るので、番号は金曜の続き（301番など）から始まる。運用上は困らないし、累計人数が2日合計で出るので報告がそのまま作れる。</p>
+      <p>ただし<b>目標との比較は「今日」の人数で行う</b>こと。設定した開場時刻より後に遊んだ人だけを数える。</p>
+    </div>
+    <div class="ib">
+      <b>客の端末に古い整理券が残る</b>
+      <p>整理券の情報は客のスマホにも保存される。データを消しても端末には残るので、<b>金曜に遊んだ客が土曜に開くと、存在しない番号が表示される</b>。券がデータベースにあるか確認して、無ければ端末からも消す処理を入れる。</p>
+    </div>
+    <div class="ib">
+      <b>おかしな値が入らないようにする</b>
+      <p>目標人数を0にすると達成率の計算が壊れる（1以上にする）。閉場を開場より前にすると残り時間がマイナスになる（開場より後しか選べないようにする）。景品の補充を0個で確定できないようにする。</p>
+      <p>表示の桁も決めておく：整理券の番号は3桁（999まで）、待ち組数は2桁（99組まで）、経過時間は60分を超えたら「63:20」と出す。文化祭の規模なら足りるが、はみ出さないか一度確かめておく。</p>
+    </div>
+    <div class="ib">
+      <b>アナウンスは決まった文だけ</b>
+      <p>このアプリはURLを知っていれば誰でもデータを書き換えられる。自由に文章を入れられるようにすると、客全員の画面に好きな文字を出せてしまう。選択式にすれば、出せる文が決まっているので問題にならない。</p>
+    </div>
+  </div>
+
+  <h2><i>16</i>変わること・変わらないこと</h2>
   <div class="diff">
     <div class="dc k"><h4>変わらない</h4>
       <p>整理券を取る流れ</p><p>URL・パスワード</p><p>レビューと口コミ</p><p>当日の運用ルール</p><p>裏側の仕組み(データ)</p>
     </div>
     <div class="dc c"><h4>変わる</h4>
-      <p>色と見た目ぜんぶ(見やすく)</p><p>スタッフは最初に担当を選ぶ</p><p>卓の担当は「終わった」を押すだけ</p><p>ボタンの言葉(入場確認→「来た」)</p><p>混み具合バーは削除</p><p>統括用の管理画面が増える</p>
+      <p>色と見た目ぜんぶ(見やすく)</p><p>スタッフは最初に担当を選ぶ</p><p>卓の担当は「終わった」を押すだけ</p><p>ボタンの言葉(入場確認→「来た」)</p><p>混み具合バーは「席の埋まり具合」に</p><p>統括用の管理画面が増える</p><p>交換所の担当が景品数を記録する</p><p>満席でも整理券が取れる</p>
     </div>
   </div>
 
