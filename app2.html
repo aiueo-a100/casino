@@ -585,7 +585,7 @@ const db={
   tickets:(light)=>api(light
     ? "tickets?select=id,number,booth,status,people,day"
     : "tickets?select=*"),
-  reviews:()=>api("reviews?select=id,booth_id,rating,comment&hidden=is.false&order=created_at.desc"),
+  reviews:()=>api("reviews?select=id,booth_id,rating,comment,hidden&order=created_at.desc"),
   settings:()=>api("settings?select=*&id=eq.1"),
   addTicket:(booth,people,day)=>api("tickets",{method:"POST",headers:{Prefer:"return=representation"},
     body:JSON.stringify({booth,people,status:"waiting",day})}),
@@ -617,7 +617,7 @@ let S={
   mine:LS.get("mine2",[]),          // [{id,number,booth,people}]
   reviewed:LS.get("reviewed2",[]),  // [booth_id]
   busy:false, loaded:false, offline:false,
-  pickBooth:null, pickPeople:2, revBooth:null, revRating:0, seeBooth:null,
+  pickBooth:null, pickPeople:2, revBooth:null, revRating:0, revText:"", seeBooth:null,
   lastCalled:null, justIssued:false,
   role:LS.get("role2",null),      // null | "reception" | booth id | "exchange" | "admin"
   sub:null,   // 統括の下位画面: settings / announce / record / paper
@@ -674,7 +674,7 @@ function reserved(bid){return S.tickets.filter(t=>t.booth===bid&&["called","arri
 function myTicket(bid){return S.mine.find(m=>m.booth===bid)}
 function ticketOf(m){return S.tickets.find(t=>t.id===m.id)}
 function starsOf(bid){
-  const rs=S.reviews.filter(r=>r.booth_id===bid);
+  const rs=S.reviews.filter(r=>r.booth_id===bid && r.hidden!==true);
   if(!rs.length)return null;
   return {avg:(rs.reduce((a,r)=>a+r.rating,0)/rs.length), n:rs.length, list:rs};
 }
@@ -811,8 +811,8 @@ function render(){
       <div class="q2">評価をお願いします</div>
       <div class="stars">${[1,2,3,4,5].map(i=>`<span class="${i<=S.revRating?"on":""}" onclick="setRating(${i})">⭐</span>`).join("")}</div>
       <div class="rvlb">${lb}</div>
-      <textarea id="rvText" maxlength="100" placeholder="感想（任意・匿名）" oninput="cntUp()"></textarea>
-      <div class="cnt"><span id="cnt">0</span> / 100文字</div>
+      <textarea id="rvText" maxlength="100" placeholder="感想（任意・匿名）" oninput="cntUp()">${esc(S.revText)}</textarea>
+      <div class="cnt"><span id="cnt">${S.revText.length}</span> / 100文字</div>
       <button class="send" id="sendBtn" ${S.revRating?"":"disabled"} onclick="sendReview()">送信する</button>
     </div>`;
   }
@@ -872,7 +872,13 @@ function closePeople(){set({pickBooth:null})}
 function setPeople(n){set({pickPeople:n})}
 function seeReviews(id){set({seeBooth:id,view:"reviews"})}
 function setRating(n){set({revRating:n})}
-function cntUp(){document.getElementById("cnt").textContent=document.getElementById("rvText").value.length}
+function cntUp(){
+  const el=document.getElementById("rvText");
+  if(!el)return;
+  S.revText=el.value;                       // 覚えておく（描き直さない）
+  const c=document.getElementById("cnt");
+  if(c)c.textContent=el.value.length;
+}
 function openReview(bid){set({revBooth:bid,revRating:0,view:"review"})}
 function dropMine(id){set({mine:S.mine.filter(m=>m.id!==id)})}
 
@@ -912,10 +918,11 @@ async function sendReview(){
   const last=LS.get("lastrev",0);
   if(Date.now()-last<30000){ toast("すこし時間をあけてください"); return }
   set({busy:true});
-  const txt=(document.getElementById("rvText")||{}).value||"";
+  const el=document.getElementById("rvText");
+  const txt=(el?el.value:S.revText)||"";
   try{
     await db.addReview(S.revBooth,S.revRating,txt.slice(0,100)||null);
-    S.reviewed.push(S.revBooth); LS.set("reviewed2",S.reviewed); LS.set("lastrev",Date.now());
+    S.reviewed.push(S.revBooth); LS.set("reviewed2",S.reviewed); LS.set("lastrev",Date.now()); S.revText="";
     toast("ありがとうございました");
     S.busy=false; await refresh(); set({view:"mine"});
   }catch(e){ S.busy=false; toast("送信できませんでした"); render(); }
@@ -1656,6 +1663,7 @@ function startPoll(){
   pollTimer=setInterval(()=>{
     if(document.hidden)return;              // 画面が見えていないときは通信しない
     if(S.busy||S.pickBooth)return;
+    if(S.view==="review")return;      // 入力中は描き直さない
     refresh();
   },pollMs);
 }
