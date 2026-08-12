@@ -368,6 +368,136 @@ textarea{width:100%;background:var(--paper);color:var(--ink);border:none;border-
   border-radius:9px;margin-top:10px;display:none}
 #offline.on{display:block}
 .load{text-align:center;color:var(--txts);font-size:13px;padding:40px 0}
+/* 交換所 */
+.krest{text-align:center;margin-top:18px}
+.krest .kk{font-size:10.5px;letter-spacing:.16em;color:var(--brass);font-weight:900}
+.krest .kn{font-family:var(--num);font-size:68px;line-height:.95;color:var(--paper);font-variant-numeric:tabular-nums}
+.krest .kn.zero{color:var(--red)}
+.krest .ku{font-size:11.5px;color:var(--txts)}
+.kbar{height:7px;background:rgba(246,241,225,.15);border-radius:4px;margin:11px 4px 0;overflow:hidden}
+.kbar i{display:block;height:100%;background:linear-gradient(90deg,var(--brass),var(--amber))}
+.kcnt{display:flex;align-items:center;gap:9px;margin-top:16px;background:var(--paper);border-radius:12px;padding:11px}
+.kcnt button{width:54px;height:54px;border-radius:11px;background:var(--paper2);color:var(--ink);
+  font-family:var(--num);font-size:26px;flex-shrink:0}
+.kcnt button:disabled{opacity:.35}
+.kcnt .kv{flex:1;min-width:0;text-align:center;line-height:1}
+.kcnt .knum{font-family:var(--num);font-size:40px;color:var(--ink)}
+.kcnt .knum.z{color:#B4BDB6}
+.kcnt .kv small{display:block;font-size:10.5px;color:var(--inks);font-weight:700;margin-top:3px}
+.kbig{width:100%;border-radius:13px;padding:16px 0;font-size:18px;margin-top:16px}
+.kbig.on{background:var(--brass);color:#1A1206}
+.kbig.off{background:#123C2A;color:#6E8C7C}
+.kundo{width:100%;background:transparent;border:1.5px solid rgba(246,241,225,.28);color:var(--txts);
+  border-radius:10px;padding:11px 0;font-size:12px;font-weight:700;margin-top:9px}
+.zmsg{background:#3A1512;border-left:4px solid var(--red);border-radius:0 9px 9px 0;padding:12px 13px;margin-top:14px}
+.zmsg b{display:block;font-size:13px;font-weight:900;color:#FC8181;margin-bottom:3px}
+.zmsg span{font-size:11px;color:#F0D0D0;line-height:1.65}
+
+
+/* ===== 統括 ===== */
+.dsec{font-size:10px;letter-spacing:.16em;font-weight:900;color:var(--brass);margin:16px 0 7px;
+  border-bottom:1px solid rgba(185,138,42,.3);padding-bottom:4px;display:flex;justify-content:space-between;align-items:baseline}
+.dsec u{text-decoration:none;background:var(--red);color:#fff;border-radius:9px;padding:1px 8px;font-size:10px;letter-spacing:0}
+.kpr{display:flex;gap:7px}
+.kpr>div{flex:1;background:var(--paper);border-radius:10px;padding:9px 3px;text-align:center;min-width:0}
+.kpr .a{font-family:var(--num);font-size:22px;color:var(--ink);line-height:1.1;font-variant-numeric:tabular-nums}
+.kpr .b2{font-size:9.5px;color:var(--inks);font-weight:700}
+.total2{font-size:10.5px;color:var(--txts);text-align:center;margin-top:7px}
+.total2 b{color:var(--paper);font-family:var(--num);font-size:12.5px}
+.goal{background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 12px;margin-top:7px}
+.goal .t{font-size:11.5px;font-weight:900}
+.goal .bar2{height:7px;background:var(--paper2);border-radius:4px;margin:7px 0 5px;overflow:hidden}
+.goal .bar2 i{display:block;height:100%;background:var(--felt5)}
+.goal .f{font-size:10px;color:var(--inks);line-height:1.6}
+.tbr{background:var(--paper);color:var(--ink);border-radius:10px;padding:9px 11px;margin-bottom:6px}
+.tbr b{font-size:13px;font-weight:900}
+.tbr .v{font-size:10.5px;color:var(--inks);margin-top:1px}
+.tbr .v em{font-style:normal;font-weight:900;color:var(--felt5)}
+.tbr.idle{background:rgba(246,241,225,.09);color:var(--txt)}
+.tbr.idle b{color:var(--txt)}.tbr.idle .v{color:var(--txts)}
+.tbr.hot{box-shadow:inset 0 0 0 2px var(--red)}
+.tbr.hot .v em{color:var(--red)}
+.alr{border-radius:10px;padding:11px 12px;margin-bottom:6px}
+.alr.bad{background:#3A1512;border-left:4px solid var(--red)}
+.alr.wn{background:#3A2400;border-left:4px solid var(--amber)}
+.alr b{display:block;font-size:12.5px;font-weight:900;color:var(--paper)}
+.alr p{font-size:10.5px;color:#C8BFA8;line-height:1.6;margin-top:2px}
+.alr button{background:var(--paper);color:var(--ink);border-radius:7px;padding:6px 12px;font-size:11px;margin-top:7px}
+.gft{background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 12px}
+.gft .r2{font-size:11.5px;font-weight:900;line-height:1.7}
+.gft .r2 i{font-style:normal;font-weight:500;color:var(--inks)}
+.gft .bar3{height:7px;background:var(--paper2);border-radius:4px;margin:6px 0;overflow:hidden}
+.gft .bar3 i{display:block;height:100%;background:var(--brass)}
+.gft .fo{font-size:10px;color:var(--inks);line-height:1.6;margin-top:3px}
+.op1{width:100%;background:var(--felt8);border:1px solid #1F6244;border-radius:10px;padding:11px 12px;
+  margin-bottom:6px;text-align:left;color:var(--txt)}
+.op1 b{display:block;font-size:12.5px;font-weight:900}
+.op1 span{display:block;font-size:10px;color:var(--txts);line-height:1.5;font-weight:500}
+.op1.dg{background:#2A1512;border-color:#5C2621}
+.op1.dg b{color:#F09A90}
+.pre{background:var(--paper);color:var(--ink);border-radius:11px;padding:11px;margin-bottom:7px}
+.pre.now{border:2px solid var(--go)}
+.pre .pt{font-size:13px;font-weight:900}
+.pbadge{display:inline-block;background:var(--go);color:#fff;border-radius:5px;padding:1px 8px;font-size:9.5px;font-weight:900;margin-left:5px}
+.plist{font-size:10px;color:var(--inks);line-height:1.6;margin-top:4px}
+.pbtn{width:100%;background:var(--brass);color:#1A1206;border-radius:9px;padding:11px 0;font-size:13px;margin-top:8px}
+.pbtn.sub{background:var(--paper2);color:var(--inks)}
+.cfg{background:var(--paper);color:var(--ink);border-radius:10px;padding:10px;margin-bottom:7px}
+.cnm{font-size:13px;font-weight:900}
+.cln{display:flex;align-items:center;gap:7px;margin-top:7px}
+.clb{font-size:10.5px;color:var(--inks);width:46px;flex-shrink:0}
+.cst{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.cst button{width:30px;height:30px;border-radius:8px;background:var(--paper2);color:var(--ink);
+  font-family:var(--num);font-size:15px;flex-shrink:0}
+.cv{flex:1;min-width:0;text-align:center;font-family:var(--num);font-size:16px;color:var(--ink)}
+.cpz{width:100%;background:var(--paper2);border-radius:8px;padding:8px 0;font-size:10.5px;color:var(--inks);margin-top:8px}
+.cfgmore{font-size:10px;color:var(--txts);line-height:1.6;margin-top:7px}
+.allstop{width:100%;background:var(--felt8);border:1.5px solid var(--brass);color:var(--brass);
+  border-radius:9px;padding:12px 0;font-size:12.5px;margin-top:9px}
+.aopt{width:100%;background:var(--paper);color:var(--ink);border-radius:10px;padding:11px 12px;margin-bottom:6px;
+  display:flex;align-items:center;gap:10px;text-align:left}
+.aopt .amk{width:16px;height:16px;border-radius:9px;border:2px solid var(--inks);flex-shrink:0}
+.aopt.on{box-shadow:inset 0 0 0 2px var(--go)}
+.aopt.on .amk{border-color:var(--go);background:var(--go)}
+.aopt .atx{flex:1;min-width:0;font-size:12.5px;font-weight:700;line-height:1.5}
+.nowb{background:#3A2400;border-left:4px solid var(--amber);border-radius:0 9px 9px 0;padding:10px 12px;margin-bottom:11px}
+.nowb .nk{font-size:9.5px;letter-spacing:.14em;color:var(--amber);font-weight:900}
+.nowb .nv{font-size:12.5px;font-weight:900;color:var(--paper);margin-top:2px}
+.chart2{background:var(--paper);border-radius:10px;padding:11px 12px}
+.cb2{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.cb2:last-child{margin-bottom:0}
+.cb2 .cl{font-size:10px;color:var(--inks);width:30px;flex-shrink:0;font-weight:700}
+.cb2 .cg{flex:1;min-width:0;height:14px;background:var(--paper2);border-radius:4px;overflow:hidden}
+.cb2 .cg i{display:block;height:100%;background:var(--felt5);border-radius:4px}
+.cb2 .cn3{font-family:var(--num);font-size:13px;color:var(--ink);width:26px;text-align:right;flex-shrink:0}
+.rk2{margin-bottom:9px}
+.rt{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+.rt span{font-size:11.5px;font-weight:900;color:var(--ink)}
+.rt b{font-family:var(--num);font-size:13px;color:var(--ink)}
+.rg2{height:10px;background:var(--paper2);border-radius:4px;overflow:hidden}
+.rg2 i{display:block;height:100%;background:var(--brass);border-radius:4px}
+.stat2{display:flex;justify-content:space-between;align-items:baseline;background:rgba(246,241,225,.07);
+  border-radius:8px;padding:9px 12px;margin-bottom:5px}
+.stat2 span{font-size:11.5px;color:var(--txts)}
+.stat2 b{font-family:var(--num);font-size:15px;color:var(--paper)}
+.paperm{background:var(--paper);color:var(--ink);border-radius:11px;padding:14px}
+.paperm .hh{font-size:12.5px;font-weight:900;border-bottom:2px solid var(--ink);padding-bottom:7px;
+  margin-bottom:9px;display:flex;justify-content:space-between}
+.pl{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(11,46,30,.12)}
+.pl:last-child{border-bottom:none}
+.pl b{font-size:13px;font-weight:900}
+.pl span{font-family:var(--num);font-size:20px;letter-spacing:.04em}
+.pl span s{text-decoration:none;color:#A9B4AC;font-size:14px}
+
+/* トースト */
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom));
+  background:var(--go);color:#fff;border-radius:10px;padding:11px 18px;font-size:13px;font-weight:900;
+  z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%;text-align:center}
+#toast.on{opacity:1}
+#offline{background:var(--red);color:#fff;text-align:center;font-size:12px;font-weight:900;padding:8px;
+  border-radius:9px;margin-top:10px;display:none}
+#offline.on{display:block}
+.load{text-align:center;color:var(--txts);font-size:13px;padding:40px 0}
 </style>
 </head>
 <body>
@@ -425,9 +555,8 @@ const db={
   tickets:()=>api("tickets?select=*"),
   reviews:()=>api("reviews?select=*&order=created_at.desc"),
   settings:()=>api("settings?select=*&id=eq.1"),
-  maxNumber:async()=>{const t=await api("tickets?select=number&order=number.desc&limit=1");return t&&t.length?t[0].number:0},
-  addTicket:(number,booth,people)=>api("tickets",{method:"POST",headers:{Prefer:"return=representation"},
-    body:JSON.stringify({number,booth,people,status:"waiting"})}),
+  addTicket:(booth,people,day)=>api("tickets",{method:"POST",headers:{Prefer:"return=representation"},
+    body:JSON.stringify({booth,people,status:"waiting",day})}),
   delTicket:(id)=>api(`tickets?id=eq.${id}`,{method:"DELETE"}),
   addReview:(booth_id,rating,comment)=>api("reviews",{method:"POST",body:JSON.stringify({booth_id,rating,comment})}),
   upTicket:(id,patch)=>api(`tickets?id=eq.${id}`,{method:"PATCH",body:JSON.stringify(patch)}),
@@ -483,13 +612,13 @@ async function refresh(){
   S.loaded=true; render();
 }
 function checkCall(){
-  for(const b of S.booths){
-    if(!b.calling_number)continue;
-    const hit=S.mine.find(m=>m.number===b.calling_number&&m.booth===b.id);
-    if(hit&&S.lastCalled!==b.calling_number){
-      S.lastCalled=b.calling_number;
-      showCall(b.calling_number,b.name);
-    }
+  for(const m of S.mine){
+    const t=S.tickets.find(x=>x.id===m.id);
+    if(!t||t.status!=="called")continue;
+    if(S.lastCalled===t.id)continue;
+    S.lastCalled=t.id;
+    const b=S.booths.find(x=>x.id===t.booth);
+    showCall(t.number,b?b.name:t.booth);
   }
 }
 function showCall(num,name){
@@ -503,6 +632,8 @@ function closeCall(){document.getElementById("callscr").classList.remove("on")}
 /* ---------- 集計 ---------- */
 function waitGroups(bid){return S.tickets.filter(t=>t.booth===bid&&t.status==="waiting").length}
 function inside(bid){return S.tickets.filter(t=>t.booth===bid&&t.status==="inside").reduce((a,t)=>a+(t.people||1),0)}
+// 呼んでいる人・到着した人も席を押さえている扱いにする
+function reserved(bid){return S.tickets.filter(t=>t.booth===bid&&["called","arrived","inside"].includes(t.status)).reduce((a,t)=>a+(t.people||1),0)}
 function myTicket(bid){return S.mine.find(m=>m.booth===bid)}
 function ticketOf(m){return S.tickets.find(t=>t.id===m.id)}
 function starsOf(bid){
@@ -515,10 +646,8 @@ function prizeGiven(){return S.prizeLog.filter(x=>x.kind==="give").reduce((a,x)=
 function prizeTotal(){return S.prizeLog.filter(x=>x.kind!=="give").reduce((a,x)=>a+x.amount,0)}
 function insideTickets(bid){return S.tickets.filter(t=>t.booth===bid&&t.status==="inside").sort((a,b)=>a.number-b.number)}
 function waitingTickets(bid){return S.tickets.filter(t=>t.booth===bid&&t.status==="waiting").sort((a,b)=>a.number-b.number)}
-function callingTicket(b){
-  if(!b.calling_number)return null;
-  return S.tickets.find(t=>t.booth===b.id&&t.number===b.calling_number)||null;
-}
+function calledTickets(bid){return S.tickets.filter(t=>t.booth===bid&&(t.status==="called"||t.status==="arrived")).sort((a,b)=>a.number-b.number)}
+function allCalled(){return S.tickets.filter(t=>t.status==="called"||t.status==="arrived").sort((a,b)=>a.number-b.number)}
 function elapsed(iso){
   if(!iso)return null;
   const sec=Math.max(0,Math.floor((S.now-new Date(iso).getTime())/1000));
@@ -548,7 +677,7 @@ function render(){
   const off=`<div id="offline" class="${S.offline?"on":""}">接続できません。少し待ってください</div>`;
 
   if(S.view==="home"){
-    const calling=S.booths.find(b=>b.calling_number);
+    const calling=S.tickets.filter(t=>t.status==="called").sort((a,b)=>a.number-b.number)[0];
     h=`<div class="bar"><b>♣ CASINO</b><span>1-E</span></div>${annHtml}${off}
     <div class="home">
       <div class="suit">♠ ♥ ♦ ♣</div>
@@ -556,7 +685,7 @@ function render(){
       <div class="en">1-E CASINO</div>
       <div class="now">
         <div class="k">ただいま呼び出し中</div>
-        ${calling?`<div class="n">${pad(calling.calling_number)}</div><div class="b">${esc(calling.name)}</div>`
+        ${calling?`<div class="n">${pad(calling.number)}</div><div class="b">${esc((S.booths.find(b=>b.id===calling.booth)||{}).name||"")}</div>`
                  :`<div class="none">まだありません</div>`}
       </div>
       <button class="gold" onclick="go('pick')">整理券を取る</button>
@@ -622,7 +751,7 @@ function render(){
           <div class="nu">${pad(m.number)}</div>
           <div class="pe">${m.people}人で参加</div>
           <div class="stt"><div class="k">順番</div>
-            <div class="v">${t.status==="inside"?"ご案内中":`あと${ahead}組`}${t.status==="inside"?"":`<small>約${mins}分</small>`}</div></div>
+            <div class="v">${t.status==="inside"?"ご案内中":t.status==="arrived"?"席の準備中":t.status==="called"?"お呼び出し中":`あと${ahead}組`}${(t.status==="waiting")?`<small>約${mins}分</small>`:""}</div></div>
         </div><div class="pf"></div><div class="bt">
           <div class="hint">呼ばれるとこの画面が金色になります。<br>受付のボードでも番号を出しています。</div>
           ${t.status==="waiting"?`<button class="cancel" onclick="cancelTicket(${m.id})">整理券を取り消す</button>`:""}
@@ -704,10 +833,9 @@ async function issue(){
   set({busy:true});
   const booth=S.pickBooth, people=S.pickPeople;
   let ok=false;
-  for(let i=0;i<8;i++){
+  for(let i=0;i<5;i++){
     try{
-      const max=await db.maxNumber();
-      const res=await db.addTicket(max+1,booth,people);
+      const res=await db.addTicket(booth,people,S.settings.day||1);
       if(res&&res[0]){
         const t=res[0];
         S.mine.push({id:t.id,number:t.number,booth,people});
@@ -777,23 +905,24 @@ function renderRolePick(){
 
 /* 受付 */
 function renderReception(){
-  const calling=S.booths.filter(b=>b.calling_number);
+  const called=allCalled();
   let h=`<div class="staff">
     <div class="shd"><span>受付</span><button class="sw" onclick="setRole(null)">担当を変更</button></div>`;
 
-  if(calling.length){
+  if(called.length){
     h+=`<div class="sjob">到着待ち</div><div class="ssub">来たら「到着」、来なければ「不在」</div>`;
-    for(const b of calling){
-      const t=callingTicket(b);
-      const sec=elapsedSec(b.calling_at);
-      h+=`<div class="callnow">
-        <div class="cnb">${esc(b.name)}</div>
-        <div class="cnn">${pad(b.calling_number)}</div>
-        <div class="cnp">${t?t.people:"?"}人で参加</div>
-        <div class="cnt2" ${sec>120?'style="color:#8a1f14"':""}>呼び出しから ${elapsed(b.calling_at)||"0:00"}</div>
+    for(const t of called){
+      const b=S.booths.find(x=>x.id===t.booth);
+      const sec=elapsedSec(t.called_at);
+      const over=sec>300;               // 5分で期限切れ
+      h+=`<div class="callnow" ${over?'style="opacity:.7"':""}>
+        <div class="cnb">${esc(b?b.name:t.booth)}${t.status==="arrived"?" ・ 到着済み":""}</div>
+        <div class="cnn">${pad(t.number)}</div>
+        <div class="cnp">${t.people}人で参加</div>
+        <div class="cnt2" ${sec>120?'style="color:#8a1f14"':""}>呼び出しから ${elapsed(t.called_at)||"0:00"}${over?" ・ 期限切れ":""}</div>
         <div class="cnrow">
-          <button class="cy" onclick="arrive('${b.id}')">到着</button>
-          <button class="cn" onclick="absent('${b.id}')">不在</button>
+          ${t.status==="called"?`<button class="cy" onclick="arrive(${t.id})">到着</button>`:`<button class="cy" style="opacity:.5" disabled>到着済み</button>`}
+          <button class="cn" onclick="absent(${t.id})">不在</button>
         </div>
       </div>`;
     }
@@ -802,27 +931,29 @@ function renderReception(){
   }
 
   for(const b of S.booths){
-    if(b.calling_number)continue;
-    const ins=inside(b.id), cap=b.capacity||4;
+    const cap=b.capacity||4;
+    const res=reserved(b.id);          // 座っている＋呼んでいる人数
     const wait=waitingTickets(b.id);
-    const full=ins>=cap;
+    const full=res>=cap;
     const paused=b.paused;
+    const ins=insideTickets(b.id);
     let cls="rrow", right="", sub="";
     if(paused){ cls+=" none"; right=`<span class="rlock">停止中</span>`; sub="受付を止めています"; }
     else if(!wait.length){ cls+=" none"; right=`<span class="rlock">―</span>`; sub="待機なし"; }
     else if(full){ cls+=" busy"; right=`<span class="rbtn">${pad(wait[0].number)}</span>`;
-      const it=insideTickets(b.id);
-      const el=it.length?elapsed(it[0].inside_at):"";
-      sub=`使用中 ${it.map(t=>pad(t.number)).join(" ")}${el?" ・ "+el:""} ・ ${wait.length}組待ち`; }
-    else { right=`<span class="rbtn">${pad(wait[0].number)}</span>`; sub=`空席 ・ ${wait.length}組待ち`; }
-    const dis=(paused||!wait.length);
-    h+=`<button class="${cls}" ${dis?"disabled":""} onclick="callNext('${b.id}')">
+      const el=ins.length?elapsed(ins[0].inside_at):"";
+      sub=`${res}/${cap}人 使用中${el?" ・ "+el:""} ・ ${wait.length}組待ち`; }
+    else { right=`<span class="rbtn">${pad(wait[0].number)}</span>`;
+      sub=`空き${cap-res}人 ・ ${wait.length}組待ち`; }
+    h+=`<button class="${cls}" ${(paused||!wait.length)?"disabled":""} onclick="callNext('${b.id}')">
       <span class="lamp"></span>
       <span class="rm"><b>${esc(b.name)}</b><span>${sub}</span></span>
       ${right}</button>`;
   }
   h+=`<button class="callsp" onclick="callByNumber()">番号を指定して呼ぶ</button>
-    <div class="rlg">● 緑＝空席　● 灰＝使用中（先に呼ぶと確認が出ます）<br>飛ばした人が来たら「番号を指定して呼ぶ」</div></div>`;
+    <div class="rlg">● 緑＝空きあり　● 灰＝満席（先に呼ぶと確認が出ます）<br>
+    呼んでから5分すぎた人は「期限切れ」と出ます。<br>
+    飛ばした人が来たら「番号を指定して呼ぶ」</div></div>`;
   return h;
 }
 
@@ -837,7 +968,6 @@ function renderTable(bid){
     <div class="shd"><span>${esc(b.name)} の卓</span><button class="sw" onclick="setRole(null)">担当を変更</button></div>`;
 
   if(!ins.length){
-    const call=b.calling_number;
     h+=`<div class="sjob">${call?"到着待ち":"客待ち"}</div>
       <div class="ssub">${call?"受付が呼びました":"受付が番号を呼ぶまで、操作は不要"}</div>
       <div class="ctr">
@@ -920,20 +1050,22 @@ async function callNext(bid){
   const wait=waitingTickets(bid);
   if(!wait.length){toast("待っている人がいません");return}
   const b0=S.booths.find(x=>x.id===bid);
-  const ins=insideTickets(bid);
-  if(ins.length && inside(bid)>=(b0.capacity||4)){
-    const el=elapsed(ins[0].inside_at)||"—";
-    if(!confirm(`${b0.name}はまだ使用中です（${el}）。\n先に呼んでおきますか？`))return;
+  const cap=b0.capacity||4;
+  if(reserved(bid)>=cap){
+    const ins=insideTickets(bid);
+    const el=ins.length?(elapsed(ins[0].inside_at)||"—"):"—";
+    if(!confirm(`${b0.name}はまだ満席です（${el}）。\n先に呼んでおきますか？`))return;
   }
   set({busy:true});
   try{
-    await db.upBooth(bid,{calling_number:wait[0].number,calling_at:new Date().toISOString()});
+    await db.upTicket(wait[0].id,{status:"called",called_at:new Date().toISOString()});
     await refresh(); toast(pad(wait[0].number)+"番を呼びました");
   }catch(e){ toast("呼び出せませんでした") }
   S.busy=false; render();
 }
 
 async function callByNumber(){
+  if(S.busy)return;
   const v=prompt("呼ぶ番号を入れてください");
   if(!v)return;
   const n=parseInt(v,10);
@@ -941,34 +1073,49 @@ async function callByNumber(){
   if(!t){toast("その番号は待機中ではありません");return}
   set({busy:true});
   try{
-    await db.upBooth(t.booth,{calling_number:n,calling_at:new Date().toISOString()});
+    await db.upTicket(t.id,{status:"called",called_at:new Date().toISOString()});
     await refresh(); toast(pad(n)+"番を呼びました");
   }catch(e){ toast("呼び出せませんでした") }
   S.busy=false; render();
 }
 
-async function arrive(bid){
+async function arrive(id){
   if(S.busy)return;
-  const b=S.booths.find(x=>x.id===bid); const t=callingTicket(b);
   set({busy:true});
   try{
-    if(t) await db.upTicket(t.id,{status:"inside",inside_at:new Date().toISOString()});
-    await db.upBooth(bid,{calling_number:null,calling_at:null});
-    await refresh(); toast("入場しました");
+    const t=S.tickets.find(x=>x.id===id);
+    const now=new Date().toISOString();
+    // 席が空いていればそのまま座らせる
+    const b=S.booths.find(x=>x.id===t.booth);
+    const room=(b.capacity||4)-inside(t.booth);
+    if(room>=(t.people||1)){
+      await db.upTicket(id,{status:"inside",arrived_at:now,inside_at:now});
+      toast("入場しました");
+    }else{
+      await db.upTicket(id,{status:"arrived",arrived_at:now});
+      toast("到着を記録しました（席が空いたら卓が座らせます）");
+    }
+    await refresh();
   }catch(e){ toast("できませんでした") }
   S.busy=false; render();
 }
 
-async function absent(bid){
+async function seat(id){
   if(S.busy)return;
-  if(!confirm("この番号の人を不在にしますか？（整理券は無効になります）"))return;
-  const b=S.booths.find(x=>x.id===bid); const t=callingTicket(b);
   set({busy:true});
   try{
-    if(t) await db.delTicket(t.id);
-    await db.upBooth(bid,{calling_number:null,calling_at:null});
-    await refresh(); toast("不在にしました");
+    await db.upTicket(id,{status:"inside",inside_at:new Date().toISOString()});
+    await refresh(); toast("開始しました");
   }catch(e){ toast("できませんでした") }
+  S.busy=false; render();
+}
+
+async function absent(id){
+  if(S.busy)return;
+  if(!confirm("この番号の人を不在にしますか？（整理券は無効になります）"))return;
+  set({busy:true});
+  try{ await db.delTicket(id); await refresh(); toast("不在にしました"); }
+  catch(e){ toast("できませんでした") }
   S.busy=false; render();
 }
 
@@ -1069,7 +1216,7 @@ function renderAdmin(){
           p:"終了の押し忘れの可能性。継続中なら操作不要。",id:t.id});
     }
     const w=waitingTickets(b.id).length;
-    if(w>=3 && inside(b.id)<(b.capacity||4) && !b.calling_number && !b.paused)
+    if(w>=3 && reserved(b.id)<(b.capacity||4) && !calledTickets(b.id).length && !b.paused)
       alerts.push({k:"wn",t:`${b.name} ${w}組待ち`,p:"空席あり。受付に呼び出しを依頼。"});
   }
   const cl=parseHM(S.settings.close_at);
@@ -1103,7 +1250,7 @@ function renderAdmin(){
         <div class="v">${ins.map(t=>pad(t.number)).join(" ")} 使用中 ・ <em>${elapsed(ins[0].inside_at)}</em> ・ ${w}組待ち</div></div>`;
     } else {
       h+=`<div class="tbr idle"><b>${esc(b.name)}</b>
-        <div class="v">${b.paused?"受付を止めています":b.calling_number?`${pad(b.calling_number)}を呼び出し中`:"空いています"} ・ ${w}組待ち</div></div>`;
+        <div class="v">${b.paused?"受付を止めています":calledTickets(b.id).length?`${pad(calledTickets(b.id)[0].number)}を呼び出し中`:"空いています"} ・ ${w}組待ち</div></div>`;
     }
   }
 
@@ -1353,7 +1500,8 @@ async function resetWaiting(){
   if(!confirm("待っている整理券をすべて消しますか？\n（遊び終わった記録と口コミは残ります）"))return;
   set({busy:true});
   try{ await db.delWaiting();
-    for(const b of S.booths) await db.upBooth(b.id,{calling_number:null,calling_at:null});
+    for(const t of S.tickets.filter(x=>x.status==="called"||x.status==="arrived"))
+      await db.upTicket(t.id,{status:"waiting",called_at:null,arrived_at:null});
     S.mine=[]; LS.set("mine2",[]);
     await refresh(); toast("整理券を消しました"); }
   catch(e){ toast("できませんでした") }
@@ -1377,7 +1525,7 @@ async function resetAll(){
   try{
     await db.delAllTickets(); await db.delAllReviews(); await db.delAllPrize();
     await db.upSettings({announce:null,announce_at:null});
-    for(const b of S.booths) await db.upBooth(b.id,{calling_number:null,calling_at:null,paused:false});
+    for(const b of S.booths) await db.upBooth(b.id,{paused:false});
     S.mine=[]; S.reviewed=[]; LS.set("mine2",[]); LS.set("reviewed2",[]);
     await refresh(); toast("初期化しました");
   }catch(e){ toast("できませんでした") }
