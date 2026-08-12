@@ -501,6 +501,31 @@ textarea{width:100%;background:var(--paper);color:var(--ink);border:none;border-
   border-radius:9px;margin-top:10px;display:none}
 #offline.on{display:block}
 .load{text-align:center;color:var(--txts);font-size:13px;padding:40px 0}
+
+/* 交換所・統括 */
+.krest{text-align:center;margin-top:18px}
+.krest .kk{font-size:10.5px;letter-spacing:.16em;color:var(--brass);font-weight:900}
+.krest .kn{font-family:var(--num);font-size:68px;line-height:.95;color:var(--paper);font-variant-numeric:tabular-nums}
+.krest .kn.zero{color:var(--red)}
+.krest .ku{font-size:11.5px;color:var(--txts)}
+.kbar{height:7px;background:rgba(246,241,225,.15);border-radius:4px;margin:11px 4px 0;overflow:hidden}
+.kbar i{display:block;height:100%;background:linear-gradient(90deg,var(--brass),var(--amber))}
+.kcnt{display:flex;align-items:center;gap:9px;margin-top:16px;background:var(--paper);border-radius:12px;padding:11px}
+.kcnt button{width:54px;height:54px;border-radius:11px;background:var(--paper2);color:var(--ink);
+  font-family:var(--num);font-size:26px;flex-shrink:0}
+.kcnt button:disabled{opacity:.35}
+.kcnt .kv{flex:1;min-width:0;text-align:center;line-height:1}
+.kcnt .knum{font-family:var(--num);font-size:40px;color:var(--ink)}
+.kcnt .knum.z{color:#B4BDB6}
+.kcnt .kv small{display:block;font-size:10.5px;color:var(--inks);font-weight:700;margin-top:3px}
+.kbig{width:100%;border-radius:13px;padding:16px 0;font-size:18px;margin-top:16px}
+.kbig.on{background:var(--brass);color:#1A1206}
+.kbig.off{background:#123C2A;color:#6E8C7C}
+.kundo{width:100%;background:transparent;border:1.5px solid rgba(246,241,225,.28);color:var(--txts);
+  border-radius:10px;padding:11px 0;font-size:12px;font-weight:700;margin-top:9px}
+.zmsg{background:#3A1512;border-left:4px solid var(--red);border-radius:0 9px 9px 0;padding:12px 13px;margin-top:14px}
+.zmsg b{display:block;font-size:13px;font-weight:900;color:#FC8181;margin-bottom:3px}
+.zmsg span{font-size:11px;color:#F0D0D0;line-height:1.65}
 </style>
 </head>
 <body>
@@ -811,7 +836,16 @@ function render(){
     }
   }
 
-  else if(S.view==="staff"){ h=renderStaff(); }
+  else if(S.view==="staff"){
+    try{ h=renderStaff(); }
+    catch(err){
+      h=`<div class="staff"><div class="shd"><span>エラー</span>
+        <button class="sw" onclick="setRole(null)">担当を変更</button></div>
+        <div class="sjob">表示できませんでした</div>
+        <div class="ssub">${esc(String(err&&err.message||err))}</div>
+        <button class="gold" style="margin-top:14px" onclick="location.reload()">読み込み直す</button></div>`;
+    }
+  }
 
   el.innerHTML=h;
   // 人数シート（bodyの直下に出す）
@@ -987,20 +1021,20 @@ function renderTable(bid){
   const b=S.booths.find(x=>x.id===bid);
   if(!b) return `<div class="staff"><div class="shd"><span>?</span><button class="sw" onclick="setRole(null)">担当を変更</button></div><div class="sjob">この卓は見つかりません</div></div>`;
   const ins=insideTickets(bid);
+  const called=calledTickets(bid);
   const wait=waitingTickets(bid);
   const turn=(b.avg_minutes||6)*60;
   let h=`<div class="staff">
     <div class="shd"><span>${esc(b.name)} の卓</span><button class="sw" onclick="setRole(null)">担当を変更</button></div>`;
 
   if(!ins.length){
-    h+=`<div class="sjob">${call?"到着待ち":"客待ち"}</div>
-      <div class="ssub">${call?"受付が呼びました":"受付が番号を呼ぶまで、操作は不要"}</div>
+    h+=`<div class="sjob">${called.length?"到着待ち":"客待ち"}</div>
+      <div class="ssub">${called.length?"受付が呼びました":"受付が番号を呼ぶまで、操作は不要"}</div>
       <div class="ctr">
-        <div class="me">${call?"呼んでいる番号":"次に来る人"}</div>
-        <div class="nu2">${call?pad(call):(wait.length?pad(wait[0].number):"—")}</div>
+        <div class="me">${called.length?"呼んでいる番号":"次に来る人"}</div>
+        <div class="nu2">${called.length?pad(called[0].number):(wait.length?pad(wait[0].number):"—")}</div>
         <div class="me">${wait.length}組待ち</div>
-      </div>
-      <div class="rlg">番号を呼ぶのは受付です。<br>この画面からは呼べません。</div>`;
+      </div>`;
   }
   else if(ins.length===1){
     const t=ins[0];
@@ -1012,8 +1046,7 @@ function renderTable(bid){
         <div class="me">${t.people}人で参加</div>
         <div class="el ${cls}">${elapsed(t.inside_at)||"—"}</div>
       </div>
-      <button class="bigbtn" onclick="finish([${t.id}])">終了</button>
-      <div class="nx">${wait.length?"次 "+wait.slice(0,3).map(x=>pad(x.number)).join(" → "):"待機なし"}</div>`;
+      <button class="bigbtn" ${S.busy?"disabled":""} onclick="finish([${t.id}])">終了</button>`;
   }
   else{
     h+=`<div class="sjob">ゲーム中 ・ ${ins.length}組</div><div class="ssub">終了した組からボタンを押す</div>`;
@@ -1022,11 +1055,23 @@ function renderTable(bid){
       const cls=sec>turn?"over":(sec>turn*0.83?"hot":"");
       h+=`<div class="trow"><span class="tn">${pad(t.number)}</span>
         <span class="tm"><span class="tp2">${t.people}人</span><br><span class="tt ${cls}">${elapsed(t.inside_at)||"—"}</span></span>
-        <button class="tb" onclick="finish([${t.id}])">終了</button></div>`;
+        <button class="tb" ${S.busy?"disabled":""} onclick="finish([${t.id}])">終了</button></div>`;
     }
-    h+=`<button class="bigbtn" onclick="finish([${ins.map(t=>t.id).join(",")}])">全員終了</button>
-      <div class="nx">${wait.length?"次 "+wait.slice(0,3).map(x=>pad(x.number)).join(" → "):"待機なし"}</div>`;
+    h+=`<button class="bigbtn" ${S.busy?"disabled":""} onclick="finish([${ins.map(t=>t.id).join(",")}])">全員終了</button>`;
   }
+
+  if(called.length){
+    h+=`<div class="dsec">到着待ち</div>`;
+    for(const t of called){
+      h+=`<div class="trow"><span class="tn">${pad(t.number)}</span>
+        <span class="tm"><span class="tp2">${t.people}人</span><br><span class="tt">${elapsed(t.called_at)||""}</span></span>
+        ${t.status==="arrived"
+          ?`<button class="tb" ${S.busy?"disabled":""} onclick="seat(${t.id})">座った</button>`
+          :`<span style="font-size:10.5px;color:var(--txts)">受付で確認中</span>`}</div>`;
+    }
+  }
+  h+=`<div class="nx">${wait.length?"次 "+wait.slice(0,3).map(x=>pad(x.number)).join(" → "):"待機なし"}</div>
+    <div class="rlg">番号を呼ぶのは受付です。この画面からは呼べません。</div>`;
   return h+`</div>`;
 }
 
