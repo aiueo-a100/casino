@@ -41,35 +41,43 @@ button{font-family:var(--jp);font-weight:900;border:none;cursor:pointer}
 .announce .tx{font-size:12.5px;font-weight:900;line-height:1.55}
 
 /* ホーム */
-.home{text-align:center;padding:36px 4px 0}
-.home .suit{font-size:26px;letter-spacing:.16em;color:var(--brass)}
-.home h1{font-size:36px;font-weight:900;letter-spacing:.04em;margin-top:12px}
-.home .en{font-size:11px;letter-spacing:.36em;color:var(--txts);margin-top:8px}
-.now{background:var(--paper);color:var(--ink);border-radius:11px;padding:14px;margin:26px 0}
+.home{text-align:center;padding:30px 4px 0}
+.home .suit{font-size:24px;letter-spacing:.16em;color:var(--brass)}
+.home h1{font-size:34px;font-weight:900;letter-spacing:.04em;margin-top:10px}
+.home .en{font-size:11px;letter-spacing:.36em;color:var(--txts);margin-top:7px}
+.now{background:var(--paper);color:var(--ink);border-radius:11px;padding:13px;margin:22px 0 20px}
 .now .k{font-size:10px;letter-spacing:.2em;color:var(--brass);font-weight:900}
-.now .n{font-family:var(--num);font-size:44px;line-height:1.05;font-variant-numeric:tabular-nums}
+.now .n{font-family:var(--num);font-size:40px;line-height:1.05;font-variant-numeric:tabular-nums}
 .now .b{font-size:12px;color:var(--inks)}
 .now .none{font-size:14px;font-weight:900;color:var(--inks);padding:10px 0}
 .gold{width:100%;background:var(--brass);color:#1A1206;border-radius:11px;padding:15px 0;font-size:15px}
+/* 客がいちばん押すボタンを大きく */
+.getbtn{width:100%;background:var(--brass);color:#1A1206;border-radius:16px;padding:28px 0;
+  font-size:24px;font-weight:900;letter-spacing:.04em;box-shadow:0 6px 0 #8A6620}
+.getbtn:active{transform:translateY(3px);box-shadow:0 3px 0 #8A6620}
+.getbtn small{display:block;font-size:12px;font-weight:700;opacity:.75;margin-top:5px;letter-spacing:0}
+.mybtn{width:100%;background:var(--paper);color:var(--ink);border-radius:14px;padding:18px 0;
+  font-size:17px;font-weight:900;margin-top:11px}
+.mybtn small{display:block;font-size:11.5px;font-weight:700;color:var(--inks);margin-top:3px}
 .ghost{width:100%;background:transparent;border:1.5px solid rgba(246,241,225,.35);color:var(--txt);
   border-radius:11px;padding:13px 0;font-size:14px;font-weight:700;margin-top:9px}
 
 /* ブース選択 */
-.ttl{font-size:17px;font-weight:900;margin-top:14px}
-.sb{font-size:11px;color:#9DD3B4;margin:2px 0 12px}
+.ttl{font-size:21px;font-weight:900;margin-top:16px}
+.sb{font-size:12.5px;color:#9DD3B4;margin:3px 0 14px}
 .brow{background:var(--paper);color:var(--ink);border-radius:10px;margin-bottom:8px;overflow:hidden}
 .brline{display:flex;align-items:center;gap:8px;padding-right:10px}
-.bmain{display:flex;align-items:center;gap:8px;padding:11px 10px;flex:1;min-width:0;background:none;text-align:left}
+.bmain{display:flex;align-items:center;gap:9px;padding:16px 12px;flex:1;min-width:0;background:none;text-align:left}
 .bmain .m{flex:1;min-width:0;line-height:1.35}
-.bmain .m b{display:block;font-size:15px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bmain .m span{font-size:10.5px;color:var(--inks);font-weight:500}
+.bmain .m b{display:block;font-size:18px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bmain .m span{font-size:12px;color:var(--inks);font-weight:500}
 .bmain .w2{text-align:center;flex-shrink:0;white-space:nowrap}
-.bmain .w2 i{display:block;font-family:var(--num);font-size:24px;color:var(--felt5);font-style:normal;line-height:1}
-.bmain .w2 em{display:block;font-size:9px;color:var(--inks);font-style:normal;margin-top:2px}
-.sbtn{background:var(--paper2);border:1px solid rgba(11,46,30,.16);border-radius:8px;padding:7px 7px;
+.bmain .w2 i{display:block;font-family:var(--num);font-size:30px;color:var(--felt5);font-style:normal;line-height:1}
+.bmain .w2 em{display:block;font-size:10px;color:var(--inks);font-style:normal;margin-top:3px}
+.sbtn{background:var(--paper2);border:1px solid rgba(11,46,30,.16);border-radius:9px;padding:9px 9px;
   text-align:center;flex-shrink:0;line-height:1.25;white-space:nowrap}
 .sbtn .s{font-size:10px;color:var(--brass);font-weight:900}
-.sbtn .v{font-size:13px;font-weight:900;color:var(--ink)}
+.sbtn .v{font-size:15px;font-weight:900;color:var(--ink)}
 .sbtn .k{font-size:8px;color:var(--inks);font-weight:500}
 .sbtn.dim{opacity:.35}
 .seat{padding:0 10px 9px;margin-top:-2px}
@@ -83,12 +91,12 @@ button{font-family:var(--jp);font-weight:900;border:none;cursor:pointer}
 /* 券 */
 .tk{background:var(--paper);border-radius:12px;margin-top:14px;position:relative}
 .tk .tp{padding:18px 14px 14px;text-align:center;color:var(--ink)}
-.tk .bo{font-size:17px;font-weight:900}
-.tk .nu{font-family:var(--num);font-size:74px;line-height:.95;font-variant-numeric:tabular-nums;margin:8px 0 3px}
+.tk .bo{font-size:19px;font-weight:900}
+.tk .nu{font-family:var(--num);font-size:84px;line-height:.95;font-variant-numeric:tabular-nums;margin:8px 0 3px}
 .tk .pe{font-size:11.5px;color:var(--inks)}
 .tk .stt{margin-top:12px;background:var(--felt);border-radius:9px;padding:10px}
 .tk .stt .k{font-size:9.5px;letter-spacing:.14em;color:#9DD3B4;font-weight:900}
-.tk .stt .v{font-size:22px;font-weight:900;color:var(--paper)}
+.tk .stt .v{font-size:26px;font-weight:900;color:var(--paper)}
 .tk .stt .v small{font-size:11px;color:#9DD3B4;margin-left:5px}
 .pf{position:relative;height:0;border-top:2px dashed rgba(11,46,30,.32);margin:0 12px}
 .pf::before,.pf::after{content:"";position:absolute;top:-11px;width:21px;height:21px;border-radius:50%;background:var(--felt)}
@@ -112,13 +120,13 @@ button{font-family:var(--jp);font-weight:900;border:none;cursor:pointer}
 .sheet{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));
   background:var(--paper);color:var(--ink);border-radius:14px;padding:16px 15px;text-align:center;z-index:21;
   max-width:436px;margin:0 auto}
-.sheet .bn{font-size:16px;font-weight:900}
+.sheet .bn{font-size:19px;font-weight:900}
 .sheet .q{font-size:11.5px;color:var(--inks);margin-bottom:13px}
 .psel{display:flex;gap:7px}
-.psel button{flex:1;background:var(--paper2);border:2px solid transparent;border-radius:11px;padding:14px 0;
-  font-family:var(--num);font-size:22px;color:var(--ink)}
+.psel button{flex:1;background:var(--paper2);border:2px solid transparent;border-radius:12px;padding:20px 0;
+  font-family:var(--num);font-size:26px;color:var(--ink)}
 .psel button.on{background:var(--felt5);border-color:var(--ink);color:#fff}
-.sheet .go{width:100%;background:var(--brass);color:#1A1206;border-radius:11px;padding:14px 0;font-size:15px;margin-top:13px}
+.sheet .go{width:100%;background:var(--brass);color:#1A1206;border-radius:12px;padding:18px 0;font-size:18px;margin-top:14px}
 .sheet .cx{width:100%;background:none;color:var(--inks);font-size:12px;font-weight:700;padding:9px 0}
 .pnote{font-size:9.5px;color:var(--inks);line-height:1.55;margin-top:9px}
 
@@ -640,9 +648,13 @@ async function refresh(){
     S.now=Date.now();
     S.offline=false;
     // DBに無い券は端末からも消す（前日の券が残るのを防ぐ）
-    const ids=new Set(S.tickets.map(x=>x.id));
-    const kept=S.mine.filter(m=>ids.has(m.id));
-    if(kept.length!==S.mine.length){S.mine=kept;LS.set("mine2",kept)}
+    // ※ 型がずれると全部消えるので文字列に揃える
+    // ※ 券が0件のときは通信の失敗も疑えるので消さない
+    if(S.tickets.length){
+      const ids=new Set(S.tickets.map(x=>String(x.id)));
+      const kept=S.mine.filter(m=>ids.has(String(m.id)));
+      if(kept.length!==S.mine.length){S.mine=kept;LS.set("mine2",kept)}
+    }
     // 呼ばれたか判定
     checkCall();
   }catch(e){ S.offline=true; }
@@ -650,7 +662,7 @@ async function refresh(){
 }
 function checkCall(){
   for(const m of S.mine){
-    const t=S.tickets.find(x=>x.id===m.id);
+    const t=S.tickets.find(x=>String(x.id)===String(m.id));
     if(!t||t.status!=="called")continue;
     if(S.lastCalled===t.id)continue;
     S.lastCalled=t.id;
@@ -672,7 +684,7 @@ function inside(bid){return S.tickets.filter(t=>t.booth===bid&&t.status==="insid
 // 呼んでいる人・到着した人も席を押さえている扱いにする
 function reserved(bid){return S.tickets.filter(t=>t.booth===bid&&["called","arrived","inside"].includes(t.status)).reduce((a,t)=>a+(t.people||1),0)}
 function myTicket(bid){return S.mine.find(m=>m.booth===bid)}
-function ticketOf(m){return S.tickets.find(t=>t.id===m.id)}
+function ticketOf(m){return S.tickets.find(t=>String(t.id)===String(m.id))}
 function starsOf(bid){
   const rs=S.reviews.filter(r=>r.booth_id===bid && r.hidden!==true);
   if(!rs.length)return null;
@@ -726,9 +738,9 @@ function render(){
         ${calling?`<div class="n">${pad(calling.number)}</div><div class="b">${esc((S.booths.find(b=>b.id===calling.booth)||{}).name||"")}</div>`
                  :`<div class="none">まだありません</div>`}
       </div>
-      <button class="gold" onclick="go('pick')">整理券を取る</button>
-      ${S.mine.length?`<button class="ghost" onclick="go('mine')">自分の整理券を見る</button>`:""}
-      <button class="ghost" onclick="goStaff()">スタッフ用</button>
+      <button class="getbtn" onclick="go('pick')">整理券を取る<small>ブースを選んで順番待ち</small></button>
+      ${S.mine.length?`<button class="mybtn" onclick="go('mine')">自分の整理券を見る<small>いま ${S.mine.length}枚</small></button>`:""}
+      <button class="ghost" style="margin-top:22px" onclick="goStaff()">スタッフ用</button>
     </div>`;
   }
 
