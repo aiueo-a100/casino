@@ -593,7 +593,9 @@ const db={
   tickets:(light,day)=>api(light
     ? `tickets?select=id,number,booth,status,people&day=eq.${day}&status=in.(waiting,called,arrived,inside)`
     : `tickets?select=*&day=eq.${day}`),
-  reviews:()=>api("reviews?select=id,booth_id,rating,comment,hidden&order=created_at.desc"),
+  reviews:()=>api("reviews?select=booth_id,rating&hidden=not.is.true"),
+  reviewsFull:()=>api("reviews?select=id,booth_id,rating,comment&hidden=not.is.true&order=created_at.desc&limit=200"),
+  reviewsOf:(bid)=>api(`reviews?select=id,booth_id,rating,comment&booth_id=eq.${bid}&hidden=not.is.true&order=created_at.desc&limit=50`),
   settings:()=>api("settings?select=*&id=eq.1"),
   addTicket:(booth,people,token)=>api("tickets",{method:"POST",headers:{Prefer:"return=representation"},
     body:JSON.stringify({booth,people,status:"waiting",client_token:token})}),
@@ -612,6 +614,7 @@ const db={
   addPrize:(amount,kind,day)=>api("prize_log",{method:"POST",body:JSON.stringify({amount,kind,day})}),
   delPrize:(id)=>api(`prize_log?id=eq.${id}`,{method:"DELETE"}),
   upSettings:(patch)=>api("settings?id=eq.1",{method:"PATCH",body:JSON.stringify(patch)}),
+  doneCount:()=>api("tickets?select=people&status=eq.done"),
   delAllTickets:()=>api("tickets?id=gt.0",{method:"DELETE"}),
   delWaiting:()=>api("tickets?status=eq.waiting",{method:"DELETE"}),
   delAllReviews:()=>api("reviews?id=gt.0",{method:"DELETE"}),
@@ -633,10 +636,10 @@ let S={
   reviewed:LS.get("reviewed2",[]),  // [booth_id]
   busy:false, loaded:false, offline:false,
   pickBooth:null, pickPeople:2, revBooth:null, revRating:0, revText:"", seeBooth:null,
-  lastCalled:null, justIssued:false,
+  lastCalled:null, justIssued:false, seeList:null,
   role:LS.get("role2",null),      // null | "reception" | booth id | "exchange" | "admin"
   sub:null,   // 統括の下位画面: settings / announce / record / paper
-  authed:LS.get("authed2",false), adminOK:LS.get("adminok2",false), giveN:0, prizeLog:[], now:Date.now()
+  authed:LS.get("authed2",false), adminOK:LS.get("adminok2",false), giveN:0, prizeLog:[], allDone:null, now:Date.now()
 };
 function set(p){Object.assign(S,p); if(p.mine)LS.set("mine2",S.mine); if(p.reviewed)LS.set("reviewed2",S.reviewed); render();}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -647,8 +650,9 @@ function toast(m){const t=document.getElementById("toast");t.textContent=m;t.cla
 async function refresh(){
   try{
     const isStaff=(S.view==="staff");
+    const usedDay=S.settings.day||1;            // 取得に使った日
     const [b,t,r,st,pl]=await Promise.all([
-      db.booths(), db.tickets(!isStaff, S.settings.day||1), db.reviews(), db.settings(),
+      db.booths(), db.tickets(!isStaff, usedDay), (isStaff?db.reviewsFull():db.reviews()), db.settings(),
       isStaff?db.prizeLog():Promise.resolve(S.prizeLog)
     ]);
     S.booths=b||[]; S.tickets=t||[]; S.reviews=r||[]; S.settings=(st&&st[0])||{}; S.prizeLog=pl||[];
@@ -657,7 +661,9 @@ async function refresh(){
     // DBに無い券は端末からも消す（前日の券が残るのを防ぐ）
     // ※ 型がずれると全部消えるので文字列に揃える
     // ※ 券が0件のときは通信の失敗も疑えるので消さない
-    if(S.tickets.length){
+    // 取得に使った日と、いま判明した日がズレていたら消さない
+    // （初回は settings が空なので day=1 で取りにいく。土曜だと金曜の券が返ってくる）
+    if(S.tickets.length && usedDay===(S.settings.day||1)){
       const ids=new Set(S.tickets.map(x=>String(x.id)));
       const kept=S.mine.filter(m=>ids.has(String(m.id)));
       if(kept.length!==S.mine.length){S.mine=kept;LS.set("mine2",kept)}
@@ -707,8 +713,8 @@ function starsOf(bid){
 }
 function prizeToday(){return S.prizeLog.filter(x=>(x.day||1)===today())}
 function prizeLeft(){return prizeToday().reduce((a,x)=>a+x.amount,0)}
-function prizeGiven(){return prizeToday().filter(x=>x.kind==="give").reduce((a,x)=>a-x.amount,0)}
-function prizeTotal(){return prizeToday().filter(x=>x.kind!=="give").reduce((a,x)=>a+x.amount,0)}
+function prizeGiven(){return prizeToday().filter(x=>x.kind==="give"||x.kind==="undo").reduce((a,x)=>a-x.amount,0)}
+function prizeTotal(){return prizeToday().filter(x=>x.kind==="prepare"||x.kind==="refill").reduce((a,x)=>a+x.amount,0)}
 function insideTickets(bid){return S.tickets.filter(t=>t.booth===bid&&t.status==="inside").sort((a,b)=>a.number-b.number)}
 function waitingTickets(bid){return S.tickets.filter(t=>t.booth===bid&&t.status==="waiting").sort((a,b)=>a.number-b.number)}
 function calledTickets(bid){return S.tickets.filter(t=>t.booth===bid&&(t.status==="called"||t.status==="arrived")).sort((a,b)=>a.number-b.number)}
@@ -721,10 +727,18 @@ function elapsed(iso){
 function elapsedSec(iso){ return iso? Math.max(0,Math.floor((S.now-new Date(iso).getTime())/1000)) : 0 }
 // 待ち時間 = 前に並んでいる組が終わるのにかかる時間
 // 席数が少ない卓は、1組でも人数ぶん回転が要る
+// 前に並んでいる組が終わるまでの時間
+// 席が空いていれば同じ回転に詰め込む（5席に2人組が2つなら1回転）
 function waitMinutes(b, tickets){
   const cap=b.capacity||4, turn=b.avg_minutes||6;
-  let rounds=0;
-  for(const t of tickets) rounds += Math.ceil((t.people||1)/cap);
+  let rounds=0, seat=0;
+  for(const t of tickets){
+    const p=t.people||1;
+    if(p>=cap){ if(seat>0){rounds++;seat=0;} rounds+=Math.ceil(p/cap); }
+    else if(seat+p>cap){ rounds++; seat=p; }
+    else seat+=p;
+  }
+  if(seat>0) rounds++;
   return rounds*turn;
 }
 function aheadOf(m){
@@ -825,7 +839,7 @@ function render(){
         </div></div>`;
       }
     }
-    h+=`<div class="fn">10秒ごとに自動で更新</div>`;
+    h+=`<div class="fn">30秒ごとに自動で更新</div>`;
   }
 
   else if(S.view==="review"){
@@ -850,13 +864,13 @@ function render(){
     h=`<div class="bar"><button class="back" onclick="go('pick')">← もどる</button><span>1-E</span></div>${off}`;
     if(!st){h+=`<div class="empty">まだ口コミがありません</div>`}
     else{
-      const cnt=[5,4,3,2,1].map(n=>st.list.filter(r=>r.rating===n).length);
-      const mx=Math.max(...cnt,1);
       h+=`<div class="rhead"><div style="font-size:15px;font-weight:900;color:var(--ink)">${esc(name)}</div>
         <div class="av" style="color:var(--ink)">${st.avg.toFixed(1)}</div>
         <div class="st">${"★".repeat(Math.round(st.avg))}${"☆".repeat(5-Math.round(st.avg))}</div>
         <div class="ct">${st.n}件の口コミ</div></div>`;
-      st.list.forEach(r=>{
+      if(S.seeList===null) h+=`<div class="empty">読み込み中…</div>`;
+      else if(!S.seeList.length) h+=`<div class="empty">コメントはありません</div>`;
+      else S.seeList.forEach(r=>{
         h+=`<div class="ci"><div class="s">${"⭐".repeat(r.rating)}</div>
           ${r.comment?`<div class="t">${esc(r.comment)}</div>`:""}</div>`;
       });
@@ -897,7 +911,11 @@ function go(v){set({view:v})}
 function openPeople(id){set({pickBooth:id,pickPeople:2})}
 function closePeople(){set({pickBooth:null})}
 function setPeople(n){set({pickPeople:n})}
-function seeReviews(id){set({seeBooth:id,view:"reviews"})}
+async function seeReviews(id){
+  set({seeBooth:id,view:"reviews",seeList:null});
+  try{ const r=await db.reviewsOf(id); set({seeList:r||[]}); }
+  catch(e){ set({seeList:[]}); toast("口コミを読めませんでした"); }
+}
 function setRating(n){set({revRating:n})}
 function cntUp(){
   const el=document.getElementById("rvText");
@@ -985,6 +1003,7 @@ function renderStaff(){
   if(S.role==="exchange")  return renderExchange();
   if(S.role==="admin"){
     if(!S.adminOK){ setRole(null); return renderRolePick(); }
+    if(S.allDone===null){ db.doneCount().then(r=>{ S.allDone=people(r||[]); render(); }).catch(()=>{S.allDone=0}); }
     return renderAdmin();
   }
   return renderTable(S.role);
@@ -1214,7 +1233,7 @@ async function arrive(id){
     const now=new Date().toISOString();
     // 席が空いていればそのまま座らせる
     const b=S.booths.find(x=>x.id===t.booth);
-    const room=(b.capacity||4)-inside(t.booth);
+    const room=(b.capacity||4)-reserved(t.booth);   // 席待ちの組も数える
     let ok;
     if(room>=(t.people||1)){
       ok=await db.upTicketIf(id,"called",{status:"inside",arrived_at:now,inside_at:now});
@@ -1241,7 +1260,7 @@ async function seat(id){
 
 async function absent(id){
   if(S.busy)return;
-  if(!confirm("この番号の人を不在にしますか？（整理券は無効になります）"))return;
+  if(!confirm("この番号の人を不在にしますか？\n整理券は無効になります。\n客の画面には理由が出ないので、来たら口頭で説明してください。"))return;
   set({busy:true});
   try{ await db.delTicket(id); await refresh(); toast("不在にしました"); }
   catch(e){ toast("できませんでした") }
@@ -1271,11 +1290,14 @@ async function giveConfirm(){
   S.busy=false; render();
 }
 async function undoGive(){
-  const last=S.prizeLog.find(x=>x.kind==="give");
+  const last=prizeToday().filter(x=>x.kind==="give")
+    .sort((a,b)=>b.id-a.id)[0];
   if(!last){toast("取り消せる交換がありません");return}
-  if(!confirm(`直前の交換（${-last.amount}個）を取り消しますか？`))return;
+  const n=-last.amount;
+  if(!confirm(`直前の交換（${n}個）を取り消しますか？`))return;
   set({busy:true});
-  try{ await db.delPrize(last.id); await refresh(); toast("取り消しました"); }
+  // 消さずに「戻した記録」を足す（prize_logを追記専用にするため）
+  try{ await db.addPrize(n,"undo",today()); await refresh(); toast("取り消しました"); }
   catch(e){ toast("できませんでした") }
   S.busy=false; render();
 }
@@ -1331,7 +1353,7 @@ function renderAdmin(){
   if(S.sub==="record")   return renderRecord();
   if(S.sub==="paper")    return renderPaper();
 
-  const todayN=people(todayDone()), all=people(doneTickets());
+  const todayN=people(todayDone()); const all=(S.allDone===null?todayN:S.allDone);
   const waiting=S.tickets.filter(t=>t.status==="waiting").length;
   const ph=perHour(), fc=forecast();
   const goal=S.settings.goal_people||300;
@@ -1357,8 +1379,11 @@ function renderAdmin(){
     if(m>0&&m<=30) alerts.push({k:"wn",t:"閉場30分前",p:"「まもなく受付を終了します」を出す頃です。"}); }
 
   let h=`<div class="staff">
-    <div class="shd"><span>統括</span><button class="sw" onclick="setRole(null)">担当を変更</button></div>
-    <div class="dsec">現在の状況</div>
+    <div class="shd"><span>統括</span><button class="sw" onclick="setRole(null)">担当を変更</button></div>`;
+  if(S.booths.some(b=>(b.capacity||4)<=2 && (b.avg_minutes||6)<=2))
+    h+=`<div class="alr bad"><b>⚠ リハーサルの設定のままです</b>
+      <p>全卓が2席・1回転2分になっています。設定 →「本番」を押してください。</p></div>`;
+  h+=`<div class="dsec">現在の状況</div>
     <div class="kpr">
       <div><div class="a">${todayN}</div><div class="b2">今日</div></div>
       <div><div class="a">${waiting}</div><div class="b2">待ち組</div></div>
@@ -1685,19 +1710,10 @@ async function resetAll(){
   S.busy=false; render();
 }
 
-/* ---------- キャッシュ対策 ---------- */
-const APP_VER="2026-08-11a";
-(function(){
-  try{
-    const old=localStorage.getItem("appver");
-    if(old && old!==APP_VER){
-      localStorage.setItem("appver",APP_VER);
-      location.reload(true);   // 新しいファイルを取り直す
-      return;
-    }
-    localStorage.setItem("appver",APP_VER);
-  }catch(e){}
-})();
+/* ---------- 版の表示 ---------- */
+// ※キャッシュ対策にはならない（このファイル自体が古ければ古い値が入るため）
+//   配るQRのURLに ?v=2 を付けるのが確実
+const APP_VER="2026-08-11b";
 
 /* ---------- 起動 ---------- */
 refresh();
