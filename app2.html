@@ -594,7 +594,7 @@ const db={
     ? `tickets?select=id,number,booth,status,people&day=eq.${day}&status=in.(waiting,called,arrived,inside)`
     : `tickets?select=*&day=eq.${day}`),
   reviews:()=>api("reviews?select=booth_id,rating&hidden=not.is.true"),
-  reviewsFull:()=>api("reviews?select=id,booth_id,rating,comment&hidden=not.is.true&order=created_at.desc&limit=200"),
+  reviewsFull:()=>api("reviews?select=id,booth_id,rating,comment&hidden=not.is.true&order=created_at.desc&limit=100"),
   reviewsOf:(bid)=>api(`reviews?select=id,booth_id,rating,comment&booth_id=eq.${bid}&hidden=not.is.true&order=created_at.desc&limit=50`),
   settings:()=>api("settings?select=*&id=eq.1"),
   addTicket:(booth,people,token)=>api("tickets",{method:"POST",headers:{Prefer:"return=representation"},
@@ -612,13 +612,11 @@ const db={
   upBooth:(id,patch)=>api(`booths?id=eq.${id}`,{method:"PATCH",body:JSON.stringify(patch)}),
   prizeLog:()=>api("prize_log?select=*&order=id.desc"),
   addPrize:(amount,kind,day)=>api("prize_log",{method:"POST",body:JSON.stringify({amount,kind,day})}),
-  delPrize:(id)=>api(`prize_log?id=eq.${id}`,{method:"DELETE"}),
   upSettings:(patch)=>api("settings?id=eq.1",{method:"PATCH",body:JSON.stringify(patch)}),
   doneCount:()=>api("tickets?select=people&status=eq.done"),
   delAllTickets:()=>api("tickets?id=gt.0",{method:"DELETE"}),
   delWaiting:()=>api("tickets?status=eq.waiting",{method:"DELETE"}),
   delAllReviews:()=>api("reviews?id=gt.0",{method:"DELETE"}),
-  delAllPrize:()=>api("prize_log?id=gt.0",{method:"DELETE"}),
   delReview:(id)=>api(`reviews?id=eq.${id}`,{method:"DELETE"}),
   hideAllReviews:()=>api("reviews?id=gt.0",{method:"PATCH",body:JSON.stringify({hidden:true})}),
 };
@@ -647,12 +645,19 @@ function pad(n){return String(n).padStart(3,"0")}
 function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),2200)}
 
 /* ---------- 読み込み ---------- */
+let revSkip=0;
 async function refresh(){
   try{
     const isStaff=(S.view==="staff");
     const usedDay=S.settings.day||1;            // 取得に使った日
+    // 口コミは毎回取らない（星の平均が数分遅れても困らない）
+    const wantFull = isStaff && S.role==="admin";
+    const needRev  = wantFull || (revSkip--<=0);
+    if(needRev) revSkip=10;
     const [b,t,r,st,pl]=await Promise.all([
-      db.booths(), db.tickets(!isStaff, usedDay), (isStaff?db.reviewsFull():db.reviews()), db.settings(),
+      db.booths(), db.tickets(!isStaff, usedDay),
+      needRev ? (wantFull?db.reviewsFull():db.reviews()) : Promise.resolve(S.reviews),
+      db.settings(),
       isStaff?db.prizeLog():Promise.resolve(S.prizeLog)
     ]);
     S.booths=b||[]; S.tickets=t||[]; S.reviews=r||[]; S.settings=(st&&st[0])||{}; S.prizeLog=pl||[];
@@ -1290,9 +1295,9 @@ async function giveConfirm(){
   S.busy=false; render();
 }
 async function undoGive(){
-  const last=prizeToday().filter(x=>x.kind==="give")
-    .sort((a,b)=>b.id-a.id)[0];
-  if(!last){toast("取り消せる交換がありません");return}
+  // 直前の1行だけを見る（取り消した直後は先頭が undo になるので2回目は弾かれる）
+  const last=prizeToday()[0];
+  if(!last || last.kind!=="give"){toast("直前の交換がありません");return}
   const n=-last.amount;
   if(!confirm(`直前の交換（${n}個）を取り消しますか？`))return;
   set({busy:true});
@@ -1497,7 +1502,7 @@ function renderSettings(){
     <button class="op1" onclick="delOneReview()"><b>口コミを1件ずつ消す</b><span>不適切な書き込みがあったとき</span></button>
     <button class="op1" onclick="hideReviews()"><b>口コミをすべて隠す</b><span>荒らされたとき。表示だけ消えます</span></button>
     <button class="op1 dg" onclick="resetAll()"><b>データ初期化（開場前のみ）</b>
-      <span>整理券・レビュー・景品・お知らせがすべて消えます</span></button>
+      <span>整理券・レビュー・お知らせが消えます（景品の記録は残ります）</span></button>
   </div>`;
   return h;
 }
@@ -1657,16 +1662,22 @@ async function setAnnounce(i){
   S.busy=false; render();
 }
 async function setPrize(){
+  if(S.busy)return;
   const v=prompt("用意した景品の数を入れてください","100");
   if(!v)return; const n=parseInt(v,10);
   if(!(n>0)){toast("1以上の数を入れてください");return}
-  if(!confirm(`今の景品の記録を消して、用意${n}個から始めますか？`))return;
+  const diff=n-prizeLeft();
+  if(!confirm(`残りを${n}個にします（${diff>=0?"+":""}${diff}個）。よろしいですか？`))return;
   set({busy:true});
-  try{ await db.delAllPrize(); await db.addPrize(n,"prepare",today());
-    await db.upSettings({prize_prepared:n}); await refresh(); toast("設定しました"); }
-  catch(e){ toast("できませんでした") }
+  // 消さずに差額を足す（prize_log は追記専用なので DELETE は使えない）
+  try{
+    if(diff!==0) await db.addPrize(diff,"prepare",today());
+    await db.upSettings({prize_prepared:n});
+    await refresh(); toast("設定しました");
+  }catch(e){ toast("できませんでした") }
   S.busy=false; render();
 }
+
 async function resetWaiting(){
   if(!confirm("待っている整理券をすべて消しますか？\n（遊び終わった記録と口コミは残ります）"))return;
   set({busy:true});
@@ -1698,10 +1709,11 @@ async function hideReviews(){
 }
 async function resetAll(){
   if(!confirm("すべてのデータを消します。よろしいですか？"))return;
-  if(!confirm("本当に消しますか？\n整理券・口コミ・景品の記録・お知らせがすべて消えます。"))return;
+  if(!confirm("本当に消しますか？\n整理券・口コミ・お知らせが消えます。\n※景品の記録は消えません（消すにはSQLエディタが必要）"))return;
   set({busy:true});
   try{
-    await db.delAllTickets(); await db.delAllReviews(); await db.delAllPrize();
+    await db.delAllTickets(); await db.delAllReviews();
+    // prize_log は追記専用。消すときは Supabase の SQL エディタで delete from prize_log;
     await db.upSettings({announce:null,announce_at:null});
     for(const b of S.booths) await db.upBooth(b.id,{paused:false});
     S.mine=[]; S.reviewed=[]; LS.set("mine2",[]); LS.set("reviewed2",[]);
