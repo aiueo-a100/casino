@@ -563,7 +563,7 @@ const URL_="https://hnrkfecbewrjwsooxvde.supabase.co";
 const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhucmtmZWNiZXdyandzb294dmRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMTA2MjcsImV4cCI6MjA5NzY4NjYyN30.iTDfmIQxTFEi7013YOmvf844uf2l0XBtOyWQ2tsVeFs";
 const MAX_TICKETS=1;   // 1組1枚（動線が一方通行なので）
 const PW_STAFF="1729";   // スタッフ全員
-const PW_ADMIN="0918";   // 統括だけ（景品の補充・強制終了・初期化ができる）
+const PW_ADMIN="4726";   // 統括だけ（景品の補充・強制終了・初期化ができる）
 // お知らせの文はコードに持ち、DBには番号だけ入れる
 // （DBを直接書き換えられても、決まった文しか出せない）
 const ANNOUNCES=[
@@ -590,16 +590,23 @@ async function api(path,opt={}){
 }
 const db={
   booths:()=>api("booths?select=*&order=id"),
-  tickets:(light)=>api(light
-    ? "tickets?select=id,number,booth,status,people,day"
-    : "tickets?select=*"),
+  tickets:(light,day)=>api(light
+    ? `tickets?select=id,number,booth,status,people&day=eq.${day}&status=in.(waiting,called,arrived,inside)`
+    : `tickets?select=*&day=eq.${day}`),
   reviews:()=>api("reviews?select=id,booth_id,rating,comment,hidden&order=created_at.desc"),
   settings:()=>api("settings?select=*&id=eq.1"),
-  addTicket:(booth,people,day)=>api("tickets",{method:"POST",headers:{Prefer:"return=representation"},
-    body:JSON.stringify({booth,people,status:"waiting",day})}),
+  addTicket:(booth,people,token)=>api("tickets",{method:"POST",headers:{Prefer:"return=representation"},
+    body:JSON.stringify({booth,people,status:"waiting",client_token:token})}),
+  findByToken:(token)=>api(`tickets?select=*&client_token=eq.${token}`),
   delTicket:(id)=>api(`tickets?id=eq.${id}`,{method:"DELETE"}),
   addReview:(booth_id,rating,comment)=>api("reviews",{method:"POST",body:JSON.stringify({booth_id,rating,comment})}),
   upTicket:(id,patch)=>api(`tickets?id=eq.${id}`,{method:"PATCH",body:JSON.stringify(patch)}),
+  // 期待する状態のときだけ更新する（他の人が先に操作していたら0件が返る）
+  upTicketIf:async(id,from,patch)=>{
+    const r=await api(`tickets?id=eq.${id}&status=eq.${from}`,
+      {method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify(patch)});
+    return Array.isArray(r)&&r.length>0;
+  },
   upBooth:(id,patch)=>api(`booths?id=eq.${id}`,{method:"PATCH",body:JSON.stringify(patch)}),
   prizeLog:()=>api("prize_log?select=*&order=id.desc"),
   addPrize:(amount,kind,day)=>api("prize_log",{method:"POST",body:JSON.stringify({amount,kind,day})}),
@@ -641,7 +648,7 @@ async function refresh(){
   try{
     const isStaff=(S.view==="staff");
     const [b,t,r,st,pl]=await Promise.all([
-      db.booths(), db.tickets(!isStaff), db.reviews(), db.settings(),
+      db.booths(), db.tickets(!isStaff, S.settings.day||1), db.reviews(), db.settings(),
       isStaff?db.prizeLog():Promise.resolve(S.prizeLog)
     ]);
     S.booths=b||[]; S.tickets=t||[]; S.reviews=r||[]; S.settings=(st&&st[0])||{}; S.prizeLog=pl||[];
@@ -682,7 +689,15 @@ function closeCall(){document.getElementById("callscr").classList.remove("on")}
 function waitGroups(bid){return S.tickets.filter(t=>t.booth===bid&&t.status==="waiting").length}
 function inside(bid){return S.tickets.filter(t=>t.booth===bid&&t.status==="inside").reduce((a,t)=>a+(t.people||1),0)}
 // 呼んでいる人・到着した人も席を押さえている扱いにする
-function reserved(bid){return S.tickets.filter(t=>t.booth===bid&&["called","arrived","inside"].includes(t.status)).reduce((a,t)=>a+(t.people||1),0)}
+// 席を押さえている人数。ただし「呼んで15分以上返事がない called」は数えない
+// （押し忘れで席が永久に埋まるのを防ぐ。券は消さないので誤爆しない）
+function isStale(t){ return t.status==="called" && elapsedSec(t.called_at)>900 }
+function reserved(bid){
+  return S.tickets.filter(t=>t.booth===bid
+    && ["called","arrived","inside"].includes(t.status)
+    && !isStale(t)).reduce((a,t)=>a+(t.people||1),0);
+}
+function staleCalls(){ return S.tickets.filter(isStale) }
 function myTicket(bid){return S.mine.find(m=>m.booth===bid)}
 function ticketOf(m){return S.tickets.find(t=>String(t.id)===String(m.id))}
 function starsOf(bid){
@@ -899,17 +914,30 @@ async function issue(){
   if(S.mine.length>=MAX_TICKETS){toast("整理券は1枚までです");return}
   set({busy:true});
   const booth=S.pickBooth, people=S.pickPeople;
+  // 同じ発券に固有の合言葉を付ける。通信が切れて再送しても2枚にならない
+  const token=(crypto&&crypto.randomUUID)?crypto.randomUUID()
+    :(Date.now()+"-"+Math.random().toString(36).slice(2));
   let ok=false;
   for(let i=0;i<5;i++){
     try{
-      const res=await db.addTicket(booth,people,S.settings.day||1);
+      let res=await db.addTicket(booth,people,token);
+      if(!(res&&res[0])){
+        const found=await db.findByToken(token);   // 既に入っていたら拾う
+        if(found&&found[0]) res=found;
+      }
       if(res&&res[0]){
         const t=res[0];
         S.mine.push({id:t.id,number:t.number,booth,people});
         LS.set("mine2",S.mine);
         ok=true; break;
       }
-    }catch(e){ await new Promise(r=>setTimeout(r,100+Math.random()*400)); }
+    }catch(e){
+      try{ const found=await db.findByToken(token);   // 届いていたかもしれない
+        if(found&&found[0]){ const t=found[0];
+          S.mine.push({id:t.id,number:t.number,booth,people}); LS.set("mine2",S.mine); ok=true; break; }
+      }catch(_){}
+      await new Promise(r=>setTimeout(r,100+Math.random()*400));
+    }
   }
   S.busy=false; S.pickBooth=null;
   if(ok){ await refresh(); set({view:"mine",justIssued:true}); toast("整理券を取りました"); setTimeout(()=>{S.justIssued=false;if(S.view==="mine")render()},15000); }
@@ -979,8 +1007,13 @@ function renderRolePick(){
 /* 受付 */
 function renderReception(){
   const called=allCalled();
+  const stale=staleCalls();
   let h=`<div class="staff">
     <div class="shd"><span>受付</span><button class="sw" onclick="setRole(null)">担当を変更</button></div>`;
+  if(stale.length) h+=`<div class="alr bad" style="margin-bottom:10px">
+    <b>⚠ 期限切れの呼び出し：${stale.length}件</b>
+    <p>${stale.map(t=>pad(t.number)).join(" ")} が15分以上returnがありません。
+    「不在」を押して片づけてください（席の計算からは外してあります）。</p></div>`;
 
   if(called.length){
     h+=`<div class="sjob">到着待ち</div><div class="ssub">来たら「到着」、来なければ「不在」</div>`;
@@ -1150,8 +1183,9 @@ async function callNext(bid){
   }
   set({busy:true});
   try{
-    await db.upTicket(wait[0].id,{status:"called",called_at:new Date().toISOString()});
-    await refresh(); toast(pad(wait[0].number)+"番を呼びました");
+    const ok=await db.upTicketIf(wait[0].id,"waiting",{status:"called",called_at:new Date().toISOString()});
+    await refresh();
+    toast(ok?pad(wait[0].number)+"番を呼びました":"他の人が先に呼びました");
   }catch(e){ toast("呼び出せませんでした") }
   S.busy=false; render();
 }
@@ -1165,8 +1199,9 @@ async function callByNumber(){
   if(!t){toast("その番号は待機中ではありません");return}
   set({busy:true});
   try{
-    await db.upTicket(t.id,{status:"called",called_at:new Date().toISOString()});
-    await refresh(); toast(pad(n)+"番を呼びました");
+    const ok=await db.upTicketIf(t.id,"waiting",{status:"called",called_at:new Date().toISOString()});
+    await refresh();
+    toast(ok?pad(n)+"番を呼びました":"他の人が先に呼びました");
   }catch(e){ toast("呼び出せませんでした") }
   S.busy=false; render();
 }
@@ -1180,13 +1215,15 @@ async function arrive(id){
     // 席が空いていればそのまま座らせる
     const b=S.booths.find(x=>x.id===t.booth);
     const room=(b.capacity||4)-inside(t.booth);
+    let ok;
     if(room>=(t.people||1)){
-      await db.upTicket(id,{status:"inside",arrived_at:now,inside_at:now});
-      toast("入場しました");
+      ok=await db.upTicketIf(id,"called",{status:"inside",arrived_at:now,inside_at:now});
+      if(ok) toast("入場しました");
     }else{
-      await db.upTicket(id,{status:"arrived",arrived_at:now});
-      toast("到着を記録しました（席が空いたら卓が座らせます）");
+      ok=await db.upTicketIf(id,"called",{status:"arrived",arrived_at:now});
+      if(ok) toast("到着を記録しました（席が空いたら卓が座らせます）");
     }
+    if(!ok) toast("他の人が先に操作しました");
     await refresh();
   }catch(e){ toast("できませんでした") }
   S.busy=false; render();
@@ -1196,8 +1233,8 @@ async function seat(id){
   if(S.busy)return;
   set({busy:true});
   try{
-    await db.upTicket(id,{status:"inside",inside_at:new Date().toISOString()});
-    await refresh(); toast("開始しました");
+    const ok=await db.upTicketIf(id,"arrived",{status:"inside",inside_at:new Date().toISOString()});
+    await refresh(); toast(ok?"開始しました":"他の人が先に操作しました");
   }catch(e){ toast("できませんでした") }
   S.busy=false; render();
 }
@@ -1216,8 +1253,9 @@ async function finish(ids){
   set({busy:true});
   try{
     const now=new Date().toISOString();
-    for(const id of ids) await db.upTicket(id,{status:"done",done_at:now});
-    await refresh(); toast("終了しました");
+    let n=0;
+    for(const id of ids){ if(await db.upTicketIf(id,"inside",{status:"done",done_at:now})) n++; }
+    await refresh(); toast(n?"終了しました":"他の人が先に操作しました");
   }catch(e){ toast("できませんでした") }
   S.busy=false; render();
 }
@@ -1264,9 +1302,10 @@ function todayDone(){ return doneTickets().filter(t=>(t.day||1)===today()) }
 function people(list){ return list.reduce((a,t)=>a+(t.people||1),0) }
 function perHour(){
   const now=Date.now(), ago=now-3600000;
-  const n=todayDone().filter(t=>t.done_at&&new Date(t.done_at).getTime()>=ago);
   const op=parseHM(S.settings.open_at);
-  if(op && now-op.getTime()<1800000) return null;   // 開場30分は計測中
+  // 開場前・開場30分以内は出さない（数字が極端になるため）
+  if(!op || now<op.getTime() || now-op.getTime()<1800000) return null;
+  const n=todayDone().filter(t=>t.done_at&&new Date(t.done_at).getTime()>=ago);
   return people(n);
 }
 function forecast(){
@@ -1278,8 +1317,10 @@ function forecast(){
 function prizeOutAt(){
   const left=prizeLeft(); if(left<=0) return null;
   const op=parseHM(S.settings.open_at); if(!op) return null;
-  const el=(Date.now()-op.getTime())/3600000; if(el<0.5) return null;
-  const rate=prizeGiven()/el; if(rate<=0) return null;
+  const el=(Date.now()-op.getTime())/3600000;
+  if(!isFinite(el) || el<0.5) return null;          // 開場30分未満は出さない
+  const rate=prizeGiven()/el;
+  if(!isFinite(rate) || rate<=0) return null;
   const t=new Date(Date.now()+left/rate*3600000);
   return `${t.getHours()}:${String(t.getMinutes()).padStart(2,"0")}`;
 }
@@ -1660,7 +1701,7 @@ const APP_VER="2026-08-11a";
 
 /* ---------- 起動 ---------- */
 refresh();
-let pollMs=10000, pollTimer=null;
+let pollMs=30000, pollTimer=null;
 function startPoll(){
   if(pollTimer)clearInterval(pollTimer);
   pollTimer=setInterval(()=>{
@@ -1674,7 +1715,7 @@ startPoll();
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden) refresh(); });
 // 切れているときは間隔を空ける（つながったら戻す）
 setInterval(()=>{
-  const want=S.offline?30000:(S.view==="staff"?8000:12000);
+  const want=S.offline?45000:(S.view==="staff"?8000:30000);
   if(want!==pollMs){ pollMs=want; startPoll(); }
 },5000);
 setInterval(()=>{ if(S.view==="staff"&&S.authed&&S.role){ S.now=Date.now(); render(); } },1000);
