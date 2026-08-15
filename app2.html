@@ -612,7 +612,12 @@ const db={
   addTicket:(booth,people,token)=>api("tickets",{method:"POST",headers:{Prefer:"return=representation"},
     body:JSON.stringify({booth,people,status:"waiting",client_token:token})}),
   findByToken:(token)=>api(`tickets?select=*&client_token=eq.${token}`),
+  // 自分の券をIDで直接引く（doneでも取れる。券消え防止と感想画面に使う）
+  mineTickets:(ids)=>api(`tickets?select=id,number,booth,status,people&id=in.(${ids.join(",")})`),
   delTicket:(id)=>api(`tickets?id=eq.${id}`,{method:"DELETE"}),
+  // waitingのときだけ消す（呼ばれた後の取り消しを防ぐ）。消せた行が返る
+  delTicketIf:(id)=>api(`tickets?id=eq.${id}&status=eq.waiting`,
+    {method:"DELETE",headers:{Prefer:"return=representation"}}),
   addReview:(booth_id,rating,comment)=>api("reviews",{method:"POST",body:JSON.stringify({booth_id,rating,comment})}),
   upTicket:(id,patch)=>api(`tickets?id=eq.${id}`,{method:"PATCH",body:JSON.stringify(patch)}),
   // 期待する状態のときだけ更新する（他の人が先に操作していたら0件が返る）
@@ -627,7 +632,7 @@ const db={
   upSettings:(patch)=>api("settings?id=eq.1",{method:"PATCH",body:JSON.stringify(patch)}),
   doneCount:()=>api("tickets?select=people&status=eq.done"),
   delAllTickets:()=>api("tickets?id=gt.0",{method:"DELETE"}),
-  delWaiting:()=>api("tickets?status=eq.waiting",{method:"DELETE"}),
+  delWaiting:()=>api("tickets?status=in.(waiting,called,arrived)",{method:"DELETE"}),
   delAllReviews:()=>api("reviews?id=gt.0",{method:"DELETE"}),
   delReview:(id)=>api(`reviews?id=eq.${id}`,{method:"DELETE"}),
   hideAllReviews:()=>api("reviews?id=gt.0",{method:"PATCH",body:JSON.stringify({hidden:true})}),
@@ -649,7 +654,7 @@ let S={
   lastCalled:null, justIssued:false, seeList:null,
   role:LS.get("role2",null),      // null | "reception" | booth id | "exchange" | "admin"
   sub:null,   // 統括の下位画面: settings / announce / record / paper
-  authed:LS.get("authed2",false), adminOK:LS.get("adminok2",false), giveN:0, prizeLog:null, allDone:null, now:Date.now()
+  authed:LS.get("authed2",false), adminOK:LS.get("adminok2",false), giveN:0, prizeLog:null, allDone:null, allDoneBusy:false, now:Date.now()
 };
 function set(p){Object.assign(S,p); if(p.mine)LS.set("mine2",S.mine); if(p.reviewed)LS.set("reviewed2",S.reviewed); render();}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -675,15 +680,22 @@ async function refresh(){
     S.booths=b||[]; S.tickets=t||[]; S.reviews=r||[]; S.settings=(st&&st[0])||{}; S.prizeLog=pl||[];
     S.now=Date.now();
     S.offline=false;
-    // DBに無い券は端末からも消す（前日の券が残るのを防ぐ）
-    // ※ 型がずれると全部消えるので文字列に揃える
-    // ※ 券が0件のときは通信の失敗も疑えるので消さない
-    // 取得に使った日と、いま判明した日がズレていたら消さない
-    // （初回は settings が空なので day=1 で取りにいく。土曜だと金曜の券が返ってくる）
-    if(S.tickets.length && usedDay===(S.settings.day||1)){
-      const ids=new Set(S.tickets.map(x=>String(x.id)));
-      const kept=S.mine.filter(m=>ids.has(String(m.id)));
-      if(kept.length!==S.mine.length){S.mine=kept;LS.set("mine2",kept)}
+    // 自分の券が一覧に無ければIDで直接引く
+    // （客の一覧はdoneを取らないので、遊び終わった券がここで戻ってくる。
+    //   dayがズレていても自分の券だけは見える）
+    if(S.mine.length){
+      const have=new Set(S.tickets.map(x=>String(x.id)));
+      const missing=S.mine.filter(m=>!have.has(String(m.id)));
+      if(missing.length){
+        try{
+          const got=await db.mineTickets(missing.map(m=>m.id))||[];
+          const found=new Set(got.map(x=>String(x.id)));
+          for(const x of got) S.tickets.push(x);
+          // IDで引いても無い＝本当に消された券。ここで初めて端末からも消す
+          const kept=S.mine.filter(m=>have.has(String(m.id))||found.has(String(m.id)));
+          if(kept.length!==S.mine.length){S.mine=kept;LS.set("mine2",kept)}
+        }catch(e){} // 引けなかったときは消さない（通信の失敗かもしれない）
+      }
     }
     // 呼ばれたか判定
     checkCall();
@@ -730,18 +742,6 @@ function starsOf(bid){
 }
 function prizeReady(){ return S.prizeLog!==null }
 // まだ取り消していない交換を探す（undoの数だけgiveを飛ばす）
-function lastUndoableGive(){
-  const rows=prizeToday();
-  let skip=rows.filter(x=>x.kind==="undo").length;
-  for(const r of rows){
-    if(r.kind!=="give") continue;
-    if(skip>0){ skip--; continue }
-    return r;
-  }
-  return null;
-}
-// まだ取り消していない交換を探す（undoの数だけgiveを飛ばす）
-// 補充が挟まっても届くし、連打しても同じ行は二度と対象にならない
 function lastUndoableGive(){
   const rows=prizeToday();
   let skip=rows.filter(x=>x.kind==="undo").length;
@@ -818,7 +818,7 @@ function render(){
     h=`<div class="bar"><button class="back" onclick="go('home')">← 戻る</button><span>1-E</span></div>${annHtml}${off}
     <div class="ttl">ブースを選ぶ</div><div class="sb">タップすると人数を選べます</div>`;
     for(const b of S.booths){
-      const w=waitGroups(b.id), ins=inside(b.id), cap=b.capacity||4;
+      const w=waitGroups(b.id), ins=reserved(b.id), cap=b.capacity||4;  // 呼び出し中・到着済みも席に数える
       const st=starsOf(b.id);
       const mine=myTicket(b.id);
       const full=ins>=cap;
@@ -837,7 +837,7 @@ function render(){
           ${star}
         </div>
         <div class="seat"><div class="g"><i class="${w>=5?"full":""}" style="width:${Math.min(100,w*20)}%"></i></div>
-          <div class="sl"><span>${w===0?"すぐ座れます":w<=2?"すこし待ちます":w<=4?"混んでいます":"かなり混んでいます"}</span>
+          <div class="sl"><span>${w===0?(full?"まもなく空きます":"すぐ座れます"):w<=2?"すこし待ちます":w<=4?"混んでいます":"かなり混んでいます"}</span>
           <span>${full?"満席":`空き${cap-ins}人`}</span></div></div>
       </div>`;
     }
@@ -880,12 +880,11 @@ function render(){
         </div></div>`;
       }
     }
-    h+=`<div class="fn">30秒ごとに自動で更新</div>`;
+    h+=`<div class="fn">自動で更新されます（順番が近づくと速くなります）</div>`;
   }
 
   else if(S.view==="review"){
     const b=S.booths.find(x=>x.id===S.revBooth); const name=b?b.name:S.revBooth;
-    const labels=["","うーん","もう少し","ふつう","良い","최高"];
     const lb=["","😐 うーん","🙂 もう少し","😊 ふつう","😄 良い","🤩 最高"][S.revRating]||"";
     h=`<div class="bar"><button class="back" onclick="go('mine')">← もどる</button><span>1-E</span></div>${off}
     <div class="rv">
@@ -1006,7 +1005,11 @@ async function issue(){
 async function cancelTicket(id){
   if(!confirm("この整理券を取り消しますか？"))return;
   set({busy:true});
-  try{ await db.delTicket(id); set({mine:S.mine.filter(m=>m.id!==id)}); toast("取り消しました"); }
+  try{
+    const r=await db.delTicketIf(id);   // waitingのときだけ消える
+    if(Array.isArray(r)&&r.length){ set({mine:S.mine.filter(m=>m.id!==id)}); toast("取り消しました"); }
+    else toast("すでに呼ばれています。受付にお越しください");
+  }
   catch(e){ toast("取り消せませんでした"); }
   S.busy=false; await refresh();
   if(!S.mine.length)set({view:"home"});
@@ -1044,7 +1047,9 @@ function renderStaff(){
   if(S.role==="exchange")  return renderExchange();
   if(S.role==="admin"){
     if(!S.adminOK){ setRole(null); return renderRolePick(); }
-    if(S.allDone===null){ db.doneCount().then(r=>{ S.allDone=people(r||[]); render(); }).catch(()=>{S.allDone=0}); }
+    if(S.allDone===null&&!S.allDoneBusy){ S.allDoneBusy=true;
+      db.doneCount().then(r=>{ S.allDone=people(r||[]); }).catch(()=>{ S.allDone=0; })
+        .finally(()=>{ S.allDoneBusy=false; render(); }); }
     return renderAdmin();
   }
   return renderTable(S.role);
@@ -1118,7 +1123,7 @@ function renderReception(){
   }
   h+=`<button class="callsp" onclick="callByNumber()">番号を指定して呼ぶ</button>
     <div class="rlg">● 緑＝空きあり　● 灰＝満席（先に呼ぶと確認が出ます）<br>
-    呼んでから5分すぎた人は「期限切れ」と出ます。<br>
+    呼んで5分で「お待たせ中」、15分で「期限切れ」になり席の数から外れます。<br>
     飛ばした人が来たら「番号を指定して呼ぶ」</div></div>`;
   return h;
 }
@@ -1288,7 +1293,9 @@ async function arrive(id){
     const now=new Date().toISOString();
     // 席が空いていればそのまま座らせる
     const b=S.booths.find(x=>x.id===t.booth);
-    const room=(b.capacity||4)-reserved(t.booth);   // 席待ちの組も数える
+    // reservedには「呼ばれている自分」も入っているので除いて数える
+    const self=(t.status==="called"&&!isStale(t))?(t.people||1):0;
+    const room=(b.capacity||4)-(reserved(t.booth)-self);
     let ok;
     if(room>=(t.people||1)){
       ok=await db.upTicketIf(id,"called",{status:"inside",arrived_at:now,inside_at:now});
@@ -1737,11 +1744,9 @@ async function setPrize(){
 }
 
 async function resetWaiting(){
-  if(!confirm("待っている整理券をすべて消しますか？\n（遊び終わった記録と口コミは残ります）"))return;
+  if(!confirm("待っている整理券（呼び出し中・到着済みも含む）をすべて消しますか？\n（遊び終わった記録と口コミは残ります）"))return;
   set({busy:true});
-  try{ await db.delWaiting();
-    for(const t of S.tickets.filter(x=>x.status==="called"||x.status==="arrived"))
-      await db.upTicket(t.id,{status:"waiting",called_at:null,arrived_at:null});
+  try{ await db.delWaiting();   // 呼び出し中・到着済みも一緒に消える
     S.mine=[]; LS.set("mine2",[]);
     await refresh(); toast("整理券を消しました"); }
   catch(e){ toast("できませんでした") }
@@ -1783,7 +1788,7 @@ async function resetAll(){
 /* ---------- 版の表示 ---------- */
 // ※キャッシュ対策にはならない（このファイル自体が古ければ古い値が入るため）
 //   配るQRのURLに ?v=2 を付けるのが確実
-const APP_VER="2026-08-11b";
+const APP_VER="2026-08-15a";
 
 /* ---------- 起動 ---------- */
 refresh();
@@ -1801,7 +1806,11 @@ startPoll();
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden) refresh(); });
 // 切れているときは間隔を空ける（つながったら戻す）
 setInterval(()=>{
-  const want=S.offline?45000:(S.view==="staff"?8000:30000);
+  // 呼ばれている人・順番が先頭付近の人だけ速く見にいく
+  // （対象は常に数台なので通信量はほぼ増えない）
+  const near=S.mine.some(m=>{const t=ticketOf(m);
+    return t&&(t.status==="called"||(t.status==="waiting"&&aheadOf(m)<=1))});
+  const want=S.offline?45000:(S.view==="staff"?8000:(near?10000:30000));
   if(want!==pollMs){ pollMs=want; startPoll(); }
 },5000);
 setInterval(()=>{ if(S.view==="staff"&&S.authed&&S.role){ S.now=Date.now(); render(); } },1000);
