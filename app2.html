@@ -809,7 +809,9 @@ function render(){
                  :`<div class="none">まだありません</div>`}
       </div>
       <button class="getbtn" onclick="go('pick')">整理券を取る<small>ブースを選んで順番待ち</small></button>
-      ${S.mine.length?`<button class="mybtn" onclick="go('mine')">自分の整理券を見る<small>いま ${S.mine.length}枚</small></button>`:""}
+      ${(()=>{if(!S.mine.length)return "";
+        const a=S.mine.filter(m=>{const t=ticketOf(m);return t&&t.status!=="done"}).length;
+        return `<button class="mybtn" onclick="go('mine')">自分の整理券を見る<small>${a?`いま ${a}枚`:"遊んだ記録"}</small></button>`})()}
       <button class="ghost" style="margin-top:22px" onclick="goStaff()">スタッフ用</button>
     </div>`;
   }
@@ -820,7 +822,8 @@ function render(){
     for(const b of S.booths){
       const w=waitGroups(b.id), ins=reserved(b.id), cap=b.capacity||4;  // 呼び出し中・到着済みも席に数える
       const st=starsOf(b.id);
-      const mine=myTicket(b.id);
+      const mt=myTicket(b.id);
+      const mine=mt&&((ticketOf(mt)||{}).status!=="done");  // 遊び終わった券は「持っている」に数えない（もう一回遊べる）
       const full=ins>=cap;
       const pct=Math.min(100,Math.round(ins/cap*100));
       const mins=waitMinutes(b, waitingTickets(b.id));
@@ -846,7 +849,16 @@ function render(){
   else if(S.view==="mine"){
     h=`<div class="bar"><button class="back" onclick="go('home')">← 戻る</button><span>1-E</span></div>${annHtml}${off}`;
     if(!S.mine.length){h+=`<div class="empty">整理券を持っていません</div><button class="gold" onclick="go('pick')">整理券を取る</button>`}
-    for(const m of S.mine){
+    else{
+      const hasActive=S.mine.some(m=>{const t=ticketOf(m);return t&&t.status!=="done"});
+      if(!hasActive) h+=`<button class="gold" style="margin-bottom:12px" onclick="go('pick')">つぎの整理券を取る</button>`;
+    }
+    // 遊んでいる券を上、遊び終わった履歴を下に
+    const mineList=[...S.mine].sort((a,b)=>{
+      const da=(ticketOf(a)||{}).status==="done"?1:0, db_=(ticketOf(b)||{}).status==="done"?1:0;
+      return da-db_;
+    });
+    for(const m of mineList){
       const t=ticketOf(m); const b=S.booths.find(x=>x.id===m.booth);
       const name=b?b.name:m.booth;
       if(!t){ continue }
@@ -861,8 +873,7 @@ function render(){
           ${done?`<div class="hint">感想をありがとうございました</div>`
                 :`<button class="revbtn" onclick="openReview('${m.booth}')">★ 感想を書く</button>
                   <div class="hint" style="margin-top:8px">書かなくても大丈夫です</div>`}
-        </div></div>
-        <button class="gold" style="margin-top:12px" onclick="dropMine(${m.id});go('pick')">次のブースの整理券を取る</button>`;
+        </div></div>`;
       } else {
         const ahead=aheadOf(m);
         const front=S.tickets.filter(x=>x.booth===m.booth&&x.status==="waiting"&&x.number<m.number);
@@ -969,7 +980,10 @@ function dropMine(id){set({mine:S.mine.filter(m=>m.id!==id)})}
 
 async function issue(){
   if(S.busy)return;
-  if(S.mine.length>=MAX_TICKETS){toast("整理券は1枚までです");return}
+  // 遊び終わった券は履歴として残すが、1枚制限には数えない
+  // （状態がまだ取れていない券は、二重取り防止のため「持っている」扱い）
+  const activeMine=S.mine.filter(m=>{const t=ticketOf(m);return !t||t.status!=="done"});
+  if(activeMine.length>=MAX_TICKETS){toast("整理券は1枚までです");return}
   set({busy:true});
   const booth=S.pickBooth, people=S.pickPeople;
   // 同じ発券に固有の合言葉を付ける。通信が切れて再送しても2枚にならない
@@ -985,6 +999,8 @@ async function issue(){
       }
       if(res&&res[0]){
         const t=res[0];
+        // 同じブースの遊び終わった券は、新しい券と入れ替える
+        S.mine=S.mine.filter(x=>!(x.booth===booth&&(ticketOf(x)||{}).status==="done"));
         S.mine.push({id:t.id,number:t.number,booth,people});
         LS.set("mine2",S.mine);
         ok=true; break;
@@ -992,6 +1008,7 @@ async function issue(){
     }catch(e){
       try{ const found=await db.findByToken(token);   // 届いていたかもしれない
         if(found&&found[0]){ const t=found[0];
+          S.mine=S.mine.filter(x=>!(x.booth===booth&&(ticketOf(x)||{}).status==="done"));
           S.mine.push({id:t.id,number:t.number,booth,people}); LS.set("mine2",S.mine); ok=true; break; }
       }catch(_){}
       await new Promise(r=>setTimeout(r,100+Math.random()*400));
@@ -1788,7 +1805,7 @@ async function resetAll(){
 /* ---------- 版の表示 ---------- */
 // ※キャッシュ対策にはならない（このファイル自体が古ければ古い値が入るため）
 //   配るQRのURLに ?v=2 を付けるのが確実
-const APP_VER="2026-08-15a";
+const APP_VER="2026-08-15b";
 
 /* ---------- 起動 ---------- */
 refresh();
