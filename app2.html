@@ -370,6 +370,12 @@ textarea{width:100%;background:var(--paper);color:var(--ink);border:none;border-
 .pl span{font-family:var(--num);font-size:20px;letter-spacing:.04em}
 .pl span s{text-decoration:none;color:#A9B4AC;font-size:14px}
 
+
+.pl2{background:var(--paper);color:var(--ink);border-radius:11px;padding:12px 14px;
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.pl2 b{font-size:13px;font-weight:900}
+.pl2 span{font-family:var(--num);font-size:30px;line-height:1}
+
 /* トースト */
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom));
   background:var(--go);color:#fff;border-radius:10px;padding:11px 18px;font-size:13px;font-weight:900;
@@ -499,6 +505,12 @@ textarea{width:100%;background:var(--paper);color:var(--ink);border:none;border-
 .pl b{font-size:13px;font-weight:900}
 .pl span{font-family:var(--num);font-size:20px;letter-spacing:.04em}
 .pl span s{text-decoration:none;color:#A9B4AC;font-size:14px}
+
+
+.pl2{background:var(--paper);color:var(--ink);border-radius:11px;padding:12px 14px;
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.pl2 b{font-size:13px;font-weight:900}
+.pl2 span{font-family:var(--num);font-size:30px;line-height:1}
 
 /* トースト */
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom));
@@ -717,6 +729,29 @@ function starsOf(bid){
   return {avg:(rs.reduce((a,r)=>a+r.rating,0)/rs.length), n:rs.length, list:rs};
 }
 function prizeReady(){ return S.prizeLog!==null }
+// まだ取り消していない交換を探す（undoの数だけgiveを飛ばす）
+function lastUndoableGive(){
+  const rows=prizeToday();
+  let skip=rows.filter(x=>x.kind==="undo").length;
+  for(const r of rows){
+    if(r.kind!=="give") continue;
+    if(skip>0){ skip--; continue }
+    return r;
+  }
+  return null;
+}
+// まだ取り消していない交換を探す（undoの数だけgiveを飛ばす）
+// 補充が挟まっても届くし、連打しても同じ行は二度と対象にならない
+function lastUndoableGive(){
+  const rows=prizeToday();
+  let skip=rows.filter(x=>x.kind==="undo").length;
+  for(const r of rows){
+    if(r.kind!=="give") continue;
+    if(skip>0){ skip--; continue }
+    return r;
+  }
+  return null;
+}
 function prizeToday(){ return (S.prizeLog||[]).filter(x=>(x.day||1)===today()) }
 function prizeLeft(){return prizeToday().reduce((a,x)=>a+x.amount,0)}
 function prizeGiven(){return prizeToday().filter(x=>x.kind==="give"||x.kind==="undo").reduce((a,x)=>a-x.amount,0)}
@@ -1037,7 +1072,7 @@ function renderReception(){
     <div class="shd"><span>受付</span><button class="sw" onclick="setRole(null)">担当を変更</button></div>`;
   if(stale.length) h+=`<div class="alr bad" style="margin-bottom:10px">
     <b>⚠ 期限切れの呼び出し：${stale.length}件</b>
-    <p>${stale.map(t=>pad(t.number)).join(" ")} が15分以上returnがありません。
+    <p>${stale.map(t=>pad(t.number)).join(" ")} が15分以上返事がありません。
     「不在」を押して片づけてください（席の計算からは外してあります）。</p></div>`;
 
   if(called.length){
@@ -1050,7 +1085,7 @@ function renderReception(){
         <div class="cnb">${esc(b?b.name:t.booth)}${t.status==="arrived"?" ・ 到着済み":""}</div>
         <div class="cnn">${pad(t.number)}</div>
         <div class="cnp">${t.people}人で参加</div>
-        <div class="cnt2" ${sec>120?'style="color:#8a1f14"':""}>呼び出しから ${elapsed(t.called_at)||"0:00"}${over?" ・ 期限切れ":""}</div>
+        <div class="cnt2" ${sec>120?'style="color:#8a1f14"':""}>呼び出しから ${elapsed(t.called_at)||"0:00"}${over?" ・ お待たせ中":""}</div>
         <div class="cnrow">
           ${t.status==="called"?`<button class="cy" onclick="arrive(${t.id})">到着</button>`:`<button class="cy" style="opacity:.5" disabled>到着済み</button>`}
           <button class="cn" onclick="absent(${t.id})">不在</button>
@@ -1179,6 +1214,16 @@ function renderExchange(){
         ${S.giveN?S.giveN+"個 交換する":"交換する"}</button>
       <button class="kundo" onclick="undoGive()">直前の交換を取り消す</button>
       <button class="kundo" onclick="refill()">＋ 景品を補充する</button>`;
+    const recent=prizeToday().slice(0,3);
+    if(recent.length){
+      h+=`<div class="dsec">直近の記録</div>`;
+      for(const r of recent){
+        const d=new Date(r.created_at);
+        h+=`<div class="stat2"><span>${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")} ${
+          r.kind==="give"?"交換":r.kind==="undo"?"取り消し":r.kind==="refill"?"補充":"用意"}</span>
+          <b>${r.amount>0?"+":""}${r.amount}個</b></div>`;
+      }
+    }
   }
   return h+`</div>`;
 }
@@ -1300,9 +1345,8 @@ async function giveConfirm(){
   S.busy=false; render();
 }
 async function undoGive(){
-  // 直前の1行だけを見る（取り消した直後は先頭が undo になるので2回目は弾かれる）
-  const last=prizeToday()[0];
-  if(!last || last.kind!=="give"){toast("直前の交換がありません");return}
+  const last=lastUndoableGive();
+  if(!last){toast("取り消せる交換がありません");return}
   const n=-last.amount;
   if(!confirm(`直前の交換（${n}個）を取り消しますか？`))return;
   set({busy:true});
@@ -1570,7 +1614,7 @@ function renderRecord(){
     <div class="dsec">全体の数字</div>
     <div class="stat2"><span>平均の待ち時間</span><b>${avgW===null?"—":avgW+"分"}</b></div>
     <div class="stat2"><span>いちばん待った人</span><b>${maxW===null?"—":maxW+"分"}</b></div>
-    <div class="stat2"><span>1回あたりの平均</span><b>${avgP===null?"—":Math.floor(avgP)+"分"+String(Math.round(avgP%1*60)).padStart(2,"0")+"秒"}</b></div>
+    <div class="stat2"><span>1回あたりの平均</span><b>${avgP===null?"—":(()=>{const x=Math.round(avgP*60);return Math.floor(x/60)+"分"+String(x%60).padStart(2,"0")+"秒"})()}</b></div>
     <div class="stat2"><span>渡した景品</span><b>${prizeGiven()}個</b></div>
     <div class="stat2"><span>口コミの数</span><b>${S.reviews.length}件</b></div>
   </div>`;
@@ -1580,8 +1624,13 @@ function renderRecord(){
 /* 紙モード */
 function renderPaper(){
   const now=new Date();
+  const next=Math.max(0,...S.tickets.map(t=>t.number||0))+1;
+  const upd=new Date(S.now);
   let h=`<div class="staff">
     <div class="shd"><span>紙モード</span><button class="sw" onclick="sub(null)">閉じる</button></div>
+    <div class="pl" style="background:var(--paper);color:var(--ink);border-radius:11px;padding:13px;margin-bottom:9px">
+      <b>次に配る番号</b><span>${pad(next)}</span></div>
+    <div class="cfgmore" style="margin-bottom:11px">最終更新 ${upd.getHours()}:${String(upd.getMinutes()).padStart(2,"0")}${S.offline?"（つながっていません。この番号は古いかもしれません）":""}</div>
     <div class="paperm">
       <div class="hh"><span>いまの待ち番号</span><span>${now.getHours()}:${String(now.getMinutes()).padStart(2,"0")}</span></div>`;
   for(const b of S.booths){
