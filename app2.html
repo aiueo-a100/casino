@@ -637,7 +637,7 @@ let S={
   lastCalled:null, justIssued:false, seeList:null,
   role:LS.get("role2",null),      // null | "reception" | booth id | "exchange" | "admin"
   sub:null,   // 統括の下位画面: settings / announce / record / paper
-  authed:LS.get("authed2",false), adminOK:LS.get("adminok2",false), giveN:0, prizeLog:[], allDone:null, now:Date.now()
+  authed:LS.get("authed2",false), adminOK:LS.get("adminok2",false), giveN:0, prizeLog:null, allDone:null, now:Date.now()
 };
 function set(p){Object.assign(S,p); if(p.mine)LS.set("mine2",S.mine); if(p.reviewed)LS.set("reviewed2",S.reviewed); render();}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -658,7 +658,7 @@ async function refresh(){
       db.booths(), db.tickets(!isStaff, usedDay),
       needRev ? (wantFull?db.reviewsFull():db.reviews()) : Promise.resolve(S.reviews),
       db.settings(),
-      isStaff?db.prizeLog():Promise.resolve(S.prizeLog)
+      (isStaff||S.prizeLog===null)?db.prizeLog():Promise.resolve(S.prizeLog)
     ]);
     S.booths=b||[]; S.tickets=t||[]; S.reviews=r||[]; S.settings=(st&&st[0])||{}; S.prizeLog=pl||[];
     S.now=Date.now();
@@ -716,7 +716,8 @@ function starsOf(bid){
   if(!rs.length)return null;
   return {avg:(rs.reduce((a,r)=>a+r.rating,0)/rs.length), n:rs.length, list:rs};
 }
-function prizeToday(){return S.prizeLog.filter(x=>(x.day||1)===today())}
+function prizeReady(){ return S.prizeLog!==null }
+function prizeToday(){ return (S.prizeLog||[]).filter(x=>(x.day||1)===today()) }
 function prizeLeft(){return prizeToday().reduce((a,x)=>a+x.amount,0)}
 function prizeGiven(){return prizeToday().filter(x=>x.kind==="give"||x.kind==="undo").reduce((a,x)=>a-x.amount,0)}
 function prizeTotal(){return prizeToday().filter(x=>x.kind==="prepare"||x.kind==="refill").reduce((a,x)=>a+x.amount,0)}
@@ -1148,6 +1149,10 @@ function renderTable(bid){
 
 /* 交換所 */
 function renderExchange(){
+  if(!prizeReady()) return `<div class="staff">
+    <div class="shd"><span>交換所</span><button class="sw" onclick="setRole(null)">担当を変更</button></div>
+    <div class="sjob">景品交換</div>
+    <div class="load" style="margin-top:40px">読み込み中…</div></div>`;
   const left=prizeLeft(), total=prizeTotal(), given=prizeGiven();
   const pct=total?Math.max(0,Math.round(left/total*100)):0;
   const zero=left<=0;
@@ -1307,7 +1312,9 @@ async function undoGive(){
   S.busy=false; render();
 }
 async function refill(){
-  const v=prompt("補充する数を入れてください","30");
+  if(S.busy)return;
+  if(!prizeReady()){toast("読み込み中です。少し待ってください");return}
+  const v=prompt("補充する数を入れてください（今の残りに足します）","30");
   if(!v)return;
   const n=parseInt(v,10);
   if(!(n>0)){toast("1以上の数を入れてください");return}
@@ -1321,7 +1328,7 @@ async function refill(){
 /* ---------- 統括 ---------- */
 function parseHM(v){ if(!v)return null; const m=String(v).match(/^(\d{1,2}):(\d{2})$/); if(!m)return null;
   const d=new Date(); d.setHours(+m[1],+m[2],0,0); return d; }
-function today(){ return S.settings.day||1 }
+function today(){ return (S.settings&&S.settings.day)||1 }
 function doneTickets(){ return S.tickets.filter(t=>t.status==="done") }
 // 「今日」は日付ではなく営業日（day=1:金曜 / 2:土曜）で切る
 // 日付で切ると時差で金土が混ざる
@@ -1493,9 +1500,10 @@ function renderSettings(){
     </div>`;
   }
   h+=`<div class="dsec">景品</div>
-    <div class="cfg"><div class="cln"><span class="clb">用意</span><span class="cst">
-      <span class="cv">${prizeTotal()}個</span></span></div></div>
-    <button class="op1" onclick="setPrize()"><b>用意した数を入れ直す</b><span>今の記録を消して入れ直します</span></button>
+    <div class="cfg"><div class="cln"><span class="clb">残り</span><span class="cst">
+      <span class="cv">${prizeReady()?prizeLeft()+"個":"読み込み中"}</span></span></div></div>
+    <button class="op1" ${prizeReady()?"":"disabled"} onclick="setPrize()">
+      <b>用意した数を入れ直す</b><span>残りをこの数に合わせます（差額を足し引き）</span></button>
 
     <div class="dsec">片づけ</div>
     <button class="op1" onclick="resetWaiting()"><b>整理券だけ消す</b><span>2日目の朝に使う。口コミは残る</span></button>
@@ -1663,6 +1671,7 @@ async function setAnnounce(i){
 }
 async function setPrize(){
   if(S.busy)return;
+  if(!prizeReady()){toast("読み込み中です。少し待ってください");return}
   const v=prompt("用意した景品の数を入れてください","100");
   if(!v)return; const n=parseInt(v,10);
   if(!(n>0)){toast("1以上の数を入れてください");return}
