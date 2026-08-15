@@ -694,7 +694,7 @@ async function refresh(){
           // IDで引いても無い＝本当に消された券。ここで初めて端末からも消す
           const kept=S.mine.filter(m=>have.has(String(m.id))||found.has(String(m.id)));
           if(kept.length!==S.mine.length){S.mine=kept;LS.set("mine2",kept)}
-        }catch(e){} // 引けなかったときは消さない（通信の失敗かもしれない）
+        }catch(e){ S.offline=true; } // 引けなかったときは消さない（画面にも出す）
       }
     }
     // 呼ばれたか判定
@@ -719,6 +719,20 @@ function showCall(num,name){
   try{navigator.vibrate&&navigator.vibrate([400,150,400,150,400])}catch(e){}
 }
 function closeCall(){document.getElementById("callscr").classList.remove("on")}
+
+// 自分の券だけを見にいく軽量チェック（5秒モード用・1回0.3KB程度）
+// 状態が変わったときだけ全体を取り直す
+async function pingMine(){
+  const watch=S.mine.filter(m=>{const t=ticketOf(m);
+    return t&&["waiting","called","arrived","inside"].includes(t.status)});
+  if(!watch.length)return;
+  try{
+    const got=await db.mineTickets(watch.map(m=>m.id))||[];
+    const changed=got.length!==watch.length
+      || got.some(x=>{const old=ticketOf(x);return !old||old.status!==x.status});
+    if(changed) await refresh();
+  }catch(e){}
+}
 
 /* ---------- 集計 ---------- */
 function waitGroups(bid){return S.tickets.filter(t=>t.booth===bid&&t.status==="waiting").length}
@@ -861,7 +875,16 @@ function render(){
     for(const m of mineList){
       const t=ticketOf(m); const b=S.booths.find(x=>x.id===m.booth);
       const name=b?b.name:m.booth;
-      if(!t){ continue }
+      if(!t){   // 情報が取れないときも黙って消さない（読み込み中として出す）
+        h+=`<div class="tk"><div class="tp">
+          <div class="bo">${esc(name)}</div>
+          <div class="doneno">${pad(m.number)}</div>
+          <div class="donemsg">記録を読み込み中</div>
+          <div class="donestt">つながらないときはこのままお待ちください</div>
+        </div><div class="pf"></div><div class="bt">
+          <button class="revbtn" onclick="openReview('${m.booth}')">★ 感想を書く</button>
+        </div></div>`;
+        continue }
       if(t.status==="done"){
         const done=S.reviewed.includes(m.booth);
         h+=`<div class="tk"><div class="tp">
@@ -891,7 +914,7 @@ function render(){
         </div></div>`;
       }
     }
-    h+=`<div class="fn">自動で更新されます（順番が近づくと速くなります）</div>`;
+    h+=`<div class="fn">自動で更新されます（順番が近づくと5秒ごとになります）</div>`;
   }
 
   else if(S.view==="review"){
@@ -999,8 +1022,6 @@ async function issue(){
       }
       if(res&&res[0]){
         const t=res[0];
-        // 同じブースの遊び終わった券は、新しい券と入れ替える
-        S.mine=S.mine.filter(x=>!(x.booth===booth&&(ticketOf(x)||{}).status==="done"));
         S.mine.push({id:t.id,number:t.number,booth,people});
         LS.set("mine2",S.mine);
         ok=true; break;
@@ -1008,7 +1029,6 @@ async function issue(){
     }catch(e){
       try{ const found=await db.findByToken(token);   // 届いていたかもしれない
         if(found&&found[0]){ const t=found[0];
-          S.mine=S.mine.filter(x=>!(x.booth===booth&&(ticketOf(x)||{}).status==="done"));
           S.mine.push({id:t.id,number:t.number,booth,people}); LS.set("mine2",S.mine); ok=true; break; }
       }catch(_){}
       await new Promise(r=>setTimeout(r,100+Math.random()*400));
@@ -1267,7 +1287,6 @@ function pickAdmin(){
 function goStaff(){ set({view:"staff"}); }
 
 async function callNext(bid){
-  if(S.busy)return;
   const wait=waitingTickets(bid);
   if(!wait.length){toast("待っている人がいません");return}
   const b0=S.booths.find(x=>x.id===bid);
@@ -1277,13 +1296,16 @@ async function callNext(bid){
     const el=ins.length?(elapsed(ins[0].inside_at)||"—"):"—";
     if(!confirm(`${b0.name}はまだ満席です（${el}）。\n先に呼んでおきますか？`))return;
   }
-  set({busy:true});
+  // 先に画面を進めて、裏でDBに書く（失敗したら自動で戻す）
+  const t=wait[0], now=new Date().toISOString();
+  const old={status:t.status,called_at:t.called_at};
+  t.status="called"; t.called_at=now; render();
   try{
-    const ok=await db.upTicketIf(wait[0].id,"waiting",{status:"called",called_at:new Date().toISOString()});
-    await refresh();
-    toast(ok?pad(wait[0].number)+"番を呼びました":"他の人が先に呼びました");
-  }catch(e){ toast("呼び出せませんでした") }
-  S.busy=false; render();
+    const ok=await db.upTicketIf(t.id,"waiting",{status:"called",called_at:now});
+    if(ok) toast(pad(t.number)+"番を呼びました");
+    else { Object.assign(t,old); toast("他の人が先に呼びました"); render(); }
+    refresh();
+  }catch(e){ Object.assign(t,old); toast("呼び出せませんでした"); render(); }
 }
 
 async function callByNumber(){
@@ -1303,38 +1325,39 @@ async function callByNumber(){
 }
 
 async function arrive(id){
-  if(S.busy)return;
-  set({busy:true});
+  const t=S.tickets.find(x=>x.id===id); if(!t||t.status!=="called")return;
+  const now=new Date().toISOString();
+  // 席が空いていればそのまま座らせる
+  const b=S.booths.find(x=>x.id===t.booth);
+  // reservedには「呼ばれている自分」も入っているので除いて数える
+  const self=(!isStale(t))?(t.people||1):0;
+  const room=(b.capacity||4)-(reserved(t.booth)-self);
+  const toInside=room>=(t.people||1);
+  // 先に画面を進めて、裏でDBに書く（失敗したら自動で戻す）
+  const old={status:t.status,arrived_at:t.arrived_at,inside_at:t.inside_at};
+  t.status=toInside?"inside":"arrived"; t.arrived_at=now; if(toInside)t.inside_at=now;
+  render();
   try{
-    const t=S.tickets.find(x=>x.id===id);
-    const now=new Date().toISOString();
-    // 席が空いていればそのまま座らせる
-    const b=S.booths.find(x=>x.id===t.booth);
-    // reservedには「呼ばれている自分」も入っているので除いて数える
-    const self=(t.status==="called"&&!isStale(t))?(t.people||1):0;
-    const room=(b.capacity||4)-(reserved(t.booth)-self);
-    let ok;
-    if(room>=(t.people||1)){
-      ok=await db.upTicketIf(id,"called",{status:"inside",arrived_at:now,inside_at:now});
-      if(ok) toast("入場しました");
-    }else{
-      ok=await db.upTicketIf(id,"called",{status:"arrived",arrived_at:now});
-      if(ok) toast("到着を記録しました（席が空いたら卓が座らせます）");
-    }
-    if(!ok) toast("他の人が先に操作しました");
-    await refresh();
-  }catch(e){ toast("できませんでした") }
-  S.busy=false; render();
+    const ok=await db.upTicketIf(id,"called",toInside
+      ?{status:"inside",arrived_at:now,inside_at:now}
+      :{status:"arrived",arrived_at:now});
+    if(ok) toast(toInside?"入場しました":"到着を記録しました（席が空いたら卓が座らせます）");
+    else { Object.assign(t,old); toast("他の人が先に操作しました"); render(); }
+    refresh();
+  }catch(e){ Object.assign(t,old); toast("できませんでした"); render(); }
 }
 
 async function seat(id){
-  if(S.busy)return;
-  set({busy:true});
+  const t=S.tickets.find(x=>x.id===id); if(!t||t.status!=="arrived")return;
+  const now=new Date().toISOString();
+  const old={status:t.status,inside_at:t.inside_at};
+  t.status="inside"; t.inside_at=now; render();
   try{
-    const ok=await db.upTicketIf(id,"arrived",{status:"inside",inside_at:new Date().toISOString()});
-    await refresh(); toast(ok?"開始しました":"他の人が先に操作しました");
-  }catch(e){ toast("できませんでした") }
-  S.busy=false; render();
+    const ok=await db.upTicketIf(id,"arrived",{status:"inside",inside_at:now});
+    if(ok) toast("開始しました");
+    else { Object.assign(t,old); toast("他の人が先に操作しました"); render(); }
+    refresh();
+  }catch(e){ Object.assign(t,old); toast("できませんでした"); render(); }
 }
 
 async function absent(id){
@@ -1347,15 +1370,19 @@ async function absent(id){
 }
 
 async function finish(ids){
-  if(S.busy)return;
-  set({busy:true});
+  const now=new Date().toISOString();
+  const olds=[];
+  for(const id of ids){ const t=S.tickets.find(x=>x.id===id);
+    if(t&&t.status==="inside"){ olds.push({t,status:t.status,done_at:t.done_at}); t.status="done"; t.done_at=now; } }
+  if(!olds.length)return;
+  render();   // 先に画面を進める
   try{
-    const now=new Date().toISOString();
     let n=0;
-    for(const id of ids){ if(await db.upTicketIf(id,"inside",{status:"done",done_at:now})) n++; }
-    await refresh(); toast(n?"終了しました":"他の人が先に操作しました");
-  }catch(e){ toast("できませんでした") }
-  S.busy=false; render();
+    for(const o of olds){ if(await db.upTicketIf(o.t.id,"inside",{status:"done",done_at:now})) n++; }
+    if(n) toast("終了しました");
+    else { for(const o of olds){o.t.status=o.status;o.t.done_at=o.done_at} toast("他の人が先に操作しました"); render(); }
+    refresh();
+  }catch(e){ for(const o of olds){o.t.status=o.status;o.t.done_at=o.done_at} toast("できませんでした"); render(); }
 }
 
 function givePlus(){ set({giveN:Math.min(S.giveN+1,prizeLeft())}) }
@@ -1805,17 +1832,19 @@ async function resetAll(){
 /* ---------- 版の表示 ---------- */
 // ※キャッシュ対策にはならない（このファイル自体が古ければ古い値が入るため）
 //   配るQRのURLに ?v=2 を付けるのが確実
-const APP_VER="2026-08-15b";
+const APP_VER="2026-08-15d";
 
 /* ---------- 起動 ---------- */
 refresh();
-let pollMs=30000, pollTimer=null;
+let pollMs=30000, pollTimer=null, pollN=0;
 function startPoll(){
   if(pollTimer)clearInterval(pollTimer);
   pollTimer=setInterval(()=>{
     if(document.hidden)return;              // 画面が見えていないときは通信しない
     if(S.busy||S.pickBooth)return;
     if(S.view==="review")return;      // 入力中は描き直さない
+    // 5秒モードは自分の券だけを見る。6回に1回（30秒ごと）は全体も見る
+    if(pollMs===5000){ pollN++; if(pollN%6===0)refresh(); else pingMine(); return }
     refresh();
   },pollMs);
 }
@@ -1823,11 +1852,11 @@ startPoll();
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden) refresh(); });
 // 切れているときは間隔を空ける（つながったら戻す）
 setInterval(()=>{
-  // 呼ばれている人・順番が先頭付近の人だけ速く見にいく
-  // （対象は常に数台なので通信量はほぼ増えない）
-  const near=S.mine.some(m=>{const t=ticketOf(m);
+  // 呼ばれている人・順番が先頭付近の人だけ5秒間隔にする
+  // （5秒側は自分の券だけを見る軽量通信なので、通信量はほぼ増えない）
+  const hot=S.mine.some(m=>{const t=ticketOf(m);
     return t&&(t.status==="called"||(t.status==="waiting"&&aheadOf(m)<=1))});
-  const want=S.offline?45000:(S.view==="staff"?8000:(near?10000:30000));
+  const want=S.offline?45000:(S.view==="staff"?8000:(hot?5000:30000));
   if(want!==pollMs){ pollMs=want; startPoll(); }
 },5000);
 setInterval(()=>{ if(S.view==="staff"&&S.authed&&S.role){ S.now=Date.now(); render(); } },1000);
