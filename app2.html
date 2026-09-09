@@ -615,9 +615,11 @@ const db={
   // 自分の券をIDで直接引く（doneでも取れる。券消え防止と感想画面に使う）
   mineTickets:(ids)=>api(`tickets?select=id,number,booth,status,people&id=in.(${ids.join(",")})`),
   delTicket:(id)=>api(`tickets?id=eq.${id}`,{method:"DELETE"}),
-  // waitingのときだけ消す（呼ばれた後の取り消しを防ぐ）。消せた行が返る
-  delTicketIf:(id)=>api(`tickets?id=eq.${id}&status=eq.waiting`,
+  // 指定した状態のときだけ消す（他の操作と競合していたら消えない）。消せた行が返る
+  delTicketIf:(id,from="waiting")=>api(`tickets?id=eq.${id}&status=eq.${from}`,
     {method:"DELETE",headers:{Prefer:"return=representation"}}),
+  // 卓の定員チェックをDB側でアトミックに行うRPC（called/arrived→arrived/insideの判定）
+  seatTicket:(id)=>api("rpc/seat_ticket",{method:"POST",body:JSON.stringify({p_ticket_id:id})}),
   addReview:(booth_id,rating,comment)=>api("reviews",{method:"POST",body:JSON.stringify({booth_id,rating,comment})}),
   upTicket:(id,patch)=>api(`tickets?id=eq.${id}`,{method:"PATCH",body:JSON.stringify(patch)}),
   // 期待する状態のときだけ更新する（他の人が先に操作していたら0件が返る）
@@ -654,7 +656,8 @@ let S={
   lastCalled:null, justIssued:false, seeList:null,
   role:LS.get("role2",null),      // null | "reception" | booth id | "exchange" | "admin"
   sub:null,   // 統括の下位画面: settings / announce / record / paper
-  authed:LS.get("authed2",false), adminOK:LS.get("adminok2",false), giveN:0, prizeLog:null, allDone:null, allDoneBusy:false, now:Date.now()
+  authed:LS.get("authed2",false), adminOK:LS.get("adminok2",false), giveN:0, prizeLog:null, allDone:null, allDoneBusy:false, now:Date.now(),
+  actingId:null,   // 到着/座った/不在で処理中のチケットID（連打防止の表示用）
 };
 function set(p){Object.assign(S,p); if(p.mine)LS.set("mine2",S.mine); if(p.reviewed)LS.set("reviewed2",S.reviewed); render();}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -1129,8 +1132,10 @@ function renderReception(){
         <div class="cnp">${t.people}人で参加</div>
         <div class="cnt2" ${sec>120?'style="color:#8a1f14"':""}>呼び出しから ${elapsed(t.called_at)||"0:00"}${over?" ・ お待たせ中":""}</div>
         <div class="cnrow">
-          ${t.status==="called"?`<button class="cy" onclick="arrive(${t.id})">到着</button>`:`<button class="cy" style="opacity:.5" disabled>到着済み</button>`}
-          <button class="cn" onclick="absent(${t.id})">不在</button>
+          ${t.status==="called"
+            ?`<button class="cy" ${S.busy?"disabled":""} onclick="arrive(${t.id})">${(S.busy&&S.actingId===t.id)?"処理中…":"到着"}</button>`
+            :`<button class="cy" style="opacity:.5" disabled>到着済み</button>`}
+          <button class="cn" ${S.busy?"disabled":""} onclick="absent(${t.id})">${(S.busy&&S.actingId===t.id)?"処理中…":"不在"}</button>
         </div>
       </div>`;
     }
@@ -1215,7 +1220,7 @@ function renderTable(bid){
       h+=`<div class="trow"><span class="tn">${pad(t.number)}</span>
         <span class="tm"><span class="tp2">${t.people}人</span><br><span class="tt">${elapsed(t.called_at)||""}</span></span>
         ${t.status==="arrived"
-          ?`<button class="tb" ${S.busy?"disabled":""} onclick="seat(${t.id})">座った</button>`
+          ?`<button class="tb" ${S.busy?"disabled":""} onclick="seat(${t.id})">${(S.busy&&S.actingId===t.id)?"処理中…":"座った"}</button>`
           :`<span style="font-size:10.5px;color:var(--txts)">受付で確認中</span>`}</div>`;
     }
   }
@@ -1324,49 +1329,53 @@ async function callByNumber(){
   S.busy=false; render();
 }
 
+// 卓の定員チェックはDB側のRPC(seat_ticket)がアトミックに行う。
+// ここでは呼ぶだけで、席の計算はしない（クライアント計算だと複数端末の同時操作で定員を超えうるため）。
 async function arrive(id){
+  if(S.busy)return;
   const t=S.tickets.find(x=>x.id===id); if(!t||t.status!=="called")return;
-  const now=new Date().toISOString();
-  // 席が空いていればそのまま座らせる
-  const b=S.booths.find(x=>x.id===t.booth);
-  // reservedには「呼ばれている自分」も入っているので除いて数える
-  const self=(!isStale(t))?(t.people||1):0;
-  const room=(b.capacity||4)-(reserved(t.booth)-self);
-  const toInside=room>=(t.people||1);
-  // 先に画面を進めて、裏でDBに書く（失敗したら自動で戻す）
-  const old={status:t.status,arrived_at:t.arrived_at,inside_at:t.inside_at};
-  t.status=toInside?"inside":"arrived"; t.arrived_at=now; if(toInside)t.inside_at=now;
-  render();
+  set({busy:true,actingId:id});   // 押した瞬間にボタンを無効化・処理中表示にする（連打防止）
   try{
-    const ok=await db.upTicketIf(id,"called",toInside
-      ?{status:"inside",arrived_at:now,inside_at:now}
-      :{status:"arrived",arrived_at:now});
-    if(ok) toast(toInside?"入場しました":"到着を記録しました（席が空いたら卓が座らせます）");
-    else { Object.assign(t,old); toast("他の人が先に操作しました"); render(); }
-    refresh();
-  }catch(e){ Object.assign(t,old); toast("できませんでした"); render(); }
+    const res=await db.seatTicket(id);
+    const row=Array.isArray(res)?res[0]:res;
+    if(row) Object.assign(t,row);
+    await refresh();
+    toast(row&&row.status==="inside"?"入場しました":"到着を記録しました（席が空いたら卓が座らせます）");
+  }catch(e){
+    toast(String((e&&e.message)||"").includes("invalid_status")?"他の人が先に操作しました":"できませんでした");
+    await refresh();
+  }
+  S.busy=false; S.actingId=null; render();
 }
 
 async function seat(id){
+  if(S.busy)return;
   const t=S.tickets.find(x=>x.id===id); if(!t||t.status!=="arrived")return;
-  const now=new Date().toISOString();
-  const old={status:t.status,inside_at:t.inside_at};
-  t.status="inside"; t.inside_at=now; render();
+  set({busy:true,actingId:id});
   try{
-    const ok=await db.upTicketIf(id,"arrived",{status:"inside",inside_at:now});
-    if(ok) toast("開始しました");
-    else { Object.assign(t,old); toast("他の人が先に操作しました"); render(); }
-    refresh();
-  }catch(e){ Object.assign(t,old); toast("できませんでした"); render(); }
+    const res=await db.seatTicket(id);
+    const row=Array.isArray(res)?res[0]:res;
+    if(row) Object.assign(t,row);
+    await refresh();
+    toast(row&&row.status==="inside"?"開始しました":"まだ席が空いていません");   // 定員超過でarrivedのまま返ってきた場合
+  }catch(e){
+    toast(String((e&&e.message)||"").includes("invalid_status")?"他の人が先に操作しました":"できませんでした");
+    await refresh();
+  }
+  S.busy=false; S.actingId=null; render();
 }
 
 async function absent(id){
   if(S.busy)return;
   if(!confirm("この番号の人を不在にしますか？\n整理券は無効になります。\n客の画面には理由が出ないので、来たら口頭で説明してください。"))return;
-  set({busy:true});
-  try{ await db.delTicket(id); await refresh(); toast("不在にしました"); }
-  catch(e){ toast("できませんでした") }
-  S.busy=false; render();
+  set({busy:true,actingId:id});
+  try{
+    const r=await db.delTicketIf(id,"called");   // calledのままのときだけ消す（到着操作と競合していたら消えない）
+    await refresh();
+    toast(Array.isArray(r)&&r.length?"不在にしました":"すでに到着などで状態が変わっています");
+  }
+  catch(e){ toast("できませんでした"); await refresh(); }
+  S.busy=false; S.actingId=null; render();
 }
 
 async function finish(ids){
