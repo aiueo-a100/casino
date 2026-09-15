@@ -817,6 +817,9 @@ function packQueue(b, list){
     const cur=rounds[rounds.length-1];
     if(!share){
       rounds.push({seat:cap, private:true});
+    } else if(p>=cap){
+      // 定員より大きい相席の組は、他の組と混ざらず単独で複数回転を占有する
+      for(let i=0;i<Math.ceil(p/cap);i++) rounds.push({seat:cap, private:false});
     } else if(cur && !cur.private && cur.seat+p<=cap){
       cur.seat+=p;
     } else {
