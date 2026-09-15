@@ -126,6 +126,12 @@ button{font-family:var(--jp);font-weight:900;border:none;cursor:pointer}
 .psel button{flex:1;background:var(--paper2);border:2px solid transparent;border-radius:12px;padding:20px 0;
   font-family:var(--num);font-size:26px;color:var(--ink)}
 .psel button.on{background:var(--felt5);border-color:var(--ink);color:#fff}
+.shsel{display:flex;gap:7px;margin-top:14px}
+.shsel button{flex:1;background:var(--paper2);border:2px solid transparent;border-radius:12px;padding:12px 6px;text-align:center;line-height:1.4}
+.shsel button b{display:block;font-size:14px;font-weight:900;color:var(--ink)}
+.shsel button small{display:block;font-size:10.5px;color:var(--inks);font-weight:700;margin-top:2px}
+.shsel button.on{background:var(--felt5);border-color:var(--ink)}
+.shsel button.on b,.shsel button.on small{color:#fff}
 .sheet .go{width:100%;background:var(--brass);color:#1A1206;border-radius:12px;padding:18px 0;font-size:18px;margin-top:14px}
 .sheet .cx{width:100%;background:none;color:var(--inks);font-size:12px;font-weight:700;padding:9px 0}
 .pnote{font-size:9.5px;color:var(--inks);line-height:1.55;margin-top:9px}
@@ -603,17 +609,17 @@ async function api(path,opt={}){
 const db={
   booths:()=>api("booths?select=*&order=id"),
   tickets:(light,day)=>api(light
-    ? `tickets?select=id,number,booth,status,people&day=eq.${day}&status=in.(waiting,called,arrived,inside)`
+    ? `tickets?select=id,number,booth,status,people,share&day=eq.${day}&status=in.(waiting,called,arrived,inside)`
     : `tickets?select=*&day=eq.${day}`),
   reviews:()=>api("reviews?select=booth_id,rating&hidden=not.is.true"),
   reviewsFull:()=>api("reviews?select=id,booth_id,rating,comment&hidden=not.is.true&order=created_at.desc&limit=100"),
   reviewsOf:(bid)=>api(`reviews?select=id,booth_id,rating,comment&booth_id=eq.${bid}&hidden=not.is.true&order=created_at.desc&limit=50`),
   settings:()=>api("settings?select=*&id=eq.1"),
-  addTicket:(booth,people,token)=>api("tickets",{method:"POST",headers:{Prefer:"return=representation"},
-    body:JSON.stringify({booth,people,status:"waiting",client_token:token})}),
+  addTicket:(booth,people,share,token)=>api("tickets",{method:"POST",headers:{Prefer:"return=representation"},
+    body:JSON.stringify({booth,people,share,status:"waiting",client_token:token})}),
   findByToken:(token)=>api(`tickets?select=*&client_token=eq.${token}`),
   // 自分の券をIDで直接引く（doneでも取れる。券消え防止と感想画面に使う）
-  mineTickets:(ids)=>api(`tickets?select=id,number,booth,status,people&id=in.(${ids.join(",")})`),
+  mineTickets:(ids)=>api(`tickets?select=id,number,booth,status,people,share&id=in.(${ids.join(",")})`),
   delTicket:(id)=>api(`tickets?id=eq.${id}`,{method:"DELETE"}),
   // waitingのときだけ消す（呼ばれた後の取り消しを防ぐ）。消せた行が返る
   delTicketIf:(id)=>api(`tickets?id=eq.${id}&status=eq.waiting`,
@@ -650,7 +656,7 @@ let S={
   mine:LS.get("mine2",[]),          // [{id,number,booth,people}]
   reviewed:LS.get("reviewed2",[]),  // [booth_id]
   busy:false, loaded:false, offline:false,
-  pickBooth:null, pickPeople:2, revBooth:null, revRating:0, revText:"", seeBooth:null,
+  pickBooth:null, pickPeople:2, pickShare:true, revBooth:null, revRating:0, revText:"", seeBooth:null,
   lastCalled:null, justIssued:false, seeList:null,
   role:LS.get("role2",null),      // null | "reception" | booth id | "exchange" | "admin"
   sub:null,   // 統括の下位画面: settings / announce / record / paper
@@ -747,6 +753,26 @@ function reserved(bid){
     && !isStale(t)).reduce((a,t)=>a+(t.people||1),0);
 }
 function staleCalls(){ return S.tickets.filter(isStale) }
+// その卓に貸し切り(share===false)の先客が居るか（期限切れcalledは除く）
+function blocked(bid){
+  return S.tickets.some(t=>t.booth===bid
+    && ["called","arrived","inside"].includes(t.status)
+    && t.share===false
+    && !isStale(t));
+}
+// このチケットを今すぐ卓に入れてよいか（自分自身は先客から除外。share未設定は相席扱い）
+function canEnter(b,t){
+  const cap=b.capacity||4;
+  const myShare=t.share!==false;
+  const myPeople=t.people||1;
+  const others=S.tickets.filter(x=>x.booth===b.id && x.id!==t.id
+    && ["called","arrived","inside"].includes(x.status) && !isStale(x));
+  if(!others.length) return myPeople<=cap;      // 空卓なら人数が定員以内か
+  if(!myShare) return false;                    // 自分が貸し切りなら、先客が居る時点で不可
+  if(others.some(x=>x.share===false)) return false;  // 先客に貸し切りが居れば不可
+  const othersPeople=others.reduce((a,x)=>a+(x.people||1),0);
+  return othersPeople+myPeople<=cap;            // 相席同士なら合計人数が定員以内か
+}
 function myTicket(bid){return S.mine.find(m=>m.booth===bid)}
 function ticketOf(m){return S.tickets.find(t=>String(t.id)===String(m.id))}
 function starsOf(bid){
@@ -780,21 +806,40 @@ function elapsed(iso){
   return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}`;
 }
 function elapsedSec(iso){ return iso? Math.max(0,Math.floor((S.now-new Date(iso).getTime())/1000)) : 0 }
-// 待ち時間 = 前に並んでいる組が終わるのにかかる時間
-// 席数が少ない卓は、1組でも人数ぶん回転が要る
-// 前に並んでいる組が終わるまでの時間
-// 席が空いていれば同じ回転に詰め込む（5席に2人組が2つなら1回転）
-function waitMinutes(b, tickets){
-  const cap=b.capacity||4, turn=b.avg_minutes||6;
-  let rounds=0, seat=0;
-  for(const t of tickets){
+// 待ち行列を「1回転」ごとにまとめる。貸し切り(share===false)は1回転を独占する。
+// 相席(true/undefined)の組は、直前の回転が相席のままで席が余っていれば詰め込む。
+function packQueue(b, list){
+  const cap=b.capacity||4;
+  const rounds=[];   // [{seat, private}]
+  for(const t of list){
     const p=t.people||1;
-    if(p>=cap){ if(seat>0){rounds++;seat=0;} rounds+=Math.ceil(p/cap); }
-    else if(seat+p>cap){ rounds++; seat=p; }
-    else seat+=p;
+    const share=t.share!==false;    // 未設定は相席扱い
+    const cur=rounds[rounds.length-1];
+    if(!share){
+      rounds.push({seat:cap, private:true});
+    } else if(cur && !cur.private && cur.seat+p<=cap){
+      cur.seat+=p;
+    } else {
+      rounds.push({seat:p, private:false});
+    }
   }
-  if(seat>0) rounds++;
-  return rounds*turn;
+  return rounds;
+}
+// list(自分より前の待ち)を捌いてから、自分(share,people)が座れるまでの分数
+function waitAfter(b, list, share, people){
+  const cap=b.capacity||4, turn=b.avg_minutes||6;
+  const rounds=packQueue(b, list);
+  const isShare=share!==false;
+  let before=rounds.length;
+  if(isShare && rounds.length){
+    const last=rounds[rounds.length-1];
+    if(!last.private && last.seat+(people||1)<=cap) before=rounds.length-1;
+  }
+  return before*turn;
+}
+// 現在の待ち行列がすべて捌けるまでの分数（ブース一覧の目安表示用）
+function queueMinutes(b){
+  return packQueue(b, waitingTickets(b.id)).length*(b.avg_minutes||6);
 }
 function aheadOf(m){
   const t=ticketOf(m); if(!t)return 0;
@@ -840,7 +885,7 @@ function render(){
       const mine=mt&&((ticketOf(mt)||{}).status!=="done");  // 遊び終わった券は「持っている」に数えない（もう一回遊べる）
       const full=ins>=cap;
       const pct=Math.min(100,Math.round(ins/cap*100));
-      const mins=waitMinutes(b, waitingTickets(b.id));
+      const mins=queueMinutes(b);
       const sub=b.paused?"受付を止めています":mine?"整理券を持っています":w?`約${mins}分待ち`:"待ちなし";
       const star=st
         ?`<button class="sbtn" onclick="event.stopPropagation();seeReviews('${b.id}')"><span class="s">★</span><span class="v">${st.avg.toFixed(1)}</span><span class="k">口コミ</span></button>`
@@ -900,7 +945,7 @@ function render(){
       } else {
         const ahead=aheadOf(m);
         const front=S.tickets.filter(x=>x.booth===m.booth&&x.status==="waiting"&&x.number<m.number);
-        const mins=b?waitMinutes(b,front):ahead*6;
+        const mins=b?waitAfter(b,front,t.share,m.people):ahead*6;
         h+=`<div class="tk"><div class="tp">
           <div class="bo">${esc(name)}</div>
           <div class="nu">${pad(m.number)}</div>
@@ -967,13 +1012,21 @@ function render(){
   document.querySelectorAll(".dim,.sheet").forEach(x=>x.remove());
   if(S.pickBooth){
     const b=S.booths.find(x=>x.id===S.pickBooth);
+    const waiters=b?waitingTickets(b.id):[];
+    const shareMin=b?waitAfter(b,waiters,true,S.pickPeople):0;
+    const privMin=b?waitAfter(b,waiters,false,S.pickPeople):0;
     document.body.insertAdjacentHTML("beforeend",`
       <div class="dim" onclick="closePeople()"></div>
       <div class="sheet">
         <div class="bn">${esc(b?b.name:"")}</div>
         <div class="q">人数を選んでください</div>
         <div class="psel">${[1,2,3,4].map(n=>`<button class="${n===S.pickPeople?"on":""}" onclick="setPeople(${n})">${n}</button>`).join("")}</div>
-        <div class="pnote">何人で来ても1枚の券で一緒に呼ばれます</div>
+        <div class="q" style="margin-top:12px">相席か貸し切りかを選んでください</div>
+        <div class="shsel">
+          <button class="${S.pickShare?"on":""}" onclick="setShare(true)"><b>相席</b><small>約${shareMin}分</small></button>
+          <button class="${S.pickShare?"":"on"}" onclick="setShare(false)"><b>貸し切り</b><small>約${privMin}分</small></button>
+        </div>
+        <div class="pnote">貸し切りは1回転を独り占めします。相席は席が空いていれば他の組と一緒になります。何人で来ても1枚の券で一緒に呼ばれます。</div>
         <button class="go" ${S.busy?"disabled":""} onclick="issue()">${S.busy?"発行中…":"整理券を取る"}</button>
         <button class="cx" onclick="closePeople()">キャンセル</button>
       </div>`);
@@ -982,9 +1035,10 @@ function render(){
 
 /* ---------- 操作 ---------- */
 function go(v){set({view:v})}
-function openPeople(id){set({pickBooth:id,pickPeople:2})}
+function openPeople(id){set({pickBooth:id,pickPeople:2,pickShare:true})}
 function closePeople(){set({pickBooth:null})}
 function setPeople(n){set({pickPeople:n})}
+function setShare(v){set({pickShare:v})}
 async function seeReviews(id){
   set({seeBooth:id,view:"reviews",seeList:null});
   try{ const r=await db.reviewsOf(id); set({seeList:r||[]}); }
@@ -1008,14 +1062,14 @@ async function issue(){
   const activeMine=S.mine.filter(m=>{const t=ticketOf(m);return !t||t.status!=="done"});
   if(activeMine.length>=MAX_TICKETS){toast("整理券は1枚までです");return}
   set({busy:true});
-  const booth=S.pickBooth, people=S.pickPeople;
+  const booth=S.pickBooth, people=S.pickPeople, share=S.pickShare;
   // 同じ発券に固有の合言葉を付ける。通信が切れて再送しても2枚にならない
   const token=(crypto&&crypto.randomUUID)?crypto.randomUUID()
     :(Date.now()+"-"+Math.random().toString(36).slice(2));
   let ok=false;
   for(let i=0;i<5;i++){
     try{
-      let res=await db.addTicket(booth,people,token);
+      let res=await db.addTicket(booth,people,share,token);
       if(!(res&&res[0])){
         const found=await db.findByToken(token);   // 既に入っていたら拾う
         if(found&&found[0]) res=found;
@@ -1126,7 +1180,7 @@ function renderReception(){
       h+=`<div class="callnow" ${over?'style="opacity:.7"':""}>
         <div class="cnb">${esc(b?b.name:t.booth)}${t.status==="arrived"?" ・ 到着済み":""}</div>
         <div class="cnn">${pad(t.number)}</div>
-        <div class="cnp">${t.people}人で参加</div>
+        <div class="cnp">${t.people}人で参加${t.share===false?" ・ 貸し切り":""}</div>
         <div class="cnt2" ${sec>120?'style="color:#8a1f14"':""}>呼び出しから ${elapsed(t.called_at)||"0:00"}${over?" ・ お待たせ中":""}</div>
         <div class="cnrow">
           ${t.status==="called"?`<button class="cy" onclick="arrive(${t.id})">到着</button>`:`<button class="cy" style="opacity:.5" disabled>到着済み</button>`}
@@ -1143,11 +1197,15 @@ function renderReception(){
     const res=reserved(b.id);          // 座っている＋呼んでいる人数
     const wait=waitingTickets(b.id);
     const full=res>=cap;
+    const priv=blocked(b.id);          // 貸し切りの先客が使用中
     const paused=b.paused;
     const ins=insideTickets(b.id);
     let cls="rrow", right="", sub="";
     if(paused){ cls+=" none"; right=`<span class="rlock">停止中</span>`; sub="受付を止めています"; }
     else if(!wait.length){ cls+=" none"; right=`<span class="rlock">―</span>`; sub="待機なし"; }
+    else if(priv){ cls+=" busy"; right=`<span class="rbtn">${pad(wait[0].number)}</span>`;
+      const el=ins.length?elapsed(ins[0].inside_at):"";
+      sub=`貸し切り中${el?" ・ "+el:""} ・ ${wait.length}組待ち`; }
     else if(full){ cls+=" busy"; right=`<span class="rbtn">${pad(wait[0].number)}</span>`;
       const el=ins.length?elapsed(ins[0].inside_at):"";
       sub=`${res}/${cap}人 使用中${el?" ・ "+el:""} ・ ${wait.length}組待ち`; }
@@ -1192,7 +1250,7 @@ function renderTable(bid){
     h+=`<div class="sjob">ゲーム中</div><div class="ssub">終了したらボタンを押す</div>
       <div class="ctr">
         <div class="nu2">${pad(t.number)}</div>
-        <div class="me">${t.people}人で参加</div>
+        <div class="me">${t.people}人で参加${t.share===false?" ・ 貸し切り":""}</div>
         <div class="el ${cls}">${elapsed(t.inside_at)||"—"}</div>
       </div>
       <button class="bigbtn" ${S.busy?"disabled":""} onclick="finish([${t.id}])">終了</button>`;
@@ -1203,7 +1261,7 @@ function renderTable(bid){
       const sec=elapsedSec(t.inside_at);
       const cls=sec>turn?"over":(sec>turn*0.83?"hot":"");
       h+=`<div class="trow"><span class="tn">${pad(t.number)}</span>
-        <span class="tm"><span class="tp2">${t.people}人</span><br><span class="tt ${cls}">${elapsed(t.inside_at)||"—"}</span></span>
+        <span class="tm"><span class="tp2">${t.people}人${t.share===false?" ・貸切":""}</span><br><span class="tt ${cls}">${elapsed(t.inside_at)||"—"}</span></span>
         <button class="tb" ${S.busy?"disabled":""} onclick="finish([${t.id}])">終了</button></div>`;
     }
     h+=`<button class="bigbtn" ${S.busy?"disabled":""} onclick="finish([${ins.map(t=>t.id).join(",")}])">全員終了</button>`;
@@ -1213,7 +1271,7 @@ function renderTable(bid){
     h+=`<div class="dsec">到着待ち</div>`;
     for(const t of called){
       h+=`<div class="trow"><span class="tn">${pad(t.number)}</span>
-        <span class="tm"><span class="tp2">${t.people}人</span><br><span class="tt">${elapsed(t.called_at)||""}</span></span>
+        <span class="tm"><span class="tp2">${t.people}人${t.share===false?" ・貸切":""}</span><br><span class="tt">${elapsed(t.called_at)||""}</span></span>
         ${t.status==="arrived"
           ?`<button class="tb" ${S.busy?"disabled":""} onclick="seat(${t.id})">座った</button>`
           :`<span style="font-size:10.5px;color:var(--txts)">受付で確認中</span>`}</div>`;
@@ -1291,10 +1349,11 @@ async function callNext(bid){
   if(!wait.length){toast("待っている人がいません");return}
   const b0=S.booths.find(x=>x.id===bid);
   const cap=b0.capacity||4;
-  if(reserved(bid)>=cap){
+  const priv=blocked(bid);
+  if(reserved(bid)>=cap || priv){
     const ins=insideTickets(bid);
     const el=ins.length?(elapsed(ins[0].inside_at)||"—"):"—";
-    if(!confirm(`${b0.name}はまだ満席です（${el}）。\n先に呼んでおきますか？`))return;
+    if(!confirm(`${b0.name}は${priv?"貸し切り中です":"まだ満席です"}（${el}）。\n先に呼んでおきますか？${wait[0].share===false?"\n※次の組は貸し切り希望です":""}`))return;
   }
   // 先に画面を進めて、裏でDBに書く（失敗したら自動で戻す）
   const t=wait[0], now=new Date().toISOString();
@@ -1327,12 +1386,8 @@ async function callByNumber(){
 async function arrive(id){
   const t=S.tickets.find(x=>x.id===id); if(!t||t.status!=="called")return;
   const now=new Date().toISOString();
-  // 席が空いていればそのまま座らせる
   const b=S.booths.find(x=>x.id===t.booth);
-  // reservedには「呼ばれている自分」も入っているので除いて数える
-  const self=(!isStale(t))?(t.people||1):0;
-  const room=(b.capacity||4)-(reserved(t.booth)-self);
-  const toInside=room>=(t.people||1);
+  const toInside=canEnter(b,t);   // 貸し切り・相席の定員判定はまとめてcanEnterに任せる
   // 先に画面を進めて、裏でDBに書く（失敗したら自動で戻す）
   const old={status:t.status,arrived_at:t.arrived_at,inside_at:t.inside_at};
   t.status=toInside?"inside":"arrived"; t.arrived_at=now; if(toInside)t.inside_at=now;
