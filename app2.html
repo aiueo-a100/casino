@@ -655,7 +655,8 @@ function packQueue(b, list){
     const share=t.share!==false;    // 未設定は相席扱い
     const cur=rounds[rounds.length-1];
     if(!share){
-      rounds.push({seat:cap, private:true});
+      // 貸し切りも、定員に対して人数が多ければ複数回転を占有する（定員1に2人なら2回転）
+      for(let i=0;i<Math.max(1,Math.ceil(p/cap));i++) rounds.push({seat:cap, private:true});
     } else if(p>=cap){
       // 定員より大きい相席の組は、他の組と混ざらず単独で複数回転を占有する
       for(let i=0;i<Math.ceil(p/cap);i++) rounds.push({seat:cap, private:false});
