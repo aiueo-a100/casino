@@ -592,8 +592,12 @@ function reserved(bid){
     && !isStale(t)).reduce((a,t)=>a+(t.people||1),0);
 }
 function staleCalls(){ return S.tickets.filter(isStale) }
+// 相席機能のキルスイッチ。settings.share_enabled=falseなら、既存のshare:false券が
+// 残っていても無視してすべて相席として扱う（8/16版の挙動に戻す）
+function shareEnabled(){ return S.settings.share_enabled!==false }
 // その卓に貸し切り(share===false)の先客が居るか（期限切れcalledは除く）
 function blocked(bid){
+  if(!shareEnabled()) return false;
   return S.tickets.some(t=>t.booth===bid
     && ["called","arrived","inside"].includes(t.status)
     && t.share===false
@@ -602,14 +606,15 @@ function blocked(bid){
 // このチケットを今すぐ卓に入れてよいか（自分自身は先客から除外。share未設定は相席扱い）
 function canEnter(b,t){
   const cap=b.capacity||4;
-  const myShare=t.share!==false;
   const myPeople=t.people||1;
   const others=S.tickets.filter(x=>x.booth===b.id && x.id!==t.id
     && ["called","arrived","inside"].includes(x.status) && !isStale(x));
+  const othersPeople=others.reduce((a,x)=>a+(x.people||1),0);
+  if(!shareEnabled()) return othersPeople+myPeople<=cap;   // キルスイッチON: 席数だけで判定
+  const myShare=t.share!==false;
   if(!others.length) return myPeople<=cap;      // 空卓なら人数が定員以内か
   if(!myShare) return false;                    // 自分が貸し切りなら、先客が居る時点で不可
   if(others.some(x=>x.share===false)) return false;  // 先客に貸し切りが居れば不可
-  const othersPeople=others.reduce((a,x)=>a+(x.people||1),0);
   return othersPeople+myPeople<=cap;            // 相席同士なら合計人数が定員以内か
 }
 function myTicket(bid){return S.mine.find(m=>m.booth===bid)}
@@ -650,9 +655,10 @@ function elapsedSec(iso){ return iso? Math.max(0,Math.floor((S.now-new Date(iso)
 function packQueue(b, list){
   const cap=b.capacity||4;
   const rounds=[];   // [{seat, private}]
+  const enabled=shareEnabled();
   for(const t of list){
     const p=t.people||1;
-    const share=t.share!==false;    // 未設定は相席扱い
+    const share=enabled?(t.share!==false):true;    // キルスイッチONなら全組を相席扱い（未設定も相席扱い）
     const cur=rounds[rounds.length-1];
     if(!share){
       // 貸し切りも、定員に対して人数が多ければ複数回転を占有する（定員1に2人なら2回転）
@@ -672,7 +678,7 @@ function packQueue(b, list){
 function waitAfter(b, list, share, people){
   const cap=b.capacity||4, turn=b.avg_minutes||6;
   const rounds=packQueue(b, list);
-  const isShare=share!==false;
+  const isShare=shareEnabled()?(share!==false):true;   // キルスイッチONなら自分も相席扱い
   let before=rounds.length;
   if(isShare && rounds.length){
     const last=rounds[rounds.length-1];
@@ -856,21 +862,24 @@ function render(){
   document.querySelectorAll(".dim,.sheet").forEach(x=>x.remove());
   if(S.pickBooth){
     const b=S.booths.find(x=>x.id===S.pickBooth);
+    const shareUI=shareEnabled();
     const waiters=b?waitingTickets(b.id):[];
-    const shareMin=b?waitAfter(b,waiters,true,S.pickPeople):0;
-    const privMin=b?waitAfter(b,waiters,false,S.pickPeople):0;
+    const shareMin=shareUI&&b?waitAfter(b,waiters,true,S.pickPeople):0;
+    const privMin=shareUI&&b?waitAfter(b,waiters,false,S.pickPeople):0;
     document.body.insertAdjacentHTML("beforeend",`
       <div class="dim" onclick="closePeople()"></div>
       <div class="sheet">
         <div class="bn">${esc(b?b.name:"")}</div>
         <div class="q">人数を選んでください</div>
         <div class="psel">${[1,2,3,4].map(n=>`<button class="${n===S.pickPeople?"on":""}" onclick="setPeople(${n})">${n}</button>`).join("")}</div>
+        ${shareUI?`
         <div class="q" style="margin-top:12px">相席か貸し切りかを選んでください</div>
         <div class="shsel">
           <button class="${S.pickShare?"on":""}" onclick="setShare(true)"><b>相席</b><small>約${shareMin}分</small></button>
           <button class="${S.pickShare?"":"on"}" onclick="setShare(false)"><b>貸し切り</b><small>約${privMin}分</small></button>
         </div>
-        <div class="pnote">貸し切りは1回転を独り占めします。相席は席が空いていれば他の組と一緒になります。何人で来ても1枚の券で一緒に呼ばれます。</div>
+        <div class="pnote">貸し切りは1回転を独り占めします。相席は席が空いていれば他の組と一緒になります。何人で来ても1枚の券で一緒に呼ばれます。</div>`
+        :`<div class="pnote">何人で来ても1枚の券で一緒に呼ばれます</div>`}
         <button class="go" ${S.busy?"disabled":""} onclick="issue()">${S.busy?"発行中…":"整理券を取る"}</button>
         <button class="cx" onclick="closePeople()">キャンセル</button>
       </div>`);
@@ -906,7 +915,7 @@ async function issue(){
   const activeMine=S.mine.filter(m=>{const t=ticketOf(m);return !t||t.status!=="done"});
   if(activeMine.length>=MAX_TICKETS){toast("整理券は1枚までです");return}
   set({busy:true});
-  const booth=S.pickBooth, people=S.pickPeople, share=S.pickShare;
+  const booth=S.pickBooth, people=S.pickPeople, share=shareEnabled()?S.pickShare:true;
   // 同じ発券に固有の合言葉を付ける。通信が切れて再送しても2枚にならない
   const token=(crypto&&crypto.randomUUID)?crypto.randomUUID()
     :(Date.now()+"-"+Math.random().toString(36).slice(2));
@@ -1480,6 +1489,15 @@ function renderSettings(){
     <div class="cfgmore">2日目の朝に入れ直す</div>
     <button class="allstop" onclick="stopAll()">すべての卓の受付を止める</button>
 
+    <div class="dsec">相席機能</div>
+    <div class="cfg">
+      <div class="cnm">相席・貸し切りの選択</div>
+      <button class="cpz" onclick="toggleShareEnabled()">${shareEnabled()?"客への表示を止める":"客に選択肢を出す"}</button>
+    </div>
+    <div class="cfgmore">${shareEnabled()
+      ?"客は整理券を取るときに相席／貸し切りを選べます。"
+      :"止めている間は全員相席として扱われます（発券済みの貸し切り券があっても無視されます）。"}</div>
+
     <div class="dsec">卓ごとに変える</div>`;
   for(const b of S.booths){
     h+=`<div class="cfg">
@@ -1624,6 +1642,15 @@ async function togglePause(id){
   const b=S.booths.find(x=>x.id===id); if(!b)return;
   set({busy:true});
   try{ await db.upBooth(id,{paused:!b.paused}); await refresh(); }catch(e){ toast("できませんでした") }
+  S.busy=false; render();
+}
+async function toggleShareEnabled(){
+  if(S.busy)return;
+  const next=!shareEnabled();
+  set({busy:true});
+  try{ await db.upSettings({share_enabled:next}); await refresh();
+    toast(next?"相席の選択を客に出します":"相席の選択を客に出しません"); }
+  catch(e){ toast("できませんでした") }
   S.busy=false; render();
 }
 async function stopAll(){
