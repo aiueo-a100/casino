@@ -617,6 +617,11 @@ function canEnter(b,t){
   if(others.some(x=>x.share===false)) return false;  // 先客に貸し切りが居れば不可
   return othersPeople+myPeople<=cap;            // 相席同士なら合計人数が定員以内か
 }
+// 発券に必要な最小人数。卓ごとの下限と、貸し切りなら2人以上のルールの大きい方
+// (min_people未設定/nullは1として扱う)
+function minPeopleFor(b, share){
+  return Math.max((b&&b.min_people)||1, share===false?2:1);
+}
 function myTicket(bid){return S.mine.find(m=>m.booth===bid)}
 function ticketOf(m){return S.tickets.find(t=>String(t.id)===String(m.id))}
 function starsOf(bid){
@@ -736,7 +741,9 @@ function render(){
       const full=priv || ins>=cap;
       const pct=Math.min(100,Math.round(ins/cap*100));
       const mins=queueMinutes(b);
-      const sub=b.paused?"受付を止めています":mine?"整理券を持っています":w?`約${mins}分待ち`:"待ちなし";
+      const minP=b.min_people||1;
+      const sub=(b.paused?"受付を止めています":mine?"整理券を持っています":w?`約${mins}分待ち`:"待ちなし")
+        +(minP>=2?` ・ ${minP}人以上`:"");
       const star=st
         ?`<button class="sbtn" onclick="event.stopPropagation();seeReviews('${b.id}')"><span class="s">★</span><span class="v">${st.avg.toFixed(1)}</span><span class="k">口コミ</span></button>`
         :`<span class="sbtn dim"><span class="s">★</span><span class="v">―</span><span class="k">なし</span></span>`;
@@ -863,6 +870,8 @@ function render(){
   if(S.pickBooth){
     const b=S.booths.find(x=>x.id===S.pickBooth);
     const shareUI=shareEnabled();
+    const effShare=shareUI?S.pickShare:true;   // キルスイッチOFFなら常に相席扱い
+    const minP=b?minPeopleFor(b,effShare):1;
     const waiters=b?waitingTickets(b.id):[];
     const shareMin=shareUI&&b?waitAfter(b,waiters,true,S.pickPeople):0;
     const privMin=shareUI&&b?waitAfter(b,waiters,false,S.pickPeople):0;
@@ -871,7 +880,8 @@ function render(){
       <div class="sheet">
         <div class="bn">${esc(b?b.name:"")}</div>
         <div class="q">人数を選んでください</div>
-        <div class="psel">${[1,2,3,4].map(n=>`<button class="${n===S.pickPeople?"on":""}" onclick="setPeople(${n})">${n}</button>`).join("")}</div>
+        <div class="psel">${[1,2,3,4].map(n=>`<button ${n<minP?"disabled":""} class="${n===S.pickPeople?"on":""}" onclick="setPeople(${n})">${n}</button>`).join("")}</div>
+        ${minP>1?`<div class="pnote" style="margin-top:4px;color:var(--brass);font-weight:900">${minP}人以上</div>`:""}
         ${shareUI?`
         <div class="q" style="margin-top:12px">相席か貸し切りかを選んでください</div>
         <div class="shsel">
@@ -888,10 +898,19 @@ function render(){
 
 /* ---------- 操作 ---------- */
 function go(v){set({view:v})}
-function openPeople(id){set({pickBooth:id,pickPeople:2,pickShare:true})}
+function openPeople(id){
+  const b=S.booths.find(x=>x.id===id);
+  const minP=b?minPeopleFor(b,true):1;   // 開いた直後は常に相席扱いで判定
+  set({pickBooth:id,pickPeople:Math.max(2,minP),pickShare:true});
+}
 function closePeople(){set({pickBooth:null})}
 function setPeople(n){set({pickPeople:n})}
-function setShare(v){set({pickShare:v})}
+function setShare(v){
+  const b=S.booths.find(x=>x.id===S.pickBooth);
+  const minP=b?minPeopleFor(b,v):1;
+  // 基準を下回っていたときだけ引き上げる（下回っていなければ触らない）
+  set({pickShare:v, pickPeople:Math.max(S.pickPeople,minP)});
+}
 async function seeReviews(id){
   set({seeBooth:id,view:"reviews",seeList:null});
   try{ const r=await db.reviewsOf(id); set({seeList:r||[]}); }
@@ -914,8 +933,12 @@ async function issue(){
   // （状態がまだ取れていない券は、二重取り防止のため「持っている」扱い）
   const activeMine=S.mine.filter(m=>{const t=ticketOf(m);return !t||t.status!=="done"});
   if(activeMine.length>=MAX_TICKETS){toast("整理券は1枚までです");return}
-  set({busy:true});
   const booth=S.pickBooth, people=S.pickPeople, share=shareEnabled()?S.pickShare:true;
+  const boothObj=S.booths.find(x=>x.id===booth);
+  const boothMin=(boothObj&&boothObj.min_people)||1;
+  if(people<boothMin){ toast(`この卓は${boothMin}人以上です`); return }
+  if(share===false && people<2){ toast("貸し切りは2人以上です"); return }
+  set({busy:true});
   // 同じ発券に固有の合言葉を付ける。通信が切れて再送しても2枚にならない
   const token=(crypto&&crypto.randomUUID)?crypto.randomUUID()
     :(Date.now()+"-"+Math.random().toString(36).slice(2));
