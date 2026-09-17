@@ -1531,6 +1531,9 @@ function renderSettings(){
       <div class="cln"><span class="clb">1回転</span><span class="cst">
         <button onclick="shiftBooth('${b.id}','avg_minutes',-1)">−</button><span class="cv">${b.avg_minutes}分</span>
         <button onclick="shiftBooth('${b.id}','avg_minutes',1)">＋</button></span></div>
+      <div class="cln"><span class="clb">最小人数</span><span class="cst">
+        <button onclick="shiftBooth('${b.id}','min_people',-1)">−</button><span class="cv">${b.min_people||1}人</span>
+        <button onclick="shiftBooth('${b.id}','min_people',1)">＋</button></span></div>
       <button class="cpz" onclick="togglePause('${b.id}')">${b.paused?"受付を再開する":"受付を止める"}</button>
     </div>`;
   }
@@ -1655,7 +1658,8 @@ async function applyPreset(kind){
 async function shiftBooth(id,key,d){
   if(S.busy)return;
   const b=S.booths.find(x=>x.id===id); if(!b)return;
-  const v=Math.max(1,(b[key]||1)+d);
+  let v=Math.max(1,(b[key]||1)+d);
+  if(key==="min_people") v=Math.min(v,b.capacity||4);   // 最小人数は席数を超えられない
   set({busy:true});
   try{ await db.upBooth(id,{[key]:v}); await refresh(); }catch(e){ toast("できませんでした") }
   S.busy=false; render();
