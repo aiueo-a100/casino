@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>にゃんこ大戦争 ガチャシード検索</title>
+<style>
+  :root { --bg:#14161c; --panel:#1e222b; --line:#323846; --fg:#e8eaf0; --mute:#8d95a8; --accent:#ffb020;
+          --R:#8d95a8; --S:#4aa3ff; --U:#ff6b6b; --L:#c78bff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.6 system-ui,"Hiragino Sans","Noto Sans JP",sans-serif; }
+  main { max-width:960px; margin:0 auto; padding:16px; }
+  h1 { font-size:20px; margin:8px 0 16px; }
+  h2 { font-size:16px; margin:0 0 10px; color:var(--accent); }
+  section { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:14px; }
+  label { display:block; font-size:13px; color:var(--mute); margin:8px 0 3px; }
+  input, textarea, select { width:100%; background:#10131a; color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:7px 9px; font:inherit; }
+  textarea { min-height:90px; font-family:ui-monospace,Menlo,monospace; }
+  .grid { display:grid; gap:10px; grid-template-columns:repeat(4,1fr); }
+  .grid3 { display:grid; gap:10px; grid-template-columns:repeat(3,1fr); }
+  @media (max-width:640px){ .grid,.grid3{ grid-template-columns:repeat(2,1fr);} }
+  button { background:var(--accent); color:#1b1400; border:0; border-radius:6px; padding:8px 16px; font:inherit; font-weight:700; cursor:pointer; }
+  button.sub { background:#2b3140; color:var(--fg); font-weight:400; }
+  button:disabled { opacity:.5; cursor:default; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+  .note { font-size:12.5px; color:var(--mute); }
+  progress { width:100%; height:10px; }
+  table { border-collapse:collapse; width:100%; font-size:14px; }
+  th,td { border-bottom:1px solid var(--line); padding:4px 8px; text-align:left; white-space:nowrap; }
+  th { color:var(--mute); font-weight:500; }
+  .R{color:var(--R)} .S{color:var(--S)} .U{color:var(--U);font-weight:700} .L{color:var(--L);font-weight:700}
+  .mono { font-family:ui-monospace,Menlo,monospace; }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:640px){ .cols{ grid-template-columns:1fr; } }
+  .scroll { overflow-x:auto; }
+</style>
+</head>
+<body>
+<main>
+<h1>にゃんこ大戦争 ガチャシード検索</h1>
+
+<section>
+  <h2>1. ガチャ設定</h2>
+  <p class="note">レアリティ判定は「乱数 % 10000」を累計の境界値と比較して決まります。通常のイベントガチャの標準値が初期値です。ガチャごとに異なる場合は書き換えてください。</p>
+  <div class="grid">
+    <div><label>レア 境界(未満)</label><input id="c1" type="number" value="6970"></div>
+    <div><label>激レア 境界(未満)</label><input id="c2" type="number" value="9070"></div>
+    <div><label>超激レア 境界(未満)</label><input id="c3" type="number" value="9500"></div>
+    <div><label>伝説 (残り)</label><input value="〜9999" disabled></div>
+    <div><label>レア 体数</label><input id="n0" type="number" value="10" min="1"></div>
+    <div><label>激レア 体数</label><input id="n1" type="number" value="10" min="1"></div>
+    <div><label>超激レア 体数</label><input id="n2" type="number" value="5" min="1"></div>
+    <div><label>伝説 体数</label><input id="n3" type="number" value="1" min="1"></div>
+  </div>
+  <div class="grid3">
+    <div><label>使用開始位置(オフセット)</label>
+      <select id="off"><option value="1" selected>1(乱数を進めてから使用)</option><option value="0">0(現在の値をそのまま使用)</option></select></div>
+  </div>
+  <p class="note">オフセットは実際のゲームの挙動に合わせるための設定です。実機の結果と合わない場合は切り替えてください。</p>
+</section>
+
+<section>
+  <h2>2. シード検索</h2>
+  <label>これまでに引いた結果(1行に1回、または空白区切り)</label>
+  <textarea id="obs" placeholder="例:&#10;R S R R U R:4 S:7 R R S ..."></textarea>
+  <p class="note">R=レア / S=激レア / U=超激レア / L=伝説。<code>S:7</code> のようにコロンの後に、そのレアリティ内での位置(1始まり)を付けると絞り込み精度が上がります。レアリティだけだと約30回分、位置も付けると約8〜10回分で候補が絞れます。</p>
+  <div class="grid3">
+    <div><label>観測したトラック</label>
+      <select id="track"><option value="0">Aトラック(1回目から数える)</option><option value="1">Bトラック</option></select></div>
+    <div><label>表示する最大件数</label><input id="max" type="number" value="50" min="1"></div>
+    <div><label>並列数</label><input id="par" type="number" min="1" max="32"></div>
+  </div>
+  <div class="row">
+    <button id="go">全シードを検索</button>
+    <button id="stop" class="sub" disabled>中止</button>
+    <button id="sample" class="sub">サンプルを入力(動作確認用)</button>
+  </div>
+  <div class="row" style="display:block"><progress id="prog" value="0" max="1"></progress><div class="note" id="status"></div></div>
+  <div class="scroll"><table id="results" hidden><thead><tr><th>シード(10進)</th><th>16進</th><th></th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section>
+  <h2>3. 先読み</h2>
+  <div class="grid3">
+    <div><label>シード値(10進)</label><input id="seed" type="number" min="0" max="4294967295"></div>
+    <div><label>表示回数</label><input id="rows" type="number" value="30" min="1" max="500"></div>
+    <div><label>&nbsp;</label><button id="fc">先読みする</button></div>
+  </div>
+  <div class="cols" style="margin-top:12px">
+    <div class="scroll"><table id="fa"></table></div>
+    <div class="scroll"><table id="fb"></table></div>
+  </div>
+  <p class="note">※ レアの連続被り回避(同じキャラが続いた場合の再抽選)は考慮していません。</p>
+</section>
+</main>
+
+<script id="core">
+// ---- 乱数・判定(ワーカーと共有) ----
+function next(x) { x ^= x << 13; x ^= x >>> 17; x ^= x << 15; return x | 0; }
+
+// cfg: {cut:[c1,c2,c3], counts:[n0..n3]}
+function classify(s, cfg) {
+  const r = (s >>> 0) % 10000;
+  return r < cfg.cut[0] ? 0 : r < cfg.cut[1] ? 1 : r < cfg.cut[2] ? 2 : 3;
+}
+
+// lo <= seed < hi を走査。p: {rolls:[{r, slot}], off, cfg, max}
+// 戻り値: {found:[seed...], truncated:bool}
+function searchRange(p, lo, hi, tick) {
+  const found = [], rolls = p.rolls, n = rolls.length, off = p.off;
+  const c0 = p.cfg.cut[0], c1 = p.cfg.cut[1], c2 = p.cfg.cut[2], counts = p.cfg.counts;
+  const rr = rolls.map(o => o.r), ss = rolls.map(o => o.slot);
+  const CHUNK = 0x1000000;
+  for (let base = lo; base < hi; base += CHUNK) {
+    const end = Math.min(hi, base + CHUNK);
+    for (let x = base; x < end; x++) {
+      let s = x | 0, ok = true;
+      for (let k = 0; k < off; k++) s = next(s);
+      for (let i = 0; i < n; i++) {
+        const r = (s >>> 0) % 10000;
+        const rar = r < c0 ? 0 : r < c1 ? 1 : r < c2 ? 2 : 3;
+        if (rar !== rr[i]) { ok = false; break; }
+        s = next(s);
+        if (ss[i] >= 0 && ((s >>> 0) % counts[rar]) !== ss[i]) { ok = false; break; }
+        s = next(s);
+      }
+      if (ok) {
+        found.push(x);
+        if (found.length >= p.max) return { found, truncated: true };
+      }
+    }
+    if (tick) tick(end);
+  }
+  return { found, truncated: false };
+}
+
+// 先読み: track 0=A, 1=B
+function forecast(seed, n, off, track, cfg) {
+  let s = seed | 0;
+  for (let k = 0; k < off + track; k++) s = next(s);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const rar = classify(s, cfg);
+    s = next(s);
+    out.push({ rar, slot: (s >>> 0) % cfg.counts[rar] });
+    s = next(s);
+  }
+  return out;
+}
+
+function parseObs(text) {
+  const rolls = [], map = { R:0, S:1, U:2, L:3 };
+  for (const t of text.toUpperCase().split(/[\s,]+/).filter(Boolean)) {
+    const m = /^([RSUL])(?::(\d+))?$/.exec(t);
+    if (!m) throw new Error('解釈できない入力: ' + t);
+    rolls.push({ r: map[m[1]], slot: m[2] ? parseInt(m[2], 10) - 1 : -1 });
+  }
+  return rolls;
+}
+</script>
+
+<script>
+const $ = id => document.getElementById(id);
+const NAMES = ['R','S','U','L'], JP = ['レア','激レア','超激レア','伝説'];
+$('par').value = Math.min(navigator.hardwareConcurrency || 4, 16);
+let workers = [];
+
+function readCfg() {
+  const cut = ['c1','c2','c3'].map(i => parseInt($(i).value, 10));
+  const counts = ['n0','n1','n2','n3'].map(i => parseInt($(i).value, 10));
+  if (cut.some(isNaN) || counts.some(n => !(n >= 1))) throw new Error('ガチャ設定が不正です');
+  return { cut, counts };
+}
+
+function workerSource() {
+  return next.toString() + searchRange.toString() + `
+  onmessage = e => {
+    const { p, lo, hi } = e.data;
+    const res = searchRange(p, lo, hi, x => postMessage({ type:'tick', x }));
+    postMessage({ type:'done', found: res.found, truncated: res.truncated });
+  };`;
+}
+
+function stopAll() { workers.forEach(w => w.terminate()); workers = []; $('go').disabled = false; $('stop').disabled = true; }
+
+$('go').onclick = () => {
+  let cfg, rolls;
+  try { cfg = readCfg(); rolls = parseObs($('obs').value); } catch (e) { $('status').textContent = e.message; return; }
+  if (rolls.length < 1) { $('status').textContent = '結果を入力してください'; return; }
+  const p = { rolls, off: parseInt($('off').value, 10) + parseInt($('track').value, 10), cfg, max: parseInt($('max').value, 10) || 50 };
+  const par = Math.max(1, Math.min(32, parseInt($('par').value, 10) || 4));
+  const TOTAL = 4294967296, step = Math.ceil(TOTAL / par);
+  const blob = new Blob([workerSource()], { type: 'text/javascript' });
+  const url = URL.createObjectURL(blob);
+  const prog = new Array(par).fill(0);
+  let doneCount = 0, all = [], trunc = false;
+  const t0 = performance.now();
+  $('go').disabled = true; $('stop').disabled = false;
+  $('results').hidden = true; $('results').tBodies[0].innerHTML = '';
+  const upd = () => {
+    const sum = prog.reduce((a, b) => a + b, 0);
+    $('prog').value = sum / TOTAL;
+    $('status').textContent = `検索中… ${(sum / TOTAL * 100).toFixed(1)}% / ${((performance.now() - t0) / 1000).toFixed(1)}秒`;
+  };
+  for (let i = 0; i < par; i++) {
+    const lo = i * step, hi = Math.min(TOTAL, lo + step);
+    const w = new Worker(url); workers.push(w);
+    w.onmessage = e => {
+      if (e.data.type === 'tick') { prog[i] = e.data.x - lo; upd(); return; }
+      prog[i] = hi - lo; all = all.concat(e.data.found); trunc = trunc || e.data.truncated; upd();
+      if (++doneCount === par) {
+        const sec = ((performance.now() - t0) / 1000).toFixed(1);
+        all.sort((a, b) => a - b);
+        const shown = all.slice(0, p.max);
+        const tb = $('results').tBodies[0];
+        shown.forEach(sd => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td class="mono">${sd}</td><td class="mono">0x${sd.toString(16).padStart(8,'0')}</td><td><button class="sub">先読みへ</button></td>`;
+          tr.querySelector('button').onclick = () => { $('seed').value = sd; $('fc').click(); $('seed').scrollIntoView(); };
+          tb.appendChild(tr);
+        });
+        $('results').hidden = shown.length === 0;
+        $('status').textContent = `完了(${sec}秒): ` + (all.length === 0 ? '該当するシードはありませんでした。入力かオフセット設定を確認してください。'
+          : (trunc || all.length > p.max ? `${p.max}件以上見つかりました(上位${shown.length}件を表示)。結果を追加して絞り込んでください。` : `${all.length}件見つかりました。`)
+            + (all.length > 1 ? ' 複数ある場合は結果を追加して絞り込んでください。' : ''));
+        URL.revokeObjectURL(url); stopAll();
+      }
+    };
+    w.postMessage({ p, lo, hi });
+  }
+};
+$('stop').onclick = () => { stopAll(); $('status').textContent = '中止しました'; };
+
+function renderForecast(el, title, list) {
+  el.innerHTML = `<thead><tr><th>${title}</th><th>結果</th></tr></thead><tbody>` +
+    list.map((o, i) => `<tr><td>${i + 1}</td><td class="${NAMES[o.rar]}">${JP[o.rar]} #${o.slot + 1}</td></tr>`).join('') + '</tbody>';
+}
+$('fc').onclick = () => {
+  let cfg; try { cfg = readCfg(); } catch (e) { return; }
+  const seed = parseInt($('seed').value, 10);
+  if (!(seed >= 0 && seed <= 4294967295)) return;
+  const off = parseInt($('off').value, 10), n = Math.min(500, parseInt($('rows').value, 10) || 30);
+  renderForecast($('fa'), 'A', forecast(seed, n, off, 0, cfg));
+  renderForecast($('fb'), 'B', forecast(seed, n, off, 1, cfg));
+};
+
+// 動作確認用: 既知のシードから結果を生成して入力欄に入れる
+$('sample').onclick = () => {
+  let cfg; try { cfg = readCfg(); } catch (e) { return; }
+  const seed = 1234567890, off = parseInt($('off').value, 10);
+  const f = forecast(seed, 8, off, 0, cfg);
+  $('obs').value = f.map(o => `${NAMES[o.rar]}:${o.slot + 1}`).join(' ');
+  $('track').value = '0';
+  $('status').textContent = `サンプル(正解シード: ${seed})を入力しました。「全シードを検索」で見つかれば正常です。`;
+};
+</script>
+</body>
+</html>
