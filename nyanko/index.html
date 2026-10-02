@@ -67,6 +67,19 @@
   .found .nm { text-decoration:underline; text-decoration-color:#2b8a3e; text-decoration-thickness:2px; }
   .legendbox { font-size:12.5px; color:var(--mute); margin-top:8px; }
   .legendbox span.sw { display:inline-block; width:14px; height:14px; border:1px solid #bbb; vertical-align:middle; margin-right:2px; }
+  .evalbox { border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin:10px 0; background:#fffdf8; }
+  .evalhead { font-weight:700; margin-bottom:4px; }
+  .verdict { font-size:16px; padding:6px 10px; border-radius:6px; display:inline-block; margin:4px 0; background:#eee; }
+  .verdict small { font-size:12px; color:var(--mute); margin-left:6px; }
+  .verdict.gS { background:#ffe3bf; color:#7a2e00; } .verdict.gA { background:#ffd8a8; } .verdict.gB { background:#d3f9d8; } .verdict.gC { background:#e9ecef; } .verdict.gD { background:#e7f5ff; } .verdict.gE { background:#dee2e6; }
+  .bestbox { border-left:4px solid var(--accent); padding:6px 10px; margin:8px 0; background:#fff; }
+  .bestbox ol { margin:4px 0 6px; padding-left:1.4em; }
+  .besthead { font-size:15px; }
+  .raretxt { color:#555; } .supatxt { color:#1864ab; } .ubertxt { color:#c92a2a; } .legendtxt { color:#6741d9; }
+  table.plans { border-collapse:collapse; font-size:12.5px; width:100%; }
+  table.plans th, table.plans td { border:1px solid var(--line); padding:3px 6px; vertical-align:top; text-align:left; }
+  .plat { outline:3px dashed #868e96; outline-offset:-3px; }
+  label.inline { display:inline-flex; align-items:center; gap:6px; color:var(--fg); font-size:13px; margin:6px 0; }
   details { margin:8px 0; }
   summary { cursor:pointer; font-weight:600; }
   .pool ul { columns:2; font-size:13px; margin:4px 0; padding-left:1.4em; }
@@ -169,7 +182,7 @@
       </select>
     </div>
     <div>
-      <label for="find">強調するキャラ</label>
+      <label for="find">狙いのキャラ(当たり扱いにする)</label>
       <select id="find"></select>
     </div>
     <div class="btns">
@@ -179,6 +192,8 @@
     </div>
   </div>
   <div id="tableMsg"></div>
+  <label class="inline"><input type="checkbox" id="usePlat"> 取り方の探索で、プラチナ/レジェンドチケットを使う手も考える(レア被りによるトラック移動を避けるのに使えます)</label>
+  <div class="evalbox" id="evalBox"></div>
   <div class="note" id="pathInfo"></div>
   <div class="tablewrap" id="tablewrap"></div>
   <div class="legendbox">
@@ -197,7 +212,9 @@
       <li><b>ガチャを選ぶ</b>。実際に引いたガチャと同じイベントを選んでください(超ネコ祭と通常ガチャでは排出率が違うため、違うものを選ぶと見つかりません)。</li>
       <li><b>7〜10回引いて結果を順番に入力</b>し、「シードを検索」を押します。全 42億9千万通りのシードを総当たりします(PCで数秒〜十数秒、スマホでは1分前後かかることがあります)。</li>
       <li>候補が1つなら「現在のシードでテーブルを表示」を押します。候補が複数のときは、もう1〜2回引いて結果を追加し、再検索してください。</li>
-      <li>テーブルの <b>1A</b> が次に引けるキャラです。実際に引いたら、そのキャラのセルの「ここまで引いた」を押すと位置(シード)が進みます。11連を引いたときは「確定枠」列の「ここまで引いた」を押します。</li>
+      <li>テーブルの <b>1A</b> が次に引けるキャラです。実際に引いたら、そのキャラのセルの「ここまで引いた」を押すと位置(シード)が進みます。11連を引いたときは「確定枠」列の「11連を引いた」を押します。間違えたら「1つ戻す」で戻せます。</li>
+      <li><b>評価</b>: 「この位置の評価」では、次の30回(単発)に出る超激レアの数をそのガチャの平均(通常5%なら1.5体)と比べて、大当たり / かなり良い / 良い / 普通 / やや悪い / 悪い を表示します。あわせて<b>一番の当たり</b>(伝説レア → 狙いのキャラ → 一番近い超激レア の順)の位置と、そこまでの最短の取り方(単発・11連・チケットの組み合わせと、必要なネコカンの目安)を示します。「狙いのキャラ」を選ぶと、そのキャラまでの取り方も出ます。</li>
+      <li>シードは全ガチャ共通なので、同じ位置でも<b>超ネコ祭なら超激レアになる位置</b>があります(セルの「祭:超激レア」バッジ)。ガチャを切り替えて評価を見比べてください。</li>
       <li>シードはこのブラウザに保存されます。別の端末やブラウザで使う場合に備えて、シードの数字をメモしておくことをおすすめします(メモした数字を「シード(現在)」に入れれば同じテーブルが出ます)。</li>
     </ol>
   </details>
@@ -599,11 +616,68 @@ var BC = (function () {
     return verify(plan, seed, 0, prevRareId == null ? -1 : prevRareId);
   }
 
+  // ---- 取り方の探索 ----
+  // tracks() の結果はそのまま「状態グラフ」になっている:
+  //   単発      : x → x.next            (x のキャラを得る)
+  //   11連/15連 : x → x.guaranteed.next (x から (g-1) 体 + 確定枠の超激レアを得る)
+  //   プラチナ/レジェンドチケット: x → 同じトラックの次の行 (乱数2回分進むだけ。被りは起きない)
+  // 移動は必ず前方へ進むので、位置順に処理すれば各ノードへの最安経路が確定する。
+  function plan(rows, start, opt) {
+    opt = opt || {};
+    var g = opt.guaranteedRolls || 0, usePlat = !!opt.platinum;
+    var cSingle = opt.costSingle || 150, cMulti = opt.costMulti || (g === 15 ? 2100 : 1500), cPlat = opt.costPlat || 1500;
+    var nodes = [];
+    rows.forEach(function (row) { row.forEach(function (x) { nodes.push(x); if (x.rerolled) nodes.push(x.rerolled); }); });
+    var D = new Map(), best = new Map();
+    function chainOf(x) { var ch = [], y = x; for (var k = 0; k < g - 1 && y; k++) { ch.push(y); y = y.next; } ch.push(x.guaranteed); return ch; }
+    function better(nc, nr, cur) { return !cur || nc < cur.cost || (nc === cur.cost && nr < cur.rolls); }
+    function relax(to, from, move, cost, rolls, got) {
+      if (!to) return;
+      var d = D.get(from), nc = d.cost + cost, nr = d.rolls + rolls;
+      if (better(nc, nr, D.get(to))) D.set(to, { cost: nc, rolls: nr, plat: d.plat + (move === 'plat' ? 1 : 0), from: from, move: move, got: got });
+    }
+    // t を「得る」最安の手 (経路の最後の一手)
+    function offer(t, via, move, cost, rolls, got) {
+      var d = D.get(via), nc = d.cost + cost, nr = d.rolls + rolls;
+      if (better(nc, nr, best.get(t))) best.set(t, { cost: nc, rolls: nr, plat: d.plat + (move === 'plat' ? 1 : 0), via: via, move: move, got: got });
+    }
+    if (start) {
+      D.set(start, { cost: 0, rolls: 0, plat: 0, from: null, move: null, got: null });
+      nodes.forEach(function (x) {
+        if (!D.has(x)) return;
+        offer(x, x, 'single', cSingle, 1, [x]);
+        relax(x.next, x, 'single', cSingle, 1, [x]);
+        if (g && x.guaranteed) {
+          var ch = chainOf(x);
+          ch.forEach(function (t) { offer(t, x, 'multi', cMulti, g, ch); });
+          relax(x.guaranteed.next, x, 'multi', cMulti, g, ch);
+        }
+        if (usePlat) relax(rows[x.seq] && rows[x.seq][x.track], x, 'plat', cPlat, 1, []);
+      });
+    }
+    function steps(tail) {
+      var out = [{ move: tail.move, from: tail.via, got: tail.got }], cur = tail.via, d;
+      while ((d = D.get(cur)) && d.from) { out.unshift({ move: d.move, from: d.from, got: d.got }); cur = d.from; }
+      return out;
+    }
+    function after(tail) {
+      if (tail.move === 'single') return tail.via.next;
+      if (tail.move === 'multi') return tail.via.guaranteed.next;
+      return rows[tail.via.seq] && rows[tail.via.seq][tail.via.track];
+    }
+    function moveTo(x, move) {
+      if (move === 'single') return x.next;
+      if (move === 'multi') return x.guaranteed && x.guaranteed.next;
+      return rows[x.seq] && rows[x.seq][x.track];
+    }
+    return { D: D, best: best, nodes: nodes, steps: steps, after: after, chainOf: chainOf, moveTo: moveTo, g: g };
+  }
+
   return {
     RARE: RARE, SUPA: SUPA, UBER: UBER, LEGEND: LEGEND, BASE: BASE, MAX_SEED: MAX_SEED,
     advance: advance, retreat: retreat, rarityOf: rarityOf, makePool: makePool, tracks: tracks,
     catLabel: catLabel, compilePlan: compilePlan, verify: verify, makeSearch: makeSearch,
-    seekRange: seekRange, simulate: simulate
+    seekRange: seekRange, simulate: simulate, plan: plan
   };
 })();
 if (typeof module !== 'undefined') module.exports = BC;
@@ -661,12 +735,13 @@ function nm(id, form) {
 
 // ---- 状態 ----
 var state = { event: null, custom: null, rates: { rare: 6970, supa: 2500, uber: 500 }, ratePreset: 'regular', g: 'auto',
-  seed: 0, last: 0, count: 100, find: 0, form: 0 };
+  seed: 0, last: 0, count: 100, find: 0, form: 0, plat: false };
 var history = [];
-var rowsCache = null, labelMap = {}, currentPoolCache = null;
+var rowsCache = null, labelMap = {}, currentPoolCache = null, lastPlan = null;
 
 function save() {
   try { localStorage.setItem('nyanko-seed-state', JSON.stringify(state)); } catch (e) {}
+  if (location.protocol !== 'file:') return; // ブックマーク用の URL ハッシュはローカルファイルのときだけ
   var q = ['seed=' + state.seed, 'last=' + state.last, 'event=' + encodeURIComponent(state.event || ''), 'g=' + state.g];
   if (state.event === 'custom') q.push('custom=' + state.custom, 'rate=' + state.rates.rare + ',' + state.rates.supa + ',' + state.rates.uber);
   try { window.history.replaceState(null, '', '#' + q.join('&')); } catch (e) {}
@@ -926,6 +1001,7 @@ function seek() {
     found.forEach(function (f, i) {
       html += '<div class="result"><div>候補' + (i + 1) + ': <b>現在のシード</b>(入力した最後の1体を引いた後) = <span class="seedv">' + f.end + '</span>　<small>開始シード(1体目を引く前) = ' + f.seed + '</small></div>';
       if (f.run) html += '<div class="note">1体目は、直前に引いていた「' + esc(nm(f.prevId)) + '」との被りによる引き直しで出たものとして一致しました。</div>';
+      html += '<div class="note">' + quickVerdict(f.end, lastEntry.id, info) + '</div>';
       html += '<div class="row" style="margin-top:6px"><div class="btns"><button class="useSeed" data-seed="' + f.end + '" data-last="' + lastEntry.id + '">現在のシードでテーブルを表示(次に引くのが1A)</button>' +
         '<button class="sub useSeed" data-seed="' + f.seed + '" data-last="' + (f.prevId || 0) + '">開始シードで確認(入力した結果が1Aから並ぶはず)</button></div></div></div>';
     });
@@ -956,6 +1032,7 @@ function renderFindSelect() {
 function syncTableInputs() {
   $('#seed').value = state.seed ? String(state.seed) : '';
   $('#count').value = state.count; $('#nameForm').value = String(state.form);
+  $('#usePlat').checked = !!state.plat;
   renderLastSelect(); renderFindSelect();
   $('#undoBtn').disabled = !history.length;
 }
@@ -1021,6 +1098,155 @@ function renderTable() {
   var s = startCat();
   if (s) { var el = elFor(BC.catLabel(s)); if (el) el.classList.add('nextpos'); }
   $('#pathInfo').innerHTML = '次に引く位置: <b>' + (s ? BC.catLabel(s) : '1A') + '</b>(' + esc(nm(s ? s.id : -1)) + ')。セルをクリックすると、そこまで引いたときに出るキャラと次の位置を強調表示します。';
+  renderEval();
+}
+
+// ---- 評価と取り方 ----
+function summarize(rows, start, info) {
+  var r = info.pool.rates;
+  var res = { n30: 0, l30: 0, first: null, exp30: 30 * (r.uber + r.legend) / 10000, verdict: null, platinumLike: r.uber + r.legend >= 9500 };
+  var c = start;
+  for (var i = 0; i < 30 && c; i++) {
+    if (c.rarity === 5) res.l30++; else if (c.rarity === 4) res.n30++;
+    if (res.first == null && c.rarity >= 4) res.first = i + 1;
+    c = c.next;
+  }
+  var ratio = res.exp30 ? (res.n30 + res.l30) / res.exp30 : 0;
+  if (res.platinumLike) res.verdict = { grade: '-', text: '評価対象外', why: 'プラチナ/レジェンドガチャは毎回超激レア以上です' };
+  else if (res.l30) res.verdict = { grade: 'S', text: '大当たり', why: '30回以内に伝説レアがあります' };
+  else if (ratio >= 2) res.verdict = { grade: 'A', text: 'かなり良い', why: '超激レアが平均の2倍以上あります' };
+  else if (ratio >= 1.3) res.verdict = { grade: 'B', text: '良い', why: '超激レアが平均より多めです' };
+  else if (ratio >= 0.7) res.verdict = { grade: 'C', text: '普通', why: '超激レアの数は平均並みです' };
+  else if (res.n30) res.verdict = { grade: 'D', text: 'やや悪い', why: '超激レアが平均より少なめです' };
+  else res.verdict = { grade: 'E', text: '悪い', why: '30回以内に超激レアがありません' };
+  return res;
+}
+function multiCost(g) { return g === 15 ? 2100 : 1500; }
+function planCostText(d, g) {
+  var food = d.singles * 150 + d.multis * multiCost(g), parts = [];
+  if (d.singles) parts.push('単発' + d.singles + '回');
+  if (d.multis) parts.push(g + '連' + d.multis + '回');
+  if (d.plat) parts.push('チケット' + d.plat + '枚');
+  return parts.join(' + ') + '、ネコカン約' + food + '個相当(単発はレアチケットでも可)';
+}
+function describePlan(P, tail, info) {
+  var g = info.g, steps = P.steps(tail), lines = [], i = 0, singles = 0, multis = 0, plats = 0;
+  while (i < steps.length) {
+    var s = steps[i];
+    if (s.move === 'single') {
+      var j = i, parts = [];
+      while (j < steps.length && steps[j].move === 'single') { parts.push(steps[j].from); j++; }
+      singles += parts.length;
+      var txt = '単発で' + parts.length + '回引く: ' + parts.map(function (f) { return BC.catLabel(f) + ' ' + nm(f.id) + (f.rarity >= 4 ? '★' : ''); }).join(' → ');
+      parts.forEach(function (f) {
+        if (/R$/.test(BC.catLabel(f))) txt += '。' + BC.catLabel(f).replace(/R$/, '') + ' は直前と同じレアになるため「' + nm(f.id) + '」に引き直され、次は ' + (f.next ? BC.catLabel(f.next) : '?') + ' に移る';
+      });
+      lines.push(txt); i = j;
+    } else if (s.move === 'multi') {
+      var f2 = s.from, hits = s.got.filter(function (t) { return t.rarity >= 4; });
+      multis++;
+      lines.push(BC.catLabel(f2) + ' から' + g + '連を引く(確定枠: ' + nm(f2.guaranteed.id) + ')' +
+        (hits.length ? '。この' + g + '体の中に ' + hits.map(function (t) { return (/G$/.test(BC.catLabel(t)) ? '確定枠' : BC.catLabel(t)) + ' ' + nm(t.id) + '★'; }).join('、') + ' が入っている' : '') +
+        '。終わると ' + (f2.guaranteed.next ? BC.catLabel(f2.guaranteed.next) : '?') + ' へ');
+      i++;
+    } else {
+      var f3 = s.from, to = P.moveTo(f3, 'plat'); plats++;
+      lines.push(BC.catLabel(f3) + ' でプラチナ(またはレジェンド)チケットを1枚使う。この位置の分だけ進んで ' + (to ? BC.catLabel(to) : '?') + ' へ(レア被りによるトラック移動を避けられる)');
+      i++;
+    }
+  }
+  return { lines: lines, rolls: tail.rolls, singles: singles, multis: multis, plat: plats, after: P.after(tail) };
+}
+function bestMultiOnTrack(start, P, info) {
+  var g = info.g; if (!g) return null;
+  var c = start, bm = null;
+  for (var i = 0; i <= 20 && c; i++) {
+    if (c.guaranteed) { var n = 0; P.chainOf(c).forEach(function (t) { if (t.rarity >= 4) n++; }); if (!bm || n > bm.n) bm = { n: n, rolls: i, label: BC.catLabel(c) }; }
+    c = c.next;
+  }
+  return bm;
+}
+function collectPrizes(P) {
+  var legends = [], ubers = [], targets = [];
+  P.best.forEach(function (tail, t) {
+    if (t.id < 0) return;
+    var rec = { node: t, tail: tail, label: BC.catLabel(t) };
+    if (t.rarity === 5) legends.push(rec); else if (t.rarity === 4) ubers.push(rec);
+    if (state.find && t.id === state.find) targets.push(rec);
+  });
+  var byCost = function (a, b) { return a.tail.cost - b.tail.cost || a.tail.rolls - b.tail.rolls; };
+  legends.sort(byCost); ubers.sort(byCost); targets.sort(byCost);
+  return { legends: legends, ubers: ubers, targets: targets };
+}
+function quickVerdict(seed, lastId, info) {
+  var rows = BC.tracks({ seed: seed, pool: info.pool, count: 100, last: lastId, guaranteedRolls: info.g });
+  var a = rows[0][0], start = (lastId && a.id === lastId && a.rerolled) ? a.rerolled : a;
+  var sm = summarize(rows, start, info);
+  var P = BC.plan(rows, start, { guaranteedRolls: info.g, platinum: false });
+  var pz = collectPrizes(P), best = pz.legends[0] || pz.targets[0] || pz.ubers[0];
+  var txt = '評価: <b>' + sm.verdict.text + '</b>';
+  if (!sm.platinumLike) txt += '(次の30回で超激レア' + sm.n30 + '体' + (sm.l30 ? '・伝説レア' + sm.l30 + '体' : '') + '、平均' + sm.exp30.toFixed(1) + '体' + (sm.first ? '、最初は' + sm.first + '回目' : '') + ')';
+  if (best) txt += '　' + (pz.legends[0] ? '一番の当たり' : pz.targets[0] ? '狙いのキャラ' : '一番近い超激レア') + ': ' + RJP[best.node.rarity] + '「' + esc(nm(best.node.id)) + '」が ' + best.label + '(' + best.tail.rolls + '体で到達)。取り方は下のテーブル欄に出ます。';
+  return txt;
+}
+function renderEval() {
+  var box = $('#evalBox');
+  if (!rowsCache) { box.innerHTML = ''; box.hidden = true; return; }
+  box.hidden = false;
+  var info = currentPoolCache, start = startCat(), g = info.g;
+  var P = BC.plan(rowsCache, start, { guaranteedRolls: g, platinum: state.plat });
+  lastPlan = P;
+  var sm = summarize(rowsCache, start, info);
+  var h = '<div class="evalhead">この位置の評価(シード ' + state.seed + '、' + esc(shortName(info.name, 30)) + ')</div>';
+  h += '<div class="verdict g' + sm.verdict.grade + '">評価: <b>' + sm.verdict.text + '</b><small>' + sm.verdict.why + '</small></div>';
+  if (!sm.platinumLike) {
+    h += '<div class="note">次の30回を単発(レアチケット / ネコカン150)で引くと: 超激レア <b>' + sm.n30 + '体</b>' + (sm.l30 ? '、伝説レア <b>' + sm.l30 + '体</b>' : '') + '(このガチャの平均は約 ' + sm.exp30.toFixed(1) + ' 体)。最初の超激レア以上は ' + (sm.first ? '<b>' + sm.first + '回目</b>' : '30回以内に無し') + '。</div>';
+    var bm = bestMultiOnTrack(start, P, info);
+    if (bm) h += '<div class="note">' + g + '連のおすすめ: ' + (bm.rolls ? '単発を <b>' + bm.rolls + '回</b>引いてから ' : '今すぐ ') + '<b>' + bm.label + '</b> で' + g + '連を引くと、超激レア以上が <b>' + bm.n + '体</b>(確定枠を含む)出ます。</div>';
+  }
+  var pz = collectPrizes(P), best = pz.legends[0] || pz.targets[0] || pz.ubers[0];
+  var unreachable = [];
+  P.nodes.forEach(function (x) { if (x.rarity === 5 && x.id > 0 && !P.best.has(x)) unreachable.push(x); });
+  if (best) {
+    var d = describePlan(P, best.tail, info);
+    var kind = pz.legends[0] ? '一番の当たり(伝説レア)' : pz.targets[0] ? '狙いのキャラ' : '一番近い超激レア';
+    h += '<div class="bestbox"><div class="besthead"><span class="tag">' + kind + '</span> <b class="' + RCLS[best.node.rarity] + 'txt">' + esc(nm(best.node.id)) + '</b>(' + RJP[best.node.rarity] + ')は <b>' + best.label + '</b> にあります。</div>';
+    h += '<div>取り方: 合計 ' + d.rolls + '体(' + planCostText(d, g) + ')</div><ol>' + d.lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ol>';
+    h += '<div class="note">取った後の位置: ' + (d.after ? BC.catLabel(d.after) + '(' + esc(nm(d.after.id)) + ')' : '表示範囲外') + '</div>';
+    h += '<button class="sub mini showPlan" data-label="' + best.label + '">テーブルで経路を見る</button></div>';
+  } else {
+    h += '<div class="note">表示範囲内に届く超激レアがありません。行数を増やすか、別のガチャで確認してください。</div>';
+  }
+  if (unreachable.length) h += '<div class="warn">伝説レア ' + unreachable.map(function (x) { return BC.catLabel(x) + ' ' + esc(nm(x.id)); }).join('、') + ' は反対のトラックにあり、このガチャの操作だけでは届きません。確定枠のある11連(別のガチャでも可)を1回引くとA↔Bが入れ替わるので、そのあと改めてここで確認してください。</div>';
+  if (state.find && !pz.targets.length) h += '<div class="note">狙いのキャラ「' + esc(nm(state.find)) + '」は、表示範囲内の届く位置にありません(行数を増やすと見つかることがあります)。</div>';
+  var list = pz.legends.concat(pz.targets.filter(function (t) { return t.node.rarity < 4; }), pz.ubers).slice(0, 12);
+  if (list.length) {
+    h += '<details><summary>超激レア以上の位置と取り方(近い順、' + list.length + '件)</summary><div class="tablewrap"><table class="plans"><tr><th>位置</th><th>キャラ</th><th>必要数</th><th>取り方</th><th></th></tr>' +
+      list.map(function (rec) {
+        var d2 = describePlan(P, rec.tail, info);
+        return '<tr><td>' + rec.label + '</td><td class="' + RCLS[rec.node.rarity] + 'txt">' + esc(nm(rec.node.id)) + '</td><td>' + d2.rolls + '体<br><small>' + planCostText(d2, g) + '</small></td><td>' + d2.lines.map(esc).join('<br>') + '</td><td><button class="sub mini showPlan" data-label="' + rec.label + '">経路</button></td></tr>';
+      }).join('') + '</table></div></details>';
+  }
+  box.innerHTML = h;
+}
+function mark(cat, cls) { var el = elFor(BC.catLabel(cat)); if (el) el.classList.add(cls); }
+function markPlan(label) {
+  var P = lastPlan; if (!P) return;
+  var target = null, tail = null;
+  P.best.forEach(function (tl, t) { if (BC.catLabel(t) === label) { target = t; tail = tl; } });
+  if (!target) { highlight(label); return; }
+  clearMarks();
+  P.steps(tail).forEach(function (s) {
+    if (s.move === 'single') mark(s.from, 'picked');
+    else if (s.move === 'multi') s.got.forEach(function (t) { mark(t, 'pickedc'); });
+    else mark(s.from, 'plat');
+  });
+  var after = P.after(tail);
+  if (after) mark(after, 'nextpos');
+  var d = describePlan(P, tail, currentPoolCache);
+  $('#pathInfo').textContent = label + ' ' + nm(target.id) + ' の取り方: ' + d.lines.join(' / ') + (after ? ' → 取った後の位置: ' + BC.catLabel(after) : '');
+  var el = elFor(label);
+  if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
 }
 function elFor(label) {
   var wrap = $('#tablewrap');
@@ -1096,10 +1322,15 @@ $('#undoBtn').addEventListener('click', function () { var h = history.pop(); if 
 $('#copyBtn').addEventListener('click', copySeed);
 $('#tablewrap').addEventListener('click', function (e) {
   var btn = e.target.closest('button.adv');
-  if (btn) { e.stopPropagation(); if (confirm(btn.getAttribute('data-label') + ' まで引いたことにして位置を進めます。よろしいですか?')) advanceTo(btn.getAttribute('data-label')); return; }
+  if (btn) { e.stopPropagation(); advanceTo(btn.getAttribute('data-label')); return; }
   var el = e.target.closest('[data-label]');
   if (el) highlight(el.getAttribute('data-label'));
 });
+$('#evalBox').addEventListener('click', function (e) {
+  var b = e.target.closest('button.showPlan');
+  if (b) markPlan(b.getAttribute('data-label'));
+});
+$('#usePlat').addEventListener('change', function () { state.plat = this.checked; save(); renderEval(); });
 
 // ---- 初期化 ----
 load();
@@ -1107,6 +1338,10 @@ renderEventSelect();
 syncTableInputs();
 renderTable();
 save();
+window.addEventListener('hashchange', function () {
+  if (location.protocol !== 'file:' || !location.hash) return;
+  load(); renderEventSelect(); syncTableInputs(); renderTable();
+});
 })();
 </script>
 </body>

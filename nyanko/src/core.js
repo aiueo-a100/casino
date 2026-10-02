@@ -372,11 +372,68 @@ var BC = (function () {
     return verify(plan, seed, 0, prevRareId == null ? -1 : prevRareId);
   }
 
+  // ---- 取り方の探索 ----
+  // tracks() の結果はそのまま「状態グラフ」になっている:
+  //   単発      : x → x.next            (x のキャラを得る)
+  //   11連/15連 : x → x.guaranteed.next (x から (g-1) 体 + 確定枠の超激レアを得る)
+  //   プラチナ/レジェンドチケット: x → 同じトラックの次の行 (乱数2回分進むだけ。被りは起きない)
+  // 移動は必ず前方へ進むので、位置順に処理すれば各ノードへの最安経路が確定する。
+  function plan(rows, start, opt) {
+    opt = opt || {};
+    var g = opt.guaranteedRolls || 0, usePlat = !!opt.platinum;
+    var cSingle = opt.costSingle || 150, cMulti = opt.costMulti || (g === 15 ? 2100 : 1500), cPlat = opt.costPlat || 1500;
+    var nodes = [];
+    rows.forEach(function (row) { row.forEach(function (x) { nodes.push(x); if (x.rerolled) nodes.push(x.rerolled); }); });
+    var D = new Map(), best = new Map();
+    function chainOf(x) { var ch = [], y = x; for (var k = 0; k < g - 1 && y; k++) { ch.push(y); y = y.next; } ch.push(x.guaranteed); return ch; }
+    function better(nc, nr, cur) { return !cur || nc < cur.cost || (nc === cur.cost && nr < cur.rolls); }
+    function relax(to, from, move, cost, rolls, got) {
+      if (!to) return;
+      var d = D.get(from), nc = d.cost + cost, nr = d.rolls + rolls;
+      if (better(nc, nr, D.get(to))) D.set(to, { cost: nc, rolls: nr, plat: d.plat + (move === 'plat' ? 1 : 0), from: from, move: move, got: got });
+    }
+    // t を「得る」最安の手 (経路の最後の一手)
+    function offer(t, via, move, cost, rolls, got) {
+      var d = D.get(via), nc = d.cost + cost, nr = d.rolls + rolls;
+      if (better(nc, nr, best.get(t))) best.set(t, { cost: nc, rolls: nr, plat: d.plat + (move === 'plat' ? 1 : 0), via: via, move: move, got: got });
+    }
+    if (start) {
+      D.set(start, { cost: 0, rolls: 0, plat: 0, from: null, move: null, got: null });
+      nodes.forEach(function (x) {
+        if (!D.has(x)) return;
+        offer(x, x, 'single', cSingle, 1, [x]);
+        relax(x.next, x, 'single', cSingle, 1, [x]);
+        if (g && x.guaranteed) {
+          var ch = chainOf(x);
+          ch.forEach(function (t) { offer(t, x, 'multi', cMulti, g, ch); });
+          relax(x.guaranteed.next, x, 'multi', cMulti, g, ch);
+        }
+        if (usePlat) relax(rows[x.seq] && rows[x.seq][x.track], x, 'plat', cPlat, 1, []);
+      });
+    }
+    function steps(tail) {
+      var out = [{ move: tail.move, from: tail.via, got: tail.got }], cur = tail.via, d;
+      while ((d = D.get(cur)) && d.from) { out.unshift({ move: d.move, from: d.from, got: d.got }); cur = d.from; }
+      return out;
+    }
+    function after(tail) {
+      if (tail.move === 'single') return tail.via.next;
+      if (tail.move === 'multi') return tail.via.guaranteed.next;
+      return rows[tail.via.seq] && rows[tail.via.seq][tail.via.track];
+    }
+    function moveTo(x, move) {
+      if (move === 'single') return x.next;
+      if (move === 'multi') return x.guaranteed && x.guaranteed.next;
+      return rows[x.seq] && rows[x.seq][x.track];
+    }
+    return { D: D, best: best, nodes: nodes, steps: steps, after: after, chainOf: chainOf, moveTo: moveTo, g: g };
+  }
+
   return {
     RARE: RARE, SUPA: SUPA, UBER: UBER, LEGEND: LEGEND, BASE: BASE, MAX_SEED: MAX_SEED,
     advance: advance, retreat: retreat, rarityOf: rarityOf, makePool: makePool, tracks: tracks,
     catLabel: catLabel, compilePlan: compilePlan, verify: verify, makeSearch: makeSearch,
-    seekRange: seekRange, simulate: simulate
+    seekRange: seekRange, simulate: simulate, plan: plan
   };
 })();
 if (typeof module !== 'undefined') module.exports = BC;
