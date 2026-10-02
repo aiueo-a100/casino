@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>にゃんこ大戦争 ガチャシード検索(非公式)</title>
+<style>
+  :root { --bg:#f6f4ef; --panel:#fff; --line:#ddd6c8; --fg:#222; --mute:#6b6457; --accent:#d9480f; --accent2:#1864ab;
+          --rare:#f1efe9; --supa:#dbe9ff; --uber:#ffd9c7; --legend:#eadcff; }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.65 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif; }
+  header { background:#2b2520; color:#fff; padding:14px 16px; }
+  header h1 { font-size:19px; margin:0; }
+  header p { margin:4px 0 0; font-size:12.5px; color:#cfc7bb; }
+  main { max-width:1100px; margin:0 auto; padding:12px 12px 40px; }
+  section { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 14px 16px; margin:0 0 14px; }
+  h2 { font-size:17px; margin:0 0 10px; padding-bottom:6px; border-bottom:2px solid var(--accent); }
+  h2 .step { display:inline-block; background:var(--accent); color:#fff; border-radius:50%; width:24px; height:24px; line-height:24px; text-align:center; font-size:14px; margin-right:6px; }
+  h3 { font-size:15px; margin:14px 0 6px; }
+  label { font-size:13px; color:var(--mute); display:block; margin:8px 0 2px; }
+  select, input[type=text], input[type=number], textarea { width:100%; max-width:100%; font:inherit; padding:6px 8px; border:1px solid #b9b2a4; border-radius:6px; background:#fff; color:var(--fg); }
+  textarea { min-height:70px; }
+  button { font:inherit; padding:7px 14px; border:1px solid #9b6b4a; border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; }
+  button.sub { background:#fff; color:#333; border-color:#b9b2a4; }
+  button.mini { padding:1px 6px; font-size:11px; border-radius:4px; background:#fff; color:#333; border-color:#b9b2a4; }
+  button:disabled { opacity:.5; cursor:default; }
+  .row { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; }
+  .row > div { flex:1 1 180px; min-width:0; }
+  .row > div.sm { flex:0 1 120px; }
+  .row > div.btns { flex:1 1 auto; display:flex; gap:8px; flex-wrap:wrap; }
+  .note { font-size:12.5px; color:var(--mute); margin:6px 0; }
+  .warn { background:#fff4e5; border:1px solid #ffc078; border-radius:6px; padding:8px 10px; font-size:13.5px; margin:8px 0; }
+  .ok { background:#e6fcf5; border:1px solid #63e6be; border-radius:6px; padding:8px 10px; font-size:13.5px; margin:8px 0; }
+  .err { background:#fff0f0; border:1px solid #ffa8a8; border-radius:6px; padding:8px 10px; font-size:13.5px; margin:8px 0; }
+  .rates { font-size:13px; margin:6px 0; }
+  .rates b { font-weight:600; }
+  ol.rolls { padding-left:0; margin:6px 0; list-style:none; display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:6px; }
+  ol.rolls li { display:flex; align-items:center; gap:6px; }
+  ol.rolls li span { width:2em; text-align:right; font-size:13px; color:var(--mute); }
+  progress { width:100%; height:12px; }
+  .result { border:1px solid var(--line); border-radius:8px; padding:10px; margin:8px 0; background:#fffdf8; }
+  .result .seedv { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:15px; font-weight:600; }
+  .tablewrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  table.tracks { border-collapse:collapse; width:100%; font-size:13.5px; }
+  table.tracks th, table.tracks td { border:1px solid #cfc7b8; padding:3px 5px; vertical-align:top; }
+  table.tracks th { background:#eee9df; font-weight:600; white-space:nowrap; text-align:center; }
+  table.tracks th.no { width:3.2em; font-family:ui-monospace,Menlo,Consolas,monospace; }
+  table.tracks td.cell { cursor:pointer; min-width:150px; }
+  table.tracks td.cell:hover { outline:2px solid #999; outline-offset:-2px; }
+  td.rare { background:var(--rare); } td.supa { background:var(--supa); } td.uber { background:var(--uber); } td.legend { background:var(--legend); }
+  td.uber .nm, td.legend .nm { font-weight:700; }
+  td.gcell { background:#fbfaf6; color:#444; min-width:120px; }
+  td.gcell .nm { font-weight:600; color:#8a2b06; }
+  .nm { word-break:break-all; }
+  .nx { color:var(--accent2); font-size:12px; white-space:nowrap; }
+  .tag { display:inline-block; font-size:10.5px; background:#555; color:#fff; border-radius:3px; padding:0 4px; margin-right:3px; vertical-align:middle; }
+  .badge { display:inline-block; font-size:10.5px; border:1px solid #c92a2a; color:#c92a2a; border-radius:3px; padding:0 3px; margin-left:3px; vertical-align:middle; }
+  .badge.dbl { border-color:#5f3dc4; color:#5f3dc4; }
+  .rr { margin-top:3px; padding-top:3px; border-top:1px dashed #b9b2a4; font-size:12.5px; }
+  .adv { margin-left:6px; vertical-align:middle; white-space:nowrap; }
+  .picked { box-shadow: inset 0 0 0 3px #333; }
+  .pickedc { box-shadow: inset 0 0 0 3px #1864ab; }
+  .nextpos { background-image: repeating-linear-gradient(135deg, rgba(0,0,0,.08) 0 6px, transparent 6px 12px) !important; box-shadow: inset 0 0 0 3px var(--accent); }
+  .rr.picked, .rr.nextpos { box-shadow:none; outline:3px solid #333; outline-offset:-1px; }
+  .rr.nextpos { outline-color:var(--accent); }
+  .found .nm { text-decoration:underline; text-decoration-color:#2b8a3e; text-decoration-thickness:2px; }
+  .legendbox { font-size:12.5px; color:var(--mute); margin-top:8px; }
+  .legendbox span.sw { display:inline-block; width:14px; height:14px; border:1px solid #bbb; vertical-align:middle; margin-right:2px; }
+  details { margin:8px 0; }
+  summary { cursor:pointer; font-weight:600; }
+  .pool ul { columns:2; font-size:13px; margin:4px 0; padding-left:1.4em; }
+  @media (max-width:640px) { .pool ul { columns:1; } body { font-size:14px; } table.tracks td.cell { min-width:130px; } }
+  footer { text-align:center; font-size:12px; color:var(--mute); padding:10px; }
+  kbd { font-family:inherit; background:#eee; border:1px solid #ccc; border-radius:3px; padding:0 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>にゃんこ大戦争 ガチャシード検索(非公式)</h1>
+  <p>自分のシードを見つけて、レアガチャで次に何が出るか先読みするツールです。日本版対応。データ更新日: __BUILT__</p>
+</header>
+<main>
+<noscript><div class="err">JavaScript を有効にしてください。</div></noscript>
+
+<section id="sec-event">
+  <h2><span class="step">1</span>ガチャを選ぶ</h2>
+  <div class="row">
+    <div style="flex:3 1 320px">
+      <label for="event">ガチャイベント(引いたガチャ・引く予定のガチャ)</label>
+      <select id="event"></select>
+    </div>
+    <div class="sm">
+      <label for="gsel">確定枠</label>
+      <select id="gsel">
+        <option value="auto">自動(イベント設定)</option>
+        <option value="0">なし</option>
+        <option value="11">11連確定</option>
+        <option value="15">15連ステップアップ</option>
+      </select>
+    </div>
+  </div>
+  <div id="customBox" hidden>
+    <div class="row">
+      <div style="flex:3 1 320px">
+        <label for="customGacha">ガチャ(ID: 名前)</label>
+        <select id="customGacha"></select>
+      </div>
+      <div>
+        <label for="customRate">排出率</label>
+        <select id="customRate"></select>
+      </div>
+    </div>
+    <div class="row" id="customNums" hidden>
+      <div class="sm"><label>レア(/10000)</label><input id="cRare" type="number" min="0" max="10000" value="6970"></div>
+      <div class="sm"><label>激レア</label><input id="cSupa" type="number" min="0" max="10000" value="2500"></div>
+      <div class="sm"><label>超激レア</label><input id="cUber" type="number" min="0" max="10000" value="500"></div>
+      <div class="sm"><label>伝説レア(残り)</label><input id="cLegend" type="text" disabled></div>
+    </div>
+  </div>
+  <div id="eventInfo"></div>
+</section>
+
+<section id="sec-seek">
+  <h2><span class="step">2</span>シードを調べる(引いた結果から探す)</h2>
+  <div class="note">
+    上で選んだガチャで、レアチケットまたはネコカン150個で引いた結果を<b>引いた順に</b>選んでください。7〜10回分あるとほぼ1つに絞れます。
+    11連を引いた場合は、1〜10体目を普通に選び、<b>11体目(確定枠の超激レア)は「確定枠」グループから</b>選んでください(15連ステップアップも同様に最後の1体が確定枠)。
+    空欄は飛ばされます。シードはガチャを引いたときだけ進むので、一度見つければ以後は「ここまで引いた」で追いかけるだけで済みます。
+  </div>
+  <details>
+    <summary>名前を文字で入力して選択欄に反映する(PC向け)</summary>
+    <textarea id="quick" placeholder="1行に1体ずつ(例)&#10;ネコ魔剣士&#10;ネコバスたぶ&#10;確定 時空神クロノス"></textarea>
+    <div class="row"><div class="btns"><button class="sub" id="quickApply">選択欄に反映</button></div></div>
+    <div id="quickMsg"></div>
+  </details>
+  <ol class="rolls" id="rolls"></ol>
+  <div class="row">
+    <div class="btns">
+      <button id="seekBtn">シードを検索</button>
+      <button class="sub" id="stopBtn" disabled>中止</button>
+      <button class="sub" id="addRows">入力欄を追加</button>
+      <button class="sub" id="clearRows">クリア</button>
+    </div>
+  </div>
+  <div style="margin-top:8px"><progress id="prog" value="0" max="1" hidden></progress><div class="note" id="seekStatus"></div></div>
+  <div id="seekResults"></div>
+</section>
+
+<section id="sec-table">
+  <h2><span class="step">3</span>テーブル(次に出るキャラの先読み)</h2>
+  <div class="row">
+    <div>
+      <label for="seed">シード(現在)</label>
+      <input id="seed" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="例: 1234567890">
+    </div>
+    <div>
+      <label for="last">直前に引いたキャラ(レア被り判定用)</label>
+      <select id="last"></select>
+    </div>
+    <div class="sm">
+      <label for="count">表示する行数</label>
+      <input id="count" type="number" min="1" max="999" value="100">
+    </div>
+    <div class="sm">
+      <label for="nameForm">名前の表示</label>
+      <select id="nameForm">
+        <option value="0">第1形態</option><option value="1">第2形態</option><option value="2">第3形態</option><option value="3">第4形態</option>
+      </select>
+    </div>
+    <div>
+      <label for="find">強調するキャラ</label>
+      <select id="find"></select>
+    </div>
+    <div class="btns">
+      <button id="showBtn">表示 / 更新</button>
+      <button class="sub" id="undoBtn" disabled>1つ戻す</button>
+      <button class="sub" id="copyBtn">シードをコピー</button>
+    </div>
+  </div>
+  <div id="tableMsg"></div>
+  <div class="note" id="pathInfo"></div>
+  <div class="tablewrap" id="tablewrap"></div>
+  <div class="legendbox">
+    <div><span class="sw" style="background:var(--rare)"></span>レア <span class="sw" style="background:var(--supa)"></span>激レア <span class="sw" style="background:var(--uber)"></span>超激レア <span class="sw" style="background:var(--legend)"></span>伝説レア
+      　<span class="sw nextpos" style="background:#fff"></span>次に引く位置　<span class="sw picked" style="background:#fff"></span>クリックした位置までに出るキャラ</div>
+    <div>あなたは常に <b>1A</b> にいます(次に1回引くと1Aのキャラ、その次は2A…)。Bは「もう一方のトラック」で、<b>確定枠(G)</b>を引いたとき、または<b>レア被り(R)</b>が起きたときにA↔Bが入れ替わります。セルの「→5B」は、そこを引いた後の次の位置です。</div>
+    <div>「被り時」の行は、直前に同じレアを引いていた場合に代わりに出るキャラです(ゲームは同じレアキャラの連続を避けて引き直します)。<span class="badge">祭:超激レア</span> は、その位置を超ネコ祭/極ネコ祭で引くと超激レアになることを示します。<span class="badge dbl">2倍:伝説レア</span> は伝説レア2倍のガチャで伝説レアになる位置です。</div>
+  </div>
+</section>
+
+<section id="sec-help">
+  <h2>使い方・仕組み</h2>
+  <details open>
+    <summary>手順</summary>
+    <ol>
+      <li><b>ガチャを選ぶ</b>。実際に引いたガチャと同じイベントを選んでください(超ネコ祭と通常ガチャでは排出率が違うため、違うものを選ぶと見つかりません)。</li>
+      <li><b>7〜10回引いて結果を順番に入力</b>し、「シードを検索」を押します。全 42億9千万通りのシードを総当たりします(PCで数秒〜十数秒、スマホでは1分前後かかることがあります)。</li>
+      <li>候補が1つなら「現在のシードでテーブルを表示」を押します。候補が複数のときは、もう1〜2回引いて結果を追加し、再検索してください。</li>
+      <li>テーブルの <b>1A</b> が次に引けるキャラです。実際に引いたら、そのキャラのセルの「ここまで引いた」を押すと位置(シード)が進みます。11連を引いたときは「確定枠」列の「ここまで引いた」を押します。</li>
+      <li>シードはこのブラウザに保存されます。別の端末やブラウザで使う場合に備えて、シードの数字をメモしておくことをおすすめします(メモした数字を「シード(現在)」に入れれば同じテーブルが出ます)。</li>
+    </ol>
+  </details>
+  <details>
+    <summary>仕組み(なぜ先読みできるのか)</summary>
+    <ul>
+      <li>ゲームのセーブデータには、ガチャ用の乱数の「種(シード)」が1つ入っていて、レアガチャを引くたびに決まった計算式(xorshift32)で次の値に進みます。チケットでもネコカンでも、どのイベントでも同じシードを共有しています。</li>
+      <li>1回引くごとに乱数を2回使います(1回目でレアリティ、2回目でそのレアリティ内のどのキャラか)。<b>確定枠</b>(11連・15連の最後)は乱数を1回しか使わないので、以降は半分ずれて「もう一方のトラック(B)」に移ります。</li>
+      <li><b>レア被り</b>: 直前に引いたレアキャラと同じレアキャラが出そうになると、ゲームは乱数を追加で1回使って別のレアキャラに引き直します。これも半回し分ずれるのでトラックが入れ替わります(テーブルでは「被り時」と「R」で表示)。</li>
+      <li>排出率は 1/10000 単位で、通常ガチャはレア 69.7% / 激レア 25% / 超激レア 5% / 伝説レア 0.3%、超ネコ祭・極ネコ祭は 64.7% / 26% / 9% / 0.3% です。キャラの並び順(スロット)はゲームデータのガチャ定義の順です。</li>
+      <li>計算方法とデータは <a href="https://gitlab.com/godfat/battle-cats-rolls" target="_blank" rel="noopener">godfat/battle-cats-rolls</a>(Apache-2.0)の Ruby 実装と日本版データ(bc-jp.yaml)を移植・同梱したもので、同じシード値を入れれば同サイトと同じテーブルになります。</li>
+    </ul>
+  </details>
+  <details>
+    <summary>注意点</summary>
+    <ul>
+      <li>非公式ツールです。ゲーム本体のアップデートで計算式やデータが変わると合わなくなることがあります。</li>
+      <li>ガチャに新しい超激レアが追加されると超激レアの並び(スロット)が変わり、超激レアの位置のキャラが入れ替わることがあります。レア・激レアの位置は基本的に変わりません。</li>
+      <li>同じキャラが複数回入っているガチャ(メタルバスターズなど)では、どのスロットを引いたか判別できないため見つかりにくいことがあります。</li>
+      <li>プラチナガチャ・レジェンドガチャも同じシードを使いますが、「確定枠」ではありません(1回につき乱数2回)。</li>
+      <li>開催期間の日付はデータ上の日付です(実際の切り替えは11:00が多いです)。</li>
+    </ul>
+  </details>
+</section>
+</main>
+<footer>データ・アルゴリズム: godfat/battle-cats-rolls (Apache License 2.0) / このページはサーバーに何も送信しません(すべて端末内で計算)。</footer>
+
+<script id="core">/*__CORE__*/</script>
+<script id="data">/*__DATA__*/</script>
+<script>
+(function () {
+'use strict';
+var $ = function (s) { return document.querySelector(s); };
+var CATS = {};
+Object.keys(DATA.cats).forEach(function (id) { CATS[id] = { id: +id, rarity: DATA.cats[id][0], name: DATA.cats[id][1] }; });
+var EVENTS = DATA.events; // 開始日順
+var GACHA = DATA.gacha;
+var EV_BY_KEY = {}, LATEST_EVENT_OF = {};
+EVENTS.forEach(function (e) { EV_BY_KEY[e.k] = e; LATEST_EVENT_OF[e.id] = e; });
+var RJP = { 2: 'レア', 3: '激レア', 4: '超激レア', 5: '伝説レア' };
+var RCLS = { 2: 'rare', 3: 'supa', 4: 'uber', 5: 'legend' };
+var PRESETS = [
+  { key: 'regular', tag: '通常', label: '通常 (伝説あり) 69.7/25/5/0.3%', rare: 6970, supa: 2500, uber: 500 },
+  { key: 'no_legend', tag: '通常', label: '通常 (伝説なし) 70/25/5%', rare: 7000, supa: 2500, uber: 500 },
+  { key: 'uberfest_legend', tag: '超ネコ祭/極ネコ祭', label: '超ネコ祭 / 極ネコ祭 (伝説あり) 64.7/26/9/0.3%', rare: 6470, supa: 2600, uber: 900 },
+  { key: 'uberfest', tag: '超ネコ祭/極ネコ祭', label: '超ネコ祭 / 極ネコ祭 (伝説なし) 65/26/9%', rare: 6500, supa: 2600, uber: 900 },
+  { key: 'superfest_legend', tag: '超選抜祭', label: '超選抜祭 (伝説あり) 64.7/25/10/0.3%', rare: 6470, supa: 2500, uber: 1000 },
+  { key: 'superfest', tag: '超選抜祭', label: '超選抜祭 (伝説なし) 65/25/10%', rare: 6500, supa: 2500, uber: 1000 },
+  { key: 'dynastyfest', tag: '超国王祭', label: '超国王祭 67.7/25/7/0.3%', rare: 6770, supa: 2500, uber: 700 },
+  { key: 'dynastyfest_no_legend', tag: '超国王祭', label: '超国王祭 (伝説なし) 68/25/7%', rare: 6800, supa: 2500, uber: 700 },
+  { key: 'royalfest', tag: '伝説2倍', label: '伝説レア2倍 69.4/25/5/0.6%', rare: 6940, supa: 2500, uber: 500 },
+  { key: 'double', tag: '超激・伝説2倍', label: '超激レア・伝説レア2倍 64.4/25/10/0.6%', rare: 6440, supa: 2500, uber: 1000 },
+  { key: 'dl_special', tag: 'DL記念', label: 'DL記念 69.3/25/5/0.7%', rare: 6930, supa: 2500, uber: 500 },
+  { key: 'platinum', tag: 'プラチナ', label: 'プラチナ (超激レア100%)', rare: 0, supa: 0, uber: 10000 },
+  { key: 'legend', tag: 'レジェンド', label: 'レジェンド (超激95% / 伝説5%)', rare: 0, supa: 0, uber: 9500 },
+  { key: 'custom', tag: '', label: '数値を入力…', rare: null, supa: null, uber: null }
+];
+var FEST = { rare: 6470, supa: 2600, uber: 900 }, DBL = { rare: 6440, supa: 2500, uber: 1000 };
+
+function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function mmdd(s) { return s.slice(5).replace('-', '/'); }
+function pct(x) { return (x / 100).toFixed(x % 100 ? (x % 10 ? 2 : 1) : 0) + '%'; }
+function presetFor(r) {
+  for (var i = 0; i < PRESETS.length; i++) { var p = PRESETS[i]; if (p.rare === r.rare && p.supa === r.supa && p.uber === r.uber) return p; }
+  return null;
+}
+function rateTag(r) { var p = presetFor(r); return p ? p.tag : (pct(r.uber) + '超激'); }
+function shortName(s, n) { s = (s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n) + '…' : s; }
+function gachaDisplayName(id) { var e = LATEST_EVENT_OF[id]; return e ? e.n : ((GACHA[id] && GACHA[id].n) || '(名称不明)'); }
+function nm(id, form) {
+  if (id === -1 || id == null) return '(該当なし)';
+  var c = CATS[id]; if (!c) return '(不明: ' + id + ')';
+  var f = form == null ? state.form : form;
+  for (var i = Math.min(f, c.name.length - 1); i >= 0; i--) if (c.name[i]) return c.name[i];
+  return '(ID ' + id + ')';
+}
+
+// ---- 状態 ----
+var state = { event: null, custom: null, rates: { rare: 6970, supa: 2500, uber: 500 }, ratePreset: 'regular', g: 'auto',
+  seed: 0, last: 0, count: 100, find: 0, form: 0 };
+var history = [];
+var rowsCache = null, labelMap = {}, currentPoolCache = null;
+
+function save() {
+  try { localStorage.setItem('nyanko-seed-state', JSON.stringify(state)); } catch (e) {}
+  var q = ['seed=' + state.seed, 'last=' + state.last, 'event=' + encodeURIComponent(state.event || ''), 'g=' + state.g];
+  if (state.event === 'custom') q.push('custom=' + state.custom, 'rate=' + state.rates.rare + ',' + state.rates.supa + ',' + state.rates.uber);
+  try { window.history.replaceState(null, '', '#' + q.join('&')); } catch (e) {}
+}
+function load() {
+  try { var s = JSON.parse(localStorage.getItem('nyanko-seed-state')); if (s && typeof s === 'object') Object.keys(state).forEach(function (k) { if (s[k] != null) state[k] = s[k]; }); } catch (e) {}
+  var h = location.hash.replace(/^#/, '');
+  if (h) {
+    var p = {}; h.split('&').forEach(function (kv) { var i = kv.indexOf('='); if (i > 0) p[kv.slice(0, i)] = decodeURIComponent(kv.slice(i + 1)); });
+    if (p.seed != null) state.seed = (parseInt(p.seed, 10) || 0) >>> 0;
+    if (p.last != null) state.last = parseInt(p.last, 10) || 0;
+    if (p.event) state.event = p.event;
+    if (p.g) state.g = p.g;
+    if (p.custom) state.custom = parseInt(p.custom, 10) || null;
+    if (p.rate) { var r = p.rate.split(',').map(Number); if (r.length === 3 && r.every(function (x) { return x >= 0; })) { state.rates = { rare: r[0], supa: r[1], uber: r[2] }; var pp = presetFor(state.rates); state.ratePreset = pp ? pp.key : 'custom'; } }
+  }
+  if (state.event !== 'custom' && !EV_BY_KEY[state.event]) state.event = defaultEvent();
+  if (!GACHA[state.custom]) { var ids = Object.keys(GACHA); state.custom = +ids[ids.length - 1]; }
+  if (!/^(auto|0|11|15)$/.test(String(state.g))) state.g = 'auto';
+}
+function groupedEvents() {
+  var t = todayStr(), g = { ongoing: [], upcoming: [], past: [] };
+  EVENTS.forEach(function (e) { if (t <= e.s) g.upcoming.push(e); else if (t <= e.e) g.ongoing.push(e); else g.past.push(e); });
+  return g;
+}
+function defaultEvent() {
+  var g = groupedEvents(), list = g.ongoing.concat(g.upcoming);
+  for (var i = 0; i < list.length; i++) if (!list[i].p) return list[i].k;
+  return list.length ? list[0].k : EVENTS[EVENTS.length - 1].k;
+}
+
+// 現在の設定からプール情報を作る
+function currentInfo() {
+  var info = {};
+  if (state.event === 'custom') {
+    info.gachaId = state.custom; info.rates = state.rates; info.name = 'カスタム: ' + gachaDisplayName(state.custom);
+    info.g = state.g === 'auto' ? 0 : +state.g; info.gAuto = 0; info.event = null;
+  } else {
+    var e = EV_BY_KEY[state.event];
+    info.gachaId = e.id; info.rates = e; info.name = e.n; info.event = e;
+    info.gAuto = e.g; info.g = state.g === 'auto' ? e.g : +state.g;
+  }
+  var ga = GACHA[info.gachaId];
+  info.cats = ga ? ga.c : [];
+  info.pool = BC.makePool(info.cats, CATS, info.rates);
+  currentPoolCache = info;
+  return info;
+}
+function uniqIds(list) { var seen = {}, out = []; list.forEach(function (id) { if (!seen[id]) { seen[id] = 1; out.push(id); } }); return out; }
+
+// ---- セクション1 ----
+function renderEventSelect() {
+  var sel = $('#event'), g = groupedEvents(), html = '';
+  function opt(e) {
+    var lab = mmdd(e.s) + '〜' + mmdd(e.e) + ' [' + rateTag(e) + (e.g === 11 ? '・11連確定' : e.g === 15 ? '・ステップアップ' : '') + '] ' + shortName(e.n, 34);
+    return '<option value="' + esc(e.k) + '" title="' + esc(e.n) + '"' + (e.k === state.event ? ' selected' : '') + '>' + esc(lab) + '</option>';
+  }
+  if (g.ongoing.length) html += '<optgroup label="開催中">' + g.ongoing.map(opt).join('') + '</optgroup>';
+  if (g.upcoming.length) html += '<optgroup label="今後">' + g.upcoming.map(opt).join('') + '</optgroup>';
+  var past = g.past.slice().reverse();
+  html += '<optgroup label="過去">' + past.map(opt).join('') + '</optgroup>';
+  html += '<option value="custom"' + (state.event === 'custom' ? ' selected' : '') + '>カスタム(ガチャIDと排出率を指定)</option>';
+  sel.innerHTML = html;
+  if (sel.value !== state.event) { state.event = sel.value; }
+  $('#gsel').value = String(state.g);
+  renderCustom();
+  renderEventInfo();
+}
+function renderCustom() {
+  var box = $('#customBox'); box.hidden = state.event !== 'custom';
+  var ids = Object.keys(GACHA).map(Number).sort(function (a, b) { return b - a; });
+  $('#customGacha').innerHTML = ids.map(function (id) {
+    return '<option value="' + id + '"' + (id === state.custom ? ' selected' : '') + '>' + id + ': ' + esc(shortName(gachaDisplayName(id), 40)) + '</option>';
+  }).join('');
+  $('#customRate').innerHTML = PRESETS.map(function (p) { return '<option value="' + p.key + '"' + (p.key === state.ratePreset ? ' selected' : '') + '>' + esc(p.label) + '</option>'; }).join('');
+  $('#customNums').hidden = state.ratePreset !== 'custom';
+  $('#cRare').value = state.rates.rare; $('#cSupa').value = state.rates.supa; $('#cUber').value = state.rates.uber;
+  $('#cLegend').value = 10000 - state.rates.rare - state.rates.supa - state.rates.uber;
+}
+function renderEventInfo() {
+  var info = currentInfo(), p = info.pool, r = p.rates, html = '';
+  var gtxt = info.g === 11 ? '11連確定あり' : info.g === 15 ? '15連ステップアップ' : 'なし';
+  html += '<div class="rates"><b>' + esc(shortName(info.name, 80)) + '</b><br>排出率: レア <b>' + pct(r.rare) + '</b> / 激レア <b>' + pct(r.supa) + '</b> / 超激レア <b>' + pct(r.uber) + '</b> / 伝説レア <b>' + pct(r.legend) + '</b>　確定枠: ' + gtxt +
+    (info.event ? '　期間: ' + info.event.s + ' 〜 ' + info.event.e + (info.event.p ? '　(' + { platinum: 'プラチナガチャ', legend: 'レジェンドガチャ', 'dl-100m': '1億DL記念' }[info.event.p] + ')' : '') : '') + '</div>';
+  if (!p.exist) {
+    html += '<div class="err">このガチャの中身のデータがありません' + (p.missing.length ? '(未知のキャラID: ' + p.missing.join(', ') + ')' : '') + '。データ更新をお待ちいただくか、別のガチャを選んでください。</div>';
+  } else {
+    html += '<details class="pool"><summary>排出テーブル(レア ' + p.slots[2].length + '体 / 激レア ' + p.slots[3].length + '体 / 超激レア ' + p.slots[4].length + '体 / 伝説レア ' + p.slots[5].length + '体)</summary>';
+    [2, 3, 4, 5].forEach(function (rr) {
+      if (!p.slots[rr].length) return;
+      html += '<h3>' + RJP[rr] + '</h3><ul>' + p.slots[rr].map(function (id, i) { return '<li>' + i + ': ' + esc(nm(id)) + '</li>'; }).join('') + '</ul>';
+    });
+    html += '</details>';
+  }
+  $('#eventInfo').innerHTML = html;
+  renderRollSelects();
+  renderLastSelect();
+  renderFindSelect();
+}
+
+// ---- セクション2 ----
+var ROLL_ROWS = 10;
+function rollOptionsHtml(p) {
+  var html = '<option value="">(未入力)</option>';
+  [2, 3, 4, 5].forEach(function (r) {
+    var ids = uniqIds(p.slots[r]); if (!ids.length) return;
+    html += '<optgroup label="' + RJP[r] + '">' + ids.map(function (id) { return '<option value="' + r + ':' + id + '">' + esc(nm(id)) + '</option>'; }).join('') + '</optgroup>';
+  });
+  var ub = uniqIds(p.slots[4]);
+  if (ub.length) html += '<optgroup label="確定枠(11連・15連の最後の超激レア)">' + ub.map(function (id) { return '<option value="g:' + id + '">【確定】' + esc(nm(id)) + '</option>'; }).join('') + '</optgroup>';
+  return html;
+}
+function renderRollSelects() {
+  var ol = $('#rolls'), p = currentPoolCache.pool;
+  var prev = Array.prototype.map.call(ol.querySelectorAll('select'), function (s) { return s.value; });
+  var n = Math.max(ROLL_ROWS, prev.length), opts = rollOptionsHtml(p), html = '';
+  for (var i = 0; i < n; i++) html += '<li><span>' + (i + 1) + '.</span><select class="roll" data-i="' + i + '">' + opts + '</select></li>';
+  ol.innerHTML = html;
+  var sels = ol.querySelectorAll('select');
+  prev.forEach(function (v, i) { if (v && sels[i]) sels[i].value = v; });
+}
+function readEntries() {
+  var es = [];
+  Array.prototype.forEach.call($('#rolls').querySelectorAll('select'), function (s) {
+    if (!s.value) return;
+    var a = s.value.split(':');
+    es.push(a[0] === 'g' ? { type: 'g', id: +a[1] } : { type: 'roll', rarity: +a[0], id: +a[1] });
+  });
+  return es;
+}
+function normalizeName(s) { return s.normalize('NFKC').replace(/[\s　]+/g, '').toLowerCase(); }
+function matchCat(token, p) {
+  var ids = uniqIds([].concat(p.slots[2], p.slots[3], p.slots[4], p.slots[5]));
+  var q = normalizeName(token); if (!q) return null;
+  var tiers = [[], [], []];
+  ids.forEach(function (id) {
+    var names = (CATS[id] ? CATS[id].name : []).map(normalizeName);
+    if (names.some(function (n) { return n === q; })) tiers[0].push(id);
+    else if (names.some(function (n) { return n.indexOf(q) === 0; })) tiers[1].push(id);
+    else if (names.some(function (n) { return n.indexOf(q) >= 0; })) tiers[2].push(id);
+  });
+  for (var t = 0; t < 3; t++) if (tiers[t].length) return tiers[t];
+  return [];
+}
+function applyQuick() {
+  var p = currentPoolCache.pool, lines = $('#quick').value.split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean);
+  var out = [], msgs = [];
+  lines.forEach(function (line, i) {
+    var g = false, t = line;
+    var m = /^(確定枠?|g|G)[\s:：]*(.*)$/.exec(t); if (m) { g = true; t = m[2]; }
+    var ids = matchCat(t, p);
+    if (ids.length === 1) {
+      var id = ids[0], r = CATS[id].rarity;
+      if (g && r !== 4) msgs.push((i + 1) + '行目「' + esc(line) + '」: 確定枠は超激レアのみです(' + esc(nm(id)) + 'は' + RJP[r] + ')');
+      else out.push(g ? 'g:' + id : r + ':' + id);
+    } else if (ids.length > 1) msgs.push((i + 1) + '行目「' + esc(line) + '」: 複数に一致 → ' + ids.map(function (id) { return esc(nm(id)); }).join(' / ') + '(もう少し長く入力してください)');
+    else msgs.push((i + 1) + '行目「' + esc(line) + '」: このガチャに見つかりません');
+  });
+  while ($('#rolls').querySelectorAll('select').length < out.length) addRollRows(5);
+  var sels = $('#rolls').querySelectorAll('select');
+  Array.prototype.forEach.call(sels, function (s, i) { s.value = out[i] || ''; });
+  $('#quickMsg').innerHTML = (out.length ? '<div class="ok">' + out.length + '体を反映しました。</div>' : '') + (msgs.length ? '<div class="warn">' + msgs.join('<br>') + '</div>' : '');
+}
+function addRollRows(n) {
+  var ol = $('#rolls'), cur = ol.querySelectorAll('select').length, opts = rollOptionsHtml(currentPoolCache.pool);
+  for (var i = 0; i < n; i++) { var li = document.createElement('li'); li.innerHTML = '<span>' + (cur + i + 1) + '.</span><select class="roll">' + opts + '</select>'; ol.appendChild(li); }
+}
+
+var WORKER_SRC = document.getElementById('core').textContent +
+  '\nonmessage=function(e){var d=e.data;var pool={slots:d.slots,rates:d.rates};var s=BC.makeSearch(d.entries,pool,d.mode);' +
+  'var r=BC.seekRange(s,d.lo,d.hi,d.max,function(f){postMessage({t:"p",f:f})});postMessage({t:"d",found:r.found,truncated:r.truncated});};';
+var blobUrl = null, active = { workers: [], cancelled: false, running: false };
+var MAX_FOUND = 60;
+
+function runSearch(entries, pool, mode, onProgress) {
+  return new Promise(function (resolve) {
+    var TOTAL = 4294967296;
+    var par = Math.min(Math.max(1, navigator.hardwareConcurrency || 4), 8);
+    var useWorker = typeof Worker !== 'undefined' && typeof Blob !== 'undefined' && window.URL && URL.createObjectURL;
+    if (useWorker && !blobUrl) { try { blobUrl = URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' })); } catch (e) { useWorker = false; } }
+    var test = null;
+    if (useWorker) { try { test = new Worker(blobUrl); test.terminate(); } catch (e) { useWorker = false; } }
+    if (!useWorker) par = 1;
+    var step = Math.ceil(TOTAL / par), prog = [], done = 0, found = [], trunc = false;
+    var slots = pool.slots, rates = pool.rates;
+    function finishOne(res) {
+      found = found.concat(res.found); trunc = trunc || res.truncated;
+      if (++done === par) resolve({ found: found, truncated: trunc });
+    }
+    function report() { var s = 0; for (var i = 0; i < par; i++) s += prog[i] || 0; onProgress(s / par); }
+    for (var i = 0; i < par; i++) {
+      (function (i) {
+        var lo = i * step, hi = Math.min(TOTAL, lo + step);
+        prog[i] = 0;
+        if (useWorker) {
+          var w = new Worker(blobUrl); active.workers.push(w);
+          w.onmessage = function (e) {
+            var d = e.data;
+            if (d.t === 'p') { prog[i] = d.f; report(); return; }
+            prog[i] = 1; report(); finishOne(d);
+          };
+          w.onerror = function () { prog[i] = 1; finishOne({ found: [], truncated: false }); };
+          w.postMessage({ entries: entries, slots: slots, rates: rates, mode: mode, lo: lo, hi: hi, max: MAX_FOUND });
+        } else {
+          // Worker が使えない環境: メインスレッドで小分けに実行
+          var search = BC.makeSearch(entries, { slots: slots, rates: rates }, mode), CH = 1 << 25, a = lo, acc = [], tr = false;
+          (function tickRun() {
+            if (active.cancelled) return;
+            var b = Math.min(hi, a + CH);
+            var r = BC.seekRange(search, a, b, MAX_FOUND - acc.length, null);
+            acc = acc.concat(r.found); tr = tr || r.truncated; a = b;
+            prog[i] = (a - lo) / (hi - lo); report();
+            if (a < hi && !tr) setTimeout(tickRun, 0); else finishOne({ found: acc, truncated: tr });
+          })();
+        }
+      })(i);
+    }
+  });
+}
+function stopSearch() { active.cancelled = true; active.workers.forEach(function (w) { w.terminate(); }); active.workers = []; active.running = false; $('#seekBtn').disabled = false; $('#stopBtn').disabled = true; }
+
+function seek() {
+  var info = currentInfo(), pool = info.pool, entries = readEntries();
+  var st = $('#seekStatus'), out = $('#seekResults');
+  out.innerHTML = '';
+  if (!pool.exist) { st.innerHTML = '<div class="err">このガチャはデータが無いため検索できません。</div>'; return; }
+  if (!entries.length) { st.innerHTML = '<div class="err">引いた結果を1つ以上選んでください。</div>'; return; }
+  if (entries.length < 5) st.innerHTML = '<div class="warn">入力が' + entries.length + '体だけなので候補が多数出る可能性があります。できれば7体以上入力してください。</div>';
+  var primary = BC.makeSearch(entries, pool, null);
+  active = { workers: [], cancelled: false, running: true };
+  $('#seekBtn').disabled = true; $('#stopBtn').disabled = false;
+  var prog = $('#prog'); prog.hidden = false; prog.value = 0;
+  var t0 = Date.now();
+  function status(txt) { st.innerHTML = '<div>' + txt + '</div>'; }
+  function onProg(f) { prog.value = f; status('検索中… ' + Math.round(f * 100) + '%(' + ((Date.now() - t0) / 1000).toFixed(1) + '秒)'); }
+  status('検索を開始します…');
+  runSearch(entries, pool, primary.mode, onProg).then(function (res) {
+    if (active.cancelled) return;
+    if (res.found.length || !primary.canReroll) return res;
+    status('通常の探索では見つかりませんでした。1体目が「レア被りの引き直し」で出た可能性を確認しています…');
+    prog.value = 0;
+    return runSearch(entries, pool, 'reroll', onProg);
+  }).then(function (res) {
+    if (!res || active.cancelled) return;
+    stopSearch();
+    prog.hidden = true;
+    var sec = ((Date.now() - t0) / 1000).toFixed(1);
+    var seen = {}, found = res.found.filter(function (f) { var k = f.seed + ':' + f.end; if (seen[k]) return false; seen[k] = 1; return true; }).sort(function (a, b) { return a.seed - b.seed; });
+    var lastEntry = entries[entries.length - 1];
+    if (!found.length) {
+      status('<div class="err">該当するシードが見つかりませんでした(' + sec + '秒)。<br>・ガチャの選択が実際に引いたものと違う(超ネコ祭と通常など)<br>・入力順や選んだキャラが違う<br>・11連の最後の1体を「確定枠」から選んでいない<br>のいずれかが考えられます。入力を見直して再検索してください。</div>');
+      return;
+    }
+    var html = '';
+    if (found.length > 1 || res.truncated) html += '<div class="warn">候補が' + (res.truncated ? found.length + '件以上' : found.length + '件') + '見つかりました。<b>あと1〜2回引いて結果を追加し、再検索</b>すると絞り込めます。または各候補のテーブルを表示して、次に引いたキャラと照らし合わせてください。</div>';
+    else html += '<div class="ok">シードが1つに決まりました(' + sec + '秒)。</div>';
+    found.forEach(function (f, i) {
+      html += '<div class="result"><div>候補' + (i + 1) + ': <b>現在のシード</b>(入力した最後の1体を引いた後) = <span class="seedv">' + f.end + '</span>　<small>開始シード(1体目を引く前) = ' + f.seed + '</small></div>';
+      if (f.run) html += '<div class="note">1体目は、直前に引いていた「' + esc(nm(f.prevId)) + '」との被りによる引き直しで出たものとして一致しました。</div>';
+      html += '<div class="row" style="margin-top:6px"><div class="btns"><button class="useSeed" data-seed="' + f.end + '" data-last="' + lastEntry.id + '">現在のシードでテーブルを表示(次に引くのが1A)</button>' +
+        '<button class="sub useSeed" data-seed="' + f.seed + '" data-last="' + (f.prevId || 0) + '">開始シードで確認(入力した結果が1Aから並ぶはず)</button></div></div></div>';
+    });
+    out.innerHTML = html;
+    Array.prototype.forEach.call(out.querySelectorAll('.useSeed'), function (b) {
+      b.onclick = function () {
+        pushHistory();
+        state.seed = (+b.getAttribute('data-seed')) >>> 0; state.last = +b.getAttribute('data-last');
+        save(); syncTableInputs(); renderTable();
+        $('#sec-table').scrollIntoView({ behavior: 'smooth' });
+      };
+    });
+  });
+}
+
+// ---- セクション3 ----
+function renderLastSelect() {
+  var p = currentPoolCache.pool, sel = $('#last'), rares = uniqIds(p.slots[2]);
+  var html = '<option value="0">なし / 不明 / レア以外</option>' + rares.map(function (id) { return '<option value="' + id + '">' + esc(nm(id)) + '</option>'; }).join('');
+  if (state.last && rares.indexOf(state.last) < 0) html += '<option value="' + state.last + '">直前: ' + esc(nm(state.last)) + (CATS[state.last] && CATS[state.last].rarity === 2 ? '(このガチャのレアには無し)' : '(レア以外のため影響なし)') + '</option>';
+  sel.innerHTML = html; sel.value = String(state.last);
+}
+function renderFindSelect() {
+  var p = currentPoolCache.pool, sel = $('#find'), html = '<option value="0">なし</option>';
+  [5, 4, 3, 2].forEach(function (r) { var ids = uniqIds(p.slots[r]); if (ids.length) html += '<optgroup label="' + RJP[r] + '">' + ids.map(function (id) { return '<option value="' + id + '">' + esc(nm(id)) + '</option>'; }).join('') + '</optgroup>'; });
+  sel.innerHTML = html; sel.value = String(state.find || 0); if (sel.value !== String(state.find || 0)) { state.find = 0; sel.value = '0'; }
+}
+function syncTableInputs() {
+  $('#seed').value = state.seed ? String(state.seed) : '';
+  $('#count').value = state.count; $('#nameForm').value = String(state.form);
+  renderLastSelect(); renderFindSelect();
+  $('#undoBtn').disabled = !history.length;
+}
+function readTableInputs() {
+  var sv = ($('#seed').value || '').replace(/[^\d]/g, '');
+  state.seed = sv ? (Number(sv) % 4294967296) >>> 0 : 0;
+  state.last = parseInt($('#last').value, 10) || 0;
+  state.count = Math.max(1, Math.min(999, parseInt($('#count').value, 10) || 100));
+  state.find = parseInt($('#find').value, 10) || 0;
+  state.form = parseInt($('#nameForm').value, 10) || 0;
+}
+function pushHistory() { history.push({ seed: state.seed, last: state.last }); if (history.length > 50) history.shift(); $('#undoBtn').disabled = false; }
+function festBadge(cat) {
+  if (cat.score == null) return '';
+  var f = BC.rarityOf(cat.score, FEST), d = BC.rarityOf(cat.score, DBL);
+  if (f > cat.rarity) return '<span class="badge" title="超ネコ祭・極ネコ祭(64.7/26/9/0.3%)でこの位置を引くと' + RJP[f] + 'になります">祭:' + RJP[f] + '</span>';
+  if (d > cat.rarity) return '<span class="badge dbl" title="超激レア・伝説レア2倍のガチャでこの位置を引くと' + RJP[d] + 'になります">2倍:' + RJP[d] + '</span>';
+  return '';
+}
+function startCat() {
+  if (!rowsCache) return null;
+  var a = rowsCache[0][0];
+  return (state.last && a.id === state.last && a.rerolled) ? a.rerolled : a;
+}
+function renderTable() {
+  var info = currentInfo(), p = info.pool, msg = $('#tableMsg'), wrap = $('#tablewrap');
+  $('#pathInfo').textContent = '';
+  rowsCache = null; labelMap = {};
+  if (!state.seed) { msg.innerHTML = '<div class="note">シードが未設定です。上の「シードを調べる」で見つけるか、分かっている場合は入力して「表示 / 更新」を押してください。</div>'; wrap.innerHTML = ''; return; }
+  if (!p.exist) { msg.innerHTML = '<div class="err">このガチャはデータが無いため表示できません。</div>'; wrap.innerHTML = ''; return; }
+  msg.innerHTML = '';
+  var rows = BC.tracks({ seed: state.seed, pool: p, count: state.count, last: state.last, guaranteedRolls: info.g });
+  rowsCache = rows;
+  var g = info.g;
+  function cell(cat, isG) {
+    if (!cat) return '<td class="' + (isG ? 'gcell' : 'cell') + '"></td>';
+    var lab = BC.catLabel(cat); labelMap[lab] = cat;
+    var cls = (isG ? 'gcell cell' : 'cell ' + RCLS[cat.rarity]) + (state.find && cat.id === state.find ? ' found' : '');
+    var h = '<span class="nm">' + esc(nm(cat.id)) + '</span>' + (isG ? '' : festBadge(cat));
+    if (isG) h += ' <span class="nx">→' + (cat.next ? BC.catLabel(cat.next) : '?') + '</span>';
+    else if (cat.next && cat.next.track !== cat.track) h += ' <span class="nx">→' + BC.catLabel(cat.next) + '</span>';
+    h += '<button class="adv mini" data-label="' + lab + '" title="' + (isG ? 'ここで' + g + '連を引いた' : 'このキャラまで引いた') + 'ことにして位置を進める">' + (isG ? g + '連を引いた' : 'ここまで引いた') + '</button>';
+    if (cat.rerolled && !isG) {
+      var rr = cat.rerolled, rl = BC.catLabel(rr); labelMap[rl] = rr;
+      h += '<div class="rr" data-label="' + rl + '"><span class="tag">被り時</span><span class="nm">' + esc(nm(rr.id)) + '</span> <span class="nx">→' + (rr.next ? BC.catLabel(rr.next) : '?') + '</span><button class="adv mini" data-label="' + rl + '">ここまで引いた</button></div>';
+    }
+    return '<td class="' + cls + '" data-label="' + lab + '">' + h + '</td>';
+  }
+  function gcell(cat) {
+    if (!g) return '';
+    if (!cat.guaranteed && !(cat.rerolled && cat.rerolled.guaranteed)) return '<td class="gcell"></td>';
+    var h = '';
+    if (cat.guaranteed) { var gc = cat.guaranteed, gl = BC.catLabel(gc); labelMap[gl] = gc; h += '<div data-label="' + gl + '"><span class="nm">' + esc(nm(gc.id)) + '</span> <span class="nx">→' + (gc.next ? BC.catLabel(gc.next) : '?') + '</span><button class="adv mini" data-label="' + gl + '">' + g + '連を引いた</button></div>'; }
+    if (cat.rerolled && cat.rerolled.guaranteed) { var rg = cat.rerolled.guaranteed, rgl = BC.catLabel(rg); labelMap[rgl] = rg; h += '<div class="rr" data-label="' + rgl + '"><span class="tag">被り時</span><span class="nm">' + esc(nm(rg.id)) + '</span> <span class="nx">→' + (rg.next ? BC.catLabel(rg.next) : '?') + '</span><button class="adv mini" data-label="' + rgl + '">' + g + '連を引いた</button></div>'; }
+    return '<td class="gcell cell" data-label="' + (cat.guaranteed ? BC.catLabel(cat.guaranteed) : BC.catLabel(cat.rerolled.guaranteed)) + '">' + h + '</td>';
+  }
+  var head = '<tr><th class="no">No.</th><th>A の結果</th>' + (g ? '<th>A で' + g + '連の確定枠</th>' : '') + '<th>B の結果</th>' + (g ? '<th>B で' + g + '連の確定枠</th>' : '') + '<th class="no">No.</th></tr>';
+  var body = rows.map(function (row, i) {
+    var a = row[0], b = row[1];
+    return '<tr><th class="no">' + (i + 1) + 'A</th>' + cell(a, false) + gcell(a) + cell(b, false) + gcell(b) + '<th class="no">' + (i + 1) + 'B</th></tr>';
+  }).join('');
+  wrap.innerHTML = '<table class="tracks"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
+  var s = startCat();
+  if (s) { var el = elFor(BC.catLabel(s)); if (el) el.classList.add('nextpos'); }
+  $('#pathInfo').innerHTML = '次に引く位置: <b>' + (s ? BC.catLabel(s) : '1A') + '</b>(' + esc(nm(s ? s.id : -1)) + ')。セルをクリックすると、そこまで引いたときに出るキャラと次の位置を強調表示します。';
+}
+function elFor(label) {
+  var wrap = $('#tablewrap');
+  return wrap.querySelector('.rr[data-label="' + label + '"]') || wrap.querySelector('div[data-label="' + label + '"]') || wrap.querySelector('td[data-label="' + label + '"]');
+}
+function clearMarks() {
+  Array.prototype.forEach.call($('#tablewrap').querySelectorAll('.picked, .pickedc, .nextpos'), function (el) { el.classList.remove('picked', 'pickedc', 'nextpos'); });
+}
+function pathTo(target) {
+  var c = startCat(), path = [], limit = rowsCache.length * 2 + 20;
+  while (c && c !== target && path.length < limit) { path.push(c); c = c.next; }
+  return c === target ? path : null;
+}
+function highlight(label) {
+  var target = labelMap[label]; if (!target) return;
+  clearMarks();
+  var info = currentPoolCache, g = info.g, picked = [], next = null, text = '';
+  if (/G$/.test(label)) {
+    var base = labelMap[label.replace(/G$/, '')];
+    var pre = base ? pathTo(base) : null;
+    if (pre) pre.forEach(function (c) { picked.push([c, 'picked']); });
+    var c = base, run = [];
+    for (var i = 0; i < g - 1 && c; i++) { run.push(c); picked.push([c, 'pickedc']); c = c.next; }
+    picked.push([target, 'pickedc']);
+    next = target.next;
+    text = (pre && pre.length ? pre.length + '回引いてから' : '') + g + '連(' + label.replace(/G$/, '') + 'から)で出るキャラ: ' + run.map(function (x) { return nm(x.id); }).join('、') + '、確定枠: ' + nm(target.id) +
+      (pre ? '' : '(現在位置からの経路が見つからないため、' + label.replace(/G$/, '') + 'に居る前提)');
+  } else {
+    var path = pathTo(target);
+    if (path) path.forEach(function (c) { picked.push([c, 'picked']); });
+    picked.push([target, 'picked']);
+    next = target.next;
+    var all = (path || []).concat([target]);
+    text = (path ? all.length + '回引くと出るキャラ: ' : '現在位置からの経路が見つかりません(' + label + 'に居る前提)。') + (path ? all.map(function (x) { return nm(x.id); }).join('、') : '');
+  }
+  picked.forEach(function (pc) { var el = elFor(BC.catLabel(pc[0])); if (el) el.classList.add(pc[1]); });
+  if (next) { var ne = elFor(BC.catLabel(next)); if (ne) ne.classList.add('nextpos'); text += ' → 次の位置: ' + BC.catLabel(next) + '(' + nm(next.id) + ')'; }
+  $('#pathInfo').textContent = text;
+}
+function advanceTo(label) {
+  var cat = labelMap[label]; if (!cat) return;
+  pushHistory();
+  state.seed = cat.slotSeed >>> 0; state.last = cat.id;
+  save(); syncTableInputs(); renderTable();
+  $('#tableMsg').innerHTML = '<div class="ok">' + esc(label) + '(' + esc(nm(cat.id)) + ')まで引いたことにして位置を進めました。新しいシード: <b>' + state.seed + '</b></div>';
+}
+function copySeed() {
+  var txt = String(state.seed);
+  function done(ok) { $('#tableMsg').innerHTML = ok ? '<div class="ok">シード ' + txt + ' をコピーしました。</div>' : '<div class="warn">コピーできませんでした。シード: ' + txt + '</div>'; }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { done(true); }, function () { done(false); });
+  else { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(ok); }
+}
+
+// ---- イベント登録 ----
+$('#event').addEventListener('change', function () { state.event = this.value; save(); renderCustom(); renderEventInfo(); renderTable(); });
+$('#gsel').addEventListener('change', function () { state.g = this.value; save(); renderEventInfo(); renderTable(); });
+$('#customGacha').addEventListener('change', function () { state.custom = +this.value; var r = GACHA[state.custom] && GACHA[state.custom].r; var pp = null; PRESETS.forEach(function (x) { if (x.key === r) pp = x; }); if (pp) { state.ratePreset = pp.key; state.rates = { rare: pp.rare, supa: pp.supa, uber: pp.uber }; } save(); renderCustom(); renderEventInfo(); renderTable(); });
+$('#customRate').addEventListener('change', function () { state.ratePreset = this.value; var pp = null; PRESETS.forEach(function (x) { if (x.key === state.ratePreset) pp = x; }); if (pp && pp.rare != null) state.rates = { rare: pp.rare, supa: pp.supa, uber: pp.uber }; save(); renderCustom(); renderEventInfo(); renderTable(); });
+['#cRare', '#cSupa', '#cUber'].forEach(function (id) { $(id).addEventListener('change', function () {
+  var r = Math.max(0, parseInt($('#cRare').value, 10) || 0), s = Math.max(0, parseInt($('#cSupa').value, 10) || 0), u = Math.max(0, parseInt($('#cUber').value, 10) || 0);
+  if (r + s + u > 10000) { $('#eventInfo').innerHTML = '<div class="err">合計が10000を超えています。</div>'; return; }
+  state.rates = { rare: r, supa: s, uber: u }; state.ratePreset = 'custom'; save(); renderCustom(); renderEventInfo(); renderTable();
+}); });
+$('#quickApply').addEventListener('click', applyQuick);
+$('#addRows').addEventListener('click', function () { addRollRows(5); });
+$('#clearRows').addEventListener('click', function () { Array.prototype.forEach.call($('#rolls').querySelectorAll('select'), function (s) { s.value = ''; }); $('#seekResults').innerHTML = ''; $('#seekStatus').innerHTML = ''; });
+$('#seekBtn').addEventListener('click', seek);
+$('#stopBtn').addEventListener('click', function () { stopSearch(); $('#prog').hidden = true; $('#seekStatus').innerHTML = '<div>中止しました。</div>'; });
+$('#showBtn').addEventListener('click', function () { readTableInputs(); save(); syncTableInputs(); renderTable(); });
+$('#seed').addEventListener('keydown', function (e) { if (e.key === 'Enter') { readTableInputs(); save(); syncTableInputs(); renderTable(); } });
+['#last', '#find', '#nameForm', '#count'].forEach(function (id) { $(id).addEventListener('change', function () { readTableInputs(); save(); syncTableInputs(); renderTable(); }); });
+$('#undoBtn').addEventListener('click', function () { var h = history.pop(); if (!h) return; state.seed = h.seed; state.last = h.last; save(); syncTableInputs(); renderTable(); $('#tableMsg').innerHTML = '<div class="ok">1つ前の位置に戻しました。</div>'; });
+$('#copyBtn').addEventListener('click', copySeed);
+$('#tablewrap').addEventListener('click', function (e) {
+  var btn = e.target.closest('button.adv');
+  if (btn) { e.stopPropagation(); if (confirm(btn.getAttribute('data-label') + ' まで引いたことにして位置を進めます。よろしいですか?')) advanceTo(btn.getAttribute('data-label')); return; }
+  var el = e.target.closest('[data-label]');
+  if (el) highlight(el.getAttribute('data-label'));
+});
+
+// ---- 初期化 ----
+load();
+renderEventSelect();
+syncTableInputs();
+renderTable();
+save();
+})();
+</script>
+</body>
+</html>
