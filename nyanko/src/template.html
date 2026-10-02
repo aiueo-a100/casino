@@ -2,245 +2,343 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>にゃんこ大戦争 ガチャシード検索(非公式)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>にゃんこ ガチャシード検索</title>
 <style>
-  :root { --bg:#f6f4ef; --panel:#fff; --line:#ddd6c8; --fg:#222; --mute:#6b6457; --accent:#d9480f; --accent2:#1864ab;
-          --rare:#f1efe9; --supa:#dbe9ff; --uber:#ffd9c7; --legend:#eadcff; }
+  /* レイアウト: 上部に固定の「ガチャ・シード・評価」バー、下はタブ(調べる / テーブル / 使い方) */
+  :root {
+    --bg:#eef1f6; --panel:#ffffff; --line:#dfe4ec; --line2:#c9d1dd; --fg:#1b2230; --mute:#66728a;
+    --primary:#2b6cf0; --primary-dk:#1f55c4; --primary-soft:#e8f0ff;
+    --rare-bg:#f6f7fa; --rare-bd:#d3d9e3; --rare-fg:#4b5565;
+    --supa-bg:#e9f1ff; --supa-bd:#9dbcff; --supa-fg:#1d4ed8;
+    --uber-bg:#fff0e4; --uber-bd:#ffb37c; --uber-fg:#c2410c;
+    --legend-bg:#f3ebff; --legend-bd:#c8a8ff; --legend-fg:#6d28d9;
+    --ok-bg:#e6f7ee; --ok-fg:#146c43; --warn-bg:#fff6e0; --warn-fg:#8a5a00; --bad-bg:#fdecec; --bad-fg:#a32020;
+    --radius:12px; --shadow:0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+    --sb-h:96px;
+  }
   * { box-sizing:border-box; }
   html { -webkit-text-size-adjust:100%; }
-  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.65 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif; }
-  header { background:#2b2520; color:#fff; padding:14px 16px; }
-  header h1 { font-size:19px; margin:0; }
-  header p { margin:4px 0 0; font-size:12.5px; color:#cfc7bb; }
-  main { max-width:1100px; margin:0 auto; padding:12px 12px 40px; }
-  section { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 14px 16px; margin:0 0 14px; }
-  h2 { font-size:17px; margin:0 0 10px; padding-bottom:6px; border-bottom:2px solid var(--accent); }
-  h2 .step { display:inline-block; background:var(--accent); color:#fff; border-radius:50%; width:24px; height:24px; line-height:24px; text-align:center; font-size:14px; margin-right:6px; }
-  h3 { font-size:15px; margin:14px 0 6px; }
-  label { font-size:13px; color:var(--mute); display:block; margin:8px 0 2px; }
-  select, input[type=text], input[type=number], textarea { width:100%; max-width:100%; font:inherit; padding:6px 8px; border:1px solid #b9b2a4; border-radius:6px; background:#fff; color:var(--fg); }
-  textarea { min-height:70px; }
-  button { font:inherit; padding:7px 14px; border:1px solid #9b6b4a; border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; }
-  button.sub { background:#fff; color:#333; border-color:#b9b2a4; }
-  button.mini { padding:1px 6px; font-size:11px; border-radius:4px; background:#fff; color:#333; border-color:#b9b2a4; }
-  button:disabled { opacity:.5; cursor:default; }
-  .row { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; }
-  .row > div { flex:1 1 180px; min-width:0; }
-  .row > div.sm { flex:0 1 120px; }
-  .row > div.btns { flex:1 1 auto; display:flex; gap:8px; flex-wrap:wrap; }
-  .note { font-size:12.5px; color:var(--mute); margin:6px 0; }
-  .warn { background:#fff4e5; border:1px solid #ffc078; border-radius:6px; padding:8px 10px; font-size:13.5px; margin:8px 0; }
-  .ok { background:#e6fcf5; border:1px solid #63e6be; border-radius:6px; padding:8px 10px; font-size:13.5px; margin:8px 0; }
-  .err { background:#fff0f0; border:1px solid #ffa8a8; border-radius:6px; padding:8px 10px; font-size:13.5px; margin:8px 0; }
-  .rates { font-size:13px; margin:6px 0; }
-  .rates b { font-weight:600; }
-  ol.rolls { padding-left:0; margin:6px 0; list-style:none; display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:6px; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.6 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif; }
+  .wrap { max-width:1080px; margin:0 auto; padding-inline:16px; }
+  h2 { font-size:17px; margin:0 0 10px; }
+  h3 { font-size:14px; margin:14px 0 6px; color:var(--mute); font-weight:600; letter-spacing:.02em; }
+  a { color:var(--primary); }
+  small, .note { color:var(--mute); font-size:12.5px; }
+  .note { margin:6px 0; }
+  .spacer { flex:1; }
+
+  /* ヘッダー */
+  .top { background:#1b2230; color:#fff; }
+  .top-in { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding-block:10px 0; }
+  .brand { font-weight:700; font-size:16px; display:flex; align-items:center; gap:8px; padding-bottom:10px; flex-wrap:wrap; }
+  @media (max-width:640px) { .brand { font-size:14.5px; gap:6px; } .brand .sub { display:none; } }
+  .brand .sub { font-weight:400; font-size:12px; color:#aab4c8; }
+  .tabs { display:flex; gap:2px; margin-left:auto; }
+  .tab { background:transparent; color:#c4cbda; border:0; border-bottom:3px solid transparent; padding:10px 14px; font:inherit; font-weight:600; cursor:pointer; }
+  .tab[aria-selected="true"] { color:#fff; border-bottom-color:#ffb37c; }
+  @media (max-width:640px) { .tabs { width:100%; margin-left:0; } .tab { flex:1; padding:9px 4px; font-size:13.5px; } .brand { padding-bottom:4px; } }
+
+  /* 固定バー */
+  .sb { position:sticky; top:0; z-index:30; background:var(--panel); border-bottom:1px solid var(--line); box-shadow:0 2px 6px rgba(16,24,40,.06); }
+  .sb-row { display:flex; gap:6px 8px; align-items:center; padding-block:6px 0; flex-wrap:wrap; }
+  .sb-row:last-child { padding-bottom:6px; }
+  @media (max-width:640px) { .sb-label { display:none; } #event { flex:1 1 60%; } #gsel { flex:1 1 130px; } .sb-info { font-size:12.5px; gap:4px 10px; } .sb-info .kv b { font-size:13px; } }
+  .sb-label { font-size:12px; color:var(--mute); white-space:nowrap; }
+  #event { flex:1 1 260px; min-width:0; }
+  #gsel { flex:0 1 150px; }
+  .sb-info { font-size:13.5px; gap:6px 14px; }
+  .sb-info .kv b { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:14px; }
+  .sb-info .kv { white-space:nowrap; }
+  .sb-info .nextcat { white-space:normal; }
+
+  /* 部品 */
+  select, input[type=text], input[type=number], textarea { font:inherit; padding:7px 9px; border:1px solid var(--line2); border-radius:8px; background:#fff; color:var(--fg); max-width:100%; }
+  select { width:100%; }
+  textarea { width:100%; min-height:80px; }
+  label { font-size:12.5px; color:var(--mute); display:block; margin:0 0 3px; }
+  .btn { font:inherit; font-weight:600; padding:8px 14px; border-radius:9px; border:1px solid var(--line2); background:#fff; color:var(--fg); cursor:pointer; line-height:1.3; }
+  .btn.primary { background:var(--primary); border-color:var(--primary); color:#fff; }
+  .btn.primary:hover { background:var(--primary-dk); }
+  .btn.sec { background:#fff; }
+  .btn.ghost { background:transparent; border-color:transparent; color:var(--primary); }
+  .btn.sm { padding:5px 10px; font-size:13px; border-radius:7px; }
+  .btn.lg { padding:12px 22px; font-size:16px; border-radius:11px; }
+  .btn.block { display:block; width:100%; text-align:left; margin-top:8px; }
+  .btn:disabled { opacity:.45; cursor:default; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-block:12px; box-shadow:var(--shadow); }
+  .chip { display:inline-block; font-size:11px; font-weight:600; border-radius:999px; padding:1px 8px; background:#eef1f6; color:#425066; vertical-align:middle; }
+  .chip.gold { background:#fff1c2; color:#7a4b00; }
+  .chip.blue { background:var(--primary-soft); color:var(--primary-dk); }
+  .msg { border-radius:9px; padding:9px 12px; font-size:13.5px; margin-block:8px; }
+  .msg.ok { background:var(--ok-bg); color:var(--ok-fg); }
+  .msg.warn { background:var(--warn-bg); color:var(--warn-fg); }
+  .msg.err { background:var(--bad-bg); color:var(--bad-fg); }
+  .raretxt { color:var(--rare-fg); } .supatxt { color:var(--supa-fg); } .ubertxt { color:var(--uber-fg); } .legendtxt { color:var(--legend-fg); }
+  .rchip { display:inline-block; font-size:10.5px; font-weight:700; border-radius:4px; padding:0 5px; line-height:16px; color:#fff; vertical-align:middle; }
+  .rchip.r2 { background:#8b96a8; } .rchip.r3 { background:#3b82f6; } .rchip.r4 { background:#ea580c; } .rchip.r5 { background:#7c3aed; }
+  .badge { display:inline-block; font-size:10.5px; border:1px solid #c92a2a; color:#c92a2a; border-radius:4px; padding:0 4px; line-height:15px; vertical-align:middle; background:#fff; }
+  .badge.dbl { border-color:#6d28d9; color:#6d28d9; }
+  .nx { color:var(--primary); font-size:12px; white-space:nowrap; font-weight:600; }
+  .check { display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--fg); margin-top:8px; }
+  details.plain > summary { cursor:pointer; font-weight:600; font-size:14px; }
+  .pool ul { columns:2; font-size:13px; margin:4px 0; padding-left:1.4em; }
+  @media (max-width:640px) { .pool ul { columns:1; } }
+  .rates { font-size:13.5px; display:flex; gap:6px 16px; flex-wrap:wrap; }
+  .rates b { font-weight:700; }
+  .grid2 { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; }
+
+  /* シード検索 */
+  ol.howto { margin:0 0 12px; padding-left:1.4em; font-size:14px; }
+  ol.howto li { margin:2px 0; }
+  .rolls-head { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:10px 0 6px; font-weight:600; }
+  ol.rolls { padding-left:0; margin:6px 0; list-style:none; display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:6px; }
   ol.rolls li { display:flex; align-items:center; gap:6px; }
   ol.rolls li span { width:2em; text-align:right; font-size:13px; color:var(--mute); }
-  progress { width:100%; height:12px; }
-  .result { border:1px solid var(--line); border-radius:8px; padding:10px; margin:8px 0; background:#fffdf8; }
-  .result .seedv { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:15px; font-weight:600; }
-  .tablewrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  table.tracks { border-collapse:collapse; width:100%; font-size:13.5px; }
-  table.tracks th, table.tracks td { border:1px solid #cfc7b8; padding:3px 5px; vertical-align:top; }
-  table.tracks th { background:#eee9df; font-weight:600; white-space:nowrap; text-align:center; }
-  table.tracks th.no { width:3.2em; font-family:ui-monospace,Menlo,Consolas,monospace; }
-  table.tracks td.cell { cursor:pointer; min-width:150px; }
-  table.tracks td.cell:hover { outline:2px solid #999; outline-offset:-2px; }
-  td.rare { background:var(--rare); } td.supa { background:var(--supa); } td.uber { background:var(--uber); } td.legend { background:var(--legend); }
-  td.uber .nm, td.legend .nm { font-weight:700; }
-  td.gcell { background:#fbfaf6; color:#444; min-width:120px; }
-  td.gcell .nm { font-weight:600; color:#8a2b06; }
-  .nm { word-break:break-all; }
-  .nx { color:var(--accent2); font-size:12px; white-space:nowrap; }
-  .tag { display:inline-block; font-size:10.5px; background:#555; color:#fff; border-radius:3px; padding:0 4px; margin-right:3px; vertical-align:middle; }
-  .badge { display:inline-block; font-size:10.5px; border:1px solid #c92a2a; color:#c92a2a; border-radius:3px; padding:0 3px; margin-left:3px; vertical-align:middle; }
-  .badge.dbl { border-color:#5f3dc4; color:#5f3dc4; }
-  .rr { margin-top:3px; padding-top:3px; border-top:1px dashed #b9b2a4; font-size:12.5px; }
-  .adv { margin-left:6px; vertical-align:middle; white-space:nowrap; }
-  .picked { box-shadow: inset 0 0 0 3px #333; }
-  .pickedc { box-shadow: inset 0 0 0 3px #1864ab; }
-  .nextpos { background-image: repeating-linear-gradient(135deg, rgba(0,0,0,.08) 0 6px, transparent 6px 12px) !important; box-shadow: inset 0 0 0 3px var(--accent); }
-  .rr.picked, .rr.nextpos { box-shadow:none; outline:3px solid #333; outline-offset:-1px; }
-  .rr.nextpos { outline-color:var(--accent); }
-  .found .nm { text-decoration:underline; text-decoration-color:#2b8a3e; text-decoration-thickness:2px; }
-  .legendbox { font-size:12.5px; color:var(--mute); margin-top:8px; }
-  .legendbox span.sw { display:inline-block; width:14px; height:14px; border:1px solid #bbb; vertical-align:middle; margin-right:2px; }
-  .evalbox { border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin:10px 0; background:#fffdf8; }
-  .evalhead { font-weight:700; margin-bottom:4px; }
-  .verdict { font-size:16px; padding:6px 10px; border-radius:6px; display:inline-block; margin:4px 0; background:#eee; }
-  .verdict small { font-size:12px; color:var(--mute); margin-left:6px; }
-  .verdict.gS { background:#ffe3bf; color:#7a2e00; } .verdict.gA { background:#ffd8a8; } .verdict.gB { background:#d3f9d8; } .verdict.gC { background:#e9ecef; } .verdict.gD { background:#e7f5ff; } .verdict.gE { background:#dee2e6; }
-  .bestbox { border-left:4px solid var(--accent); padding:6px 10px; margin:8px 0; background:#fff; }
-  .bestbox ol { margin:4px 0 6px; padding-left:1.4em; }
-  .besthead { font-size:15px; }
-  .raretxt { color:#555; } .supatxt { color:#1864ab; } .ubertxt { color:#c92a2a; } .legendtxt { color:#6741d9; }
+  .seek-actions { display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+  progress { width:100%; height:10px; margin-top:8px; accent-color:var(--primary); }
+  .result { border-left:4px solid var(--primary); }
+  .result .seedv { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:17px; font-weight:700; }
+  .result .acts { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .row-end { display:flex; justify-content:flex-end; margin-top:6px; }
+
+  /* 評価カード */
+  .eval-top { display:flex; gap:14px; align-items:stretch; flex-wrap:wrap; }
+  .grade { flex:0 0 112px; min-height:96px; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px; background:#eef1f6; color:#425066; }
+  .grade .g { font-size:40px; font-weight:800; line-height:1; }
+  .grade .gt { font-size:13px; font-weight:700; margin-top:4px; }
+  .grade.gS { background:#fff1c2; color:#7a4b00; } .grade.gA { background:#ffe0c7; color:#9a3412; } .grade.gB { background:#dcf5e6; color:#146c43; }
+  .grade.gC { background:#e9edf3; color:#425066; } .grade.gD { background:#e3ebf7; color:#3d5a80; } .grade.gE { background:#dfe3ea; color:#33404f; }
+  .stats { flex:1 1 320px; display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:8px; }
+  @media (max-width:640px) { .grade { flex:1 1 100%; flex-direction:row; gap:12px; min-height:0; padding:8px 12px; } .grade .g { font-size:30px; } .stats { grid-template-columns:1fr 1fr; } .stat .v { font-size:19px; } }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:8px 10px; min-width:0; }
+  .stat .k { font-size:11.5px; color:var(--mute); }
+  .stat .v { font-size:22px; font-weight:800; line-height:1.2; font-variant-numeric:tabular-nums; }
+  .stat .v small { font-size:12px; font-weight:600; margin-left:2px; color:var(--mute); }
+  .stat .s { font-size:12px; color:var(--mute); }
+  .prize { margin-top:12px; border-top:1px solid var(--line); padding-top:10px; }
+  .prize-h { font-size:15px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .prize-h b { font-size:17px; }
+  ol.steps { list-style:none; padding:0; margin:10px 0 6px; display:flex; flex-direction:column; gap:6px; }
+  ol.steps li { display:flex; gap:10px; align-items:flex-start; }
+  .stp { flex:0 0 24px; height:24px; border-radius:50%; background:var(--primary); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px; }
+  .stp.m { background:#ea580c; } .stp.p { background:#64748b; }
+  .st-t { font-weight:700; }
+  .st-d { font-size:13px; color:#344054; }
+  .st-d .sw { color:var(--warn-fg); }
+  .total { font-size:13px; color:var(--mute); }
   table.plans { border-collapse:collapse; font-size:12.5px; width:100%; }
-  table.plans th, table.plans td { border:1px solid var(--line); padding:3px 6px; vertical-align:top; text-align:left; }
-  .plat { outline:3px dashed #868e96; outline-offset:-3px; }
-  label.inline { display:inline-flex; align-items:center; gap:6px; color:var(--fg); font-size:13px; margin:6px 0; }
-  details { margin:8px 0; }
-  summary { cursor:pointer; font-weight:600; }
-  .pool ul { columns:2; font-size:13px; margin:4px 0; padding-left:1.4em; }
-  @media (max-width:640px) { .pool ul { columns:1; } body { font-size:14px; } table.tracks td.cell { min-width:130px; } }
-  footer { text-align:center; font-size:12px; color:var(--mute); padding:10px; }
-  kbd { font-family:inherit; background:#eee; border:1px solid #ccc; border-radius:3px; padding:0 4px; }
+  table.plans th, table.plans td { border-bottom:1px solid var(--line); padding:5px 6px; vertical-align:top; text-align:left; }
+  table.plans th { color:var(--mute); font-weight:600; white-space:nowrap; }
+  .tablewrap-x { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+  /* テーブル操作列 */
+  .ctrl-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; align-items:end; }
+  .ctrl-grid .sm { max-width:120px; }
+  .inline-row { display:flex; gap:6px; }
+  .inline-row input { flex:1; min-width:0; }
+  .ctrl-btns { display:flex; gap:6px; flex-wrap:wrap; }
+  .ctrl-grid input[type=text], .ctrl-grid input[type=number] { width:100%; }
+
+  /* トラック表 */
+  .thead { position:sticky; top:var(--sb-h); z-index:10; display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px; }
+  .th { background:#1b2230; color:#fff; border-radius:8px; padding:5px 10px; font-weight:700; font-size:13.5px; }
+  .th small { color:#c4cbda; font-weight:500; margin-left:6px; }
+  .th.b { background:#4b5565; }
+  .rows { display:flex; flex-direction:column; gap:6px; }
+  .trow { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .cell { position:relative; border:1px solid var(--rare-bd); border-left-width:5px; background:var(--rare-bg); border-radius:9px; padding:5px 8px 6px 9px; cursor:pointer; min-width:0; transition:box-shadow .12s; }
+  .cell:hover { box-shadow:0 0 0 2px #b9c3d6; }
+  .cell.r3 { background:var(--supa-bg); border-color:var(--supa-bd); }
+  .cell.r4 { background:var(--uber-bg); border-color:var(--uber-bd); }
+  .cell.r5 { background:var(--legend-bg); border-color:var(--legend-bd); }
+  .c-top { display:flex; align-items:center; gap:5px; flex-wrap:wrap; font-size:12px; }
+  .pos { font-family:ui-monospace,Menlo,Consolas,monospace; font-weight:700; color:var(--mute); font-size:12px; }
+  .cell .nm { font-size:14.5px; line-height:1.35; word-break:break-all; }
+  @media (max-width:640px) { .cell .nm { font-size:13.5px; } .cell { padding:4px 6px 5px 7px; } .trow, .thead { gap:5px; } }
+  .cell.r4 .nm { font-weight:700; color:var(--uber-fg); }
+  .cell.r5 .nm { font-weight:700; color:var(--legend-fg); }
+  .cell.r3 .nm { color:var(--supa-fg); }
+  .c-sub { margin-top:4px; padding-top:3px; border-top:1px dashed #c3cbd8; font-size:12.5px; display:flex; gap:5px; align-items:center; flex-wrap:wrap; }
+  .c-sub .k { display:inline-block; font-size:10.5px; font-weight:700; border-radius:4px; padding:0 5px; line-height:16px; background:#4b5565; color:#fff; }
+  .c-sub.gg .k { background:#b45309; }
+  .c-sub .gnm { font-weight:600; color:#8a4b1c; }
+  .c-sub.gg { font-size:11.5px; border-top-style:dotted; }
+  .nexttag { position:absolute; top:-9px; right:8px; background:var(--primary); color:#fff; font-size:10.5px; font-weight:700; border-radius:999px; padding:1px 8px; }
+  .cell.nextpos { box-shadow:0 0 0 3px var(--primary); }
+  .picked { box-shadow:0 0 0 3px #1b2230 !important; }
+  .pickedc { box-shadow:0 0 0 3px #ea580c !important; }
+  .plat { box-shadow:0 0 0 3px #64748b !important; outline:2px dashed #fff; outline-offset:-5px; }
+  .c-sub.picked, .c-sub.pickedc, .c-sub.nextpos, .c-sub.plat { box-shadow:none !important; outline:2px solid #1b2230; outline-offset:1px; border-radius:4px; }
+  .c-sub.pickedc { outline-color:#ea580c; } .c-sub.nextpos { outline-color:var(--primary); }
+  .found .nm { text-decoration:underline; text-decoration-color:#15803d; text-decoration-thickness:3px; }
+  .legendbox { font-size:12.5px; color:var(--mute); margin:12px 0; display:flex; gap:6px 14px; flex-wrap:wrap; }
+  .legendbox .sw { display:inline-block; width:12px; height:12px; border-radius:3px; vertical-align:middle; margin-right:3px; border:1px solid #bbb; }
+
+  /* シート(セルを押したときの操作) */
+  .backdrop { position:fixed; inset:0; background:rgba(16,24,40,.35); z-index:40; }
+  .sheet { position:fixed; left:0; right:0; bottom:0; z-index:50; background:#fff; border-radius:16px 16px 0 0; box-shadow:0 -8px 30px rgba(0,0,0,.25); padding:14px 16px calc(16px + env(safe-area-inset-bottom, 0px)); max-height:80vh; overflow:auto; }
+  @media (min-width:700px) { .sheet { left:50%; right:auto; bottom:auto; top:50%; transform:translate(-50%,-50%); width:min(540px, 92vw); border-radius:14px; } }
+  .sh-head { display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:15px; }
+  .sh-head b { font-size:18px; }
+  .sh-sub { font-size:13px; color:var(--mute); margin-top:4px; }
+  .toast { position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); background:#1b2230; color:#fff; padding:10px 16px; border-radius:10px; font-size:14px; z-index:60; box-shadow:0 6px 20px rgba(0,0,0,.25); max-width:92vw; }
+  footer { text-align:center; font-size:12px; color:var(--mute); padding:16px; }
+  .help h2 { margin-top:4px; }
+  .help ol, .help ul { padding-left:1.4em; }
+  .help li { margin:4px 0; }
+  kbd { font-family:inherit; background:#eef1f6; border:1px solid var(--line2); border-radius:4px; padding:0 5px; }
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; scroll-behavior:auto !important; } }
 </style>
 </head>
 <body>
-<header>
-  <h1>にゃんこ大戦争 ガチャシード検索(非公式)</h1>
-  <p>自分のシードを見つけて、レアガチャで次に何が出るか先読みするツールです。日本版対応。データ更新日: __BUILT__</p>
+<noscript><div class="msg err">JavaScript を有効にしてください。</div></noscript>
+<header class="top">
+  <div class="wrap top-in">
+    <div class="brand"><span>🐾 にゃんこ大戦争 ガチャシード検索</span><span class="sub">非公式・日本版・データ __BUILT__</span></div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="seek">シードを調べる</button>
+      <button class="tab" role="tab" data-tab="table">テーブル・評価</button>
+      <button class="tab" role="tab" data-tab="help">使い方</button>
+    </nav>
+  </div>
 </header>
-<main>
-<noscript><div class="err">JavaScript を有効にしてください。</div></noscript>
 
-<section id="sec-event">
-  <h2><span class="step">1</span>ガチャを選ぶ</h2>
-  <div class="row">
-    <div style="flex:3 1 320px">
-      <label for="event">ガチャイベント(引いたガチャ・引く予定のガチャ)</label>
-      <select id="event"></select>
-    </div>
-    <div class="sm">
-      <label for="gsel">確定枠</label>
-      <select id="gsel">
-        <option value="auto">自動(イベント設定)</option>
-        <option value="0">なし</option>
-        <option value="11">11連確定</option>
-        <option value="15">15連ステップアップ</option>
+<div class="sb" id="sb">
+  <div class="wrap">
+    <div class="sb-row">
+      <span class="sb-label">ガチャ</span>
+      <select id="event" aria-label="ガチャイベント"></select>
+      <select id="gsel" aria-label="確定枠">
+        <option value="auto">確定枠: 自動</option><option value="0">確定枠: なし</option><option value="11">11連確定</option><option value="15">15連ステップアップ</option>
       </select>
+      <button class="btn ghost sm" id="detailsBtn" aria-expanded="false">詳細</button>
     </div>
+    <div class="sb-row sb-info" id="sbInfo"></div>
   </div>
-  <div id="customBox" hidden>
-    <div class="row">
-      <div style="flex:3 1 320px">
-        <label for="customGacha">ガチャ(ID: 名前)</label>
-        <select id="customGacha"></select>
+</div>
+
+<main class="wrap">
+  <section class="card" id="gachaDetails" hidden>
+    <div id="customBox" hidden>
+      <div class="grid2">
+        <div><label for="customGacha">ガチャ(ID: 名前)</label><select id="customGacha"></select></div>
+        <div><label for="customRate">排出率</label><select id="customRate"></select></div>
       </div>
-      <div>
-        <label for="customRate">排出率</label>
-        <select id="customRate"></select>
+      <div class="grid2" id="customNums" hidden style="margin-top:8px">
+        <div><label>レア(/10000)</label><input id="cRare" type="number" min="0" max="10000" value="6970" style="width:100%"></div>
+        <div><label>激レア</label><input id="cSupa" type="number" min="0" max="10000" value="2500" style="width:100%"></div>
+        <div><label>超激レア</label><input id="cUber" type="number" min="0" max="10000" value="500" style="width:100%"></div>
+        <div><label>伝説レア(残り)</label><input id="cLegend" type="text" disabled style="width:100%"></div>
       </div>
     </div>
-    <div class="row" id="customNums" hidden>
-      <div class="sm"><label>レア(/10000)</label><input id="cRare" type="number" min="0" max="10000" value="6970"></div>
-      <div class="sm"><label>激レア</label><input id="cSupa" type="number" min="0" max="10000" value="2500"></div>
-      <div class="sm"><label>超激レア</label><input id="cUber" type="number" min="0" max="10000" value="500"></div>
-      <div class="sm"><label>伝説レア(残り)</label><input id="cLegend" type="text" disabled></div>
-    </div>
-  </div>
-  <div id="eventInfo"></div>
-</section>
+    <div id="eventInfo"></div>
+  </section>
 
-<section id="sec-seek">
-  <h2><span class="step">2</span>シードを調べる(引いた結果から探す)</h2>
-  <div class="note">
-    上で選んだガチャで、レアチケットまたはネコカン150個で引いた結果を<b>引いた順に</b>選んでください。7〜10回分あるとほぼ1つに絞れます。
-    11連を引いた場合は、1〜10体目を普通に選び、<b>11体目(確定枠の超激レア)は「確定枠」グループから</b>選んでください(15連ステップアップも同様に最後の1体が確定枠)。
-    空欄は飛ばされます。シードはガチャを引いたときだけ進むので、一度見つければ以後は「ここまで引いた」で追いかけるだけで済みます。
-  </div>
-  <details>
-    <summary>名前を文字で入力して選択欄に反映する(PC向け)</summary>
-    <textarea id="quick" placeholder="1行に1体ずつ(例)&#10;ネコ魔剣士&#10;ネコバスたぶ&#10;確定 時空神クロノス"></textarea>
-    <div class="row"><div class="btns"><button class="sub" id="quickApply">選択欄に反映</button></div></div>
-    <div id="quickMsg"></div>
-  </details>
-  <ol class="rolls" id="rolls"></ol>
-  <div class="row">
-    <div class="btns">
-      <button id="seekBtn">シードを検索</button>
-      <button class="sub" id="stopBtn" disabled>中止</button>
-      <button class="sub" id="addRows">入力欄を追加</button>
-      <button class="sub" id="clearRows">クリア</button>
+  <section data-tab="seek" class="tabpane" hidden>
+    <div class="card">
+      <h2>引いた結果からシードを見つける</h2>
+      <ol class="howto">
+        <li>上の「ガチャ」で、<b>実際に引いたガチャ</b>を選びます(超ネコ祭と通常では排出率が違います)。</li>
+        <li>レアチケットまたはネコカン150で引いた結果を、<b>引いた順に</b>選びます。7〜10体あるとほぼ1つに決まります。</li>
+        <li>11連を引いたときは、1〜10体目を普通に選び、<b>11体目の超激レアは「確定枠」グループ</b>から選びます(15連ステップアップは最後の1体)。</li>
+      </ol>
+      <div class="rolls-head">
+        <span>引いた順に選ぶ</span>
+        <span class="spacer"></span>
+        <button class="btn ghost sm" id="quickToggle">名前で入力</button>
+        <button class="btn ghost sm" id="addRows">欄を追加</button>
+        <button class="btn ghost sm" id="clearRows">クリア</button>
+      </div>
+      <div id="quickBox" hidden>
+        <textarea id="quick" placeholder="1行に1体ずつ(例)&#10;ネコ魔剣士&#10;ネコバスたぶ&#10;確定 時空神クロノス"></textarea>
+        <div class="row-end"><button class="btn sec sm" id="quickApply">選択欄に反映</button></div>
+        <div id="quickMsg"></div>
+      </div>
+      <ol class="rolls" id="rolls"></ol>
+      <div class="seek-actions">
+        <button class="btn primary lg" id="seekBtn">シードを検索</button>
+        <button class="btn sec" id="stopBtn" disabled>中止</button>
+        <span class="note">全42億通りを端末内で総当たりします(PC数秒〜、スマホ1分前後)。</span>
+      </div>
+      <progress id="prog" value="0" max="1" hidden></progress>
+      <div class="note" id="seekStatus"></div>
     </div>
-  </div>
-  <div style="margin-top:8px"><progress id="prog" value="0" max="1" hidden></progress><div class="note" id="seekStatus"></div></div>
-  <div id="seekResults"></div>
-</section>
+    <div id="seekResults"></div>
+  </section>
 
-<section id="sec-table">
-  <h2><span class="step">3</span>テーブル(次に出るキャラの先読み)</h2>
-  <div class="row">
-    <div>
-      <label for="seed">シード(現在)</label>
-      <input id="seed" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="例: 1234567890">
+  <section data-tab="table" class="tabpane" hidden>
+    <div class="card eval" id="evalBox"></div>
+    <div class="card">
+      <div class="ctrl-grid">
+        <div><label for="seed">シード(現在)</label><div class="inline-row"><input id="seed" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="例: 1234567890"><button class="btn sec sm" id="showBtn">表示</button></div></div>
+        <div><label for="last">直前に引いたキャラ(レア被り判定)</label><select id="last"></select></div>
+        <div><label for="find">狙いのキャラ(当たり扱い)</label><select id="find"></select></div>
+        <div class="sm"><label for="count">行数</label><input id="count" type="number" min="1" max="999" value="100"></div>
+        <div class="sm"><label for="nameForm">名前</label><select id="nameForm"><option value="0">第1形態</option><option value="1">第2形態</option><option value="2">第3形態</option><option value="3">第4形態</option></select></div>
+        <div class="ctrl-btns"><button class="btn sec sm" id="undoBtn" disabled>1つ戻す</button><button class="btn sec sm" id="copyBtn">シードをコピー</button></div>
+      </div>
+      <label class="check"><input type="checkbox" id="usePlat"> 取り方の計算で、プラチナ/レジェンドチケットを使う手も考える(レア被りによるトラック移動を避けられます)</label>
     </div>
-    <div>
-      <label for="last">直前に引いたキャラ(レア被り判定用)</label>
-      <select id="last"></select>
+    <div class="note" id="pathInfo"></div>
+    <div id="tablewrap"></div>
+    <div class="legendbox">
+      <span><span class="sw" style="background:var(--rare-bg)"></span>レア</span>
+      <span><span class="sw" style="background:var(--supa-bg)"></span>激レア</span>
+      <span><span class="sw" style="background:var(--uber-bg)"></span>超激レア</span>
+      <span><span class="sw" style="background:var(--legend-bg)"></span>伝説レア</span>
+      <span><span class="sw" style="box-shadow:0 0 0 2px var(--primary)"></span>次に引く位置</span>
+      <span><span class="sw" style="box-shadow:0 0 0 2px #1b2230"></span>単発で通る位置</span>
+      <span><span class="sw" style="box-shadow:0 0 0 2px #ea580c"></span>11連で得る位置</span>
+      <span>→5B = そこを引いた後の位置／「被り時」= 直前と同じレアだった場合に代わりに出るキャラ／「11連」= そこから11連を引いたときの確定枠</span>
     </div>
-    <div class="sm">
-      <label for="count">表示する行数</label>
-      <input id="count" type="number" min="1" max="999" value="100">
-    </div>
-    <div class="sm">
-      <label for="nameForm">名前の表示</label>
-      <select id="nameForm">
-        <option value="0">第1形態</option><option value="1">第2形態</option><option value="2">第3形態</option><option value="3">第4形態</option>
-      </select>
-    </div>
-    <div>
-      <label for="find">狙いのキャラ(当たり扱いにする)</label>
-      <select id="find"></select>
-    </div>
-    <div class="btns">
-      <button id="showBtn">表示 / 更新</button>
-      <button class="sub" id="undoBtn" disabled>1つ戻す</button>
-      <button class="sub" id="copyBtn">シードをコピー</button>
-    </div>
-  </div>
-  <div id="tableMsg"></div>
-  <label class="inline"><input type="checkbox" id="usePlat"> 取り方の探索で、プラチナ/レジェンドチケットを使う手も考える(レア被りによるトラック移動を避けるのに使えます)</label>
-  <div class="evalbox" id="evalBox"></div>
-  <div class="note" id="pathInfo"></div>
-  <div class="tablewrap" id="tablewrap"></div>
-  <div class="legendbox">
-    <div><span class="sw" style="background:var(--rare)"></span>レア <span class="sw" style="background:var(--supa)"></span>激レア <span class="sw" style="background:var(--uber)"></span>超激レア <span class="sw" style="background:var(--legend)"></span>伝説レア
-      　<span class="sw nextpos" style="background:#fff"></span>次に引く位置　<span class="sw picked" style="background:#fff"></span>クリックした位置までに出るキャラ</div>
-    <div>あなたは常に <b>1A</b> にいます(次に1回引くと1Aのキャラ、その次は2A…)。Bは「もう一方のトラック」で、<b>確定枠(G)</b>を引いたとき、または<b>レア被り(R)</b>が起きたときにA↔Bが入れ替わります。セルの「→5B」は、そこを引いた後の次の位置です。</div>
-    <div>「被り時」の行は、直前に同じレアを引いていた場合に代わりに出るキャラです(ゲームは同じレアキャラの連続を避けて引き直します)。<span class="badge">祭:超激レア</span> は、その位置を超ネコ祭/極ネコ祭で引くと超激レアになることを示します。<span class="badge dbl">2倍:伝説レア</span> は伝説レア2倍のガチャで伝説レアになる位置です。</div>
-  </div>
-</section>
+  </section>
 
-<section id="sec-help">
-  <h2>使い方・仕組み</h2>
-  <details open>
-    <summary>手順</summary>
-    <ol>
-      <li><b>ガチャを選ぶ</b>。実際に引いたガチャと同じイベントを選んでください(超ネコ祭と通常ガチャでは排出率が違うため、違うものを選ぶと見つかりません)。</li>
-      <li><b>7〜10回引いて結果を順番に入力</b>し、「シードを検索」を押します。全 42億9千万通りのシードを総当たりします(PCで数秒〜十数秒、スマホでは1分前後かかることがあります)。</li>
-      <li>候補が1つなら「現在のシードでテーブルを表示」を押します。候補が複数のときは、もう1〜2回引いて結果を追加し、再検索してください。</li>
-      <li>テーブルの <b>1A</b> が次に引けるキャラです。実際に引いたら、そのキャラのセルの「ここまで引いた」を押すと位置(シード)が進みます。11連を引いたときは「確定枠」列の「11連を引いた」を押します。間違えたら「1つ戻す」で戻せます。</li>
-      <li><b>評価</b>: 「この位置の評価」では、次の30回(単発)に出る超激レアの数をそのガチャの平均(通常5%なら1.5体)と比べて、大当たり / かなり良い / 良い / 普通 / やや悪い / 悪い を表示します。あわせて<b>一番の当たり</b>(伝説レア → 狙いのキャラ → 一番近い超激レア の順)の位置と、そこまでの最短の取り方(単発・11連・チケットの組み合わせと、必要なネコカンの目安)を示します。「狙いのキャラ」を選ぶと、そのキャラまでの取り方も出ます。</li>
-      <li>シードは全ガチャ共通なので、同じ位置でも<b>超ネコ祭なら超激レアになる位置</b>があります(セルの「祭:超激レア」バッジ)。ガチャを切り替えて評価を見比べてください。</li>
-      <li>シードはこのブラウザに保存されます。別の端末やブラウザで使う場合に備えて、シードの数字をメモしておくことをおすすめします(メモした数字を「シード(現在)」に入れれば同じテーブルが出ます)。</li>
-    </ol>
-  </details>
-  <details>
-    <summary>仕組み(なぜ先読みできるのか)</summary>
-    <ul>
-      <li>ゲームのセーブデータには、ガチャ用の乱数の「種(シード)」が1つ入っていて、レアガチャを引くたびに決まった計算式(xorshift32)で次の値に進みます。チケットでもネコカンでも、どのイベントでも同じシードを共有しています。</li>
-      <li>1回引くごとに乱数を2回使います(1回目でレアリティ、2回目でそのレアリティ内のどのキャラか)。<b>確定枠</b>(11連・15連の最後)は乱数を1回しか使わないので、以降は半分ずれて「もう一方のトラック(B)」に移ります。</li>
-      <li><b>レア被り</b>: 直前に引いたレアキャラと同じレアキャラが出そうになると、ゲームは乱数を追加で1回使って別のレアキャラに引き直します。これも半回し分ずれるのでトラックが入れ替わります(テーブルでは「被り時」と「R」で表示)。</li>
-      <li>排出率は 1/10000 単位で、通常ガチャはレア 69.7% / 激レア 25% / 超激レア 5% / 伝説レア 0.3%、超ネコ祭・極ネコ祭は 64.7% / 26% / 9% / 0.3% です。キャラの並び順(スロット)はゲームデータのガチャ定義の順です。</li>
-      <li>計算方法とデータは <a href="https://gitlab.com/godfat/battle-cats-rolls" target="_blank" rel="noopener">godfat/battle-cats-rolls</a>(Apache-2.0)の Ruby 実装と日本版データ(bc-jp.yaml)を移植・同梱したもので、同じシード値を入れれば同サイトと同じテーブルになります。</li>
-    </ul>
-  </details>
-  <details>
-    <summary>注意点</summary>
-    <ul>
-      <li>非公式ツールです。ゲーム本体のアップデートで計算式やデータが変わると合わなくなることがあります。</li>
-      <li>ガチャに新しい超激レアが追加されると超激レアの並び(スロット)が変わり、超激レアの位置のキャラが入れ替わることがあります。レア・激レアの位置は基本的に変わりません。</li>
-      <li>同じキャラが複数回入っているガチャ(メタルバスターズなど)では、どのスロットを引いたか判別できないため見つかりにくいことがあります。</li>
-      <li>プラチナガチャ・レジェンドガチャも同じシードを使いますが、「確定枠」ではありません(1回につき乱数2回)。</li>
-      <li>開催期間の日付はデータ上の日付です(実際の切り替えは11:00が多いです)。</li>
-    </ul>
-  </details>
-</section>
+  <section data-tab="help" class="tabpane help" hidden>
+    <div class="card">
+      <h2>使い方</h2>
+      <ol>
+        <li><b>ガチャを選ぶ</b>: 画面上部の「ガチャ」で、実際に引いた(引く予定の)イベントを選びます。「詳細」で排出率と排出テーブルが見られます。</li>
+        <li><b>シードを調べる</b>: 7〜10回引いた結果を順番に選んで「シードを検索」。候補が1つなら「このシードでテーブルを見る」を押します。複数のときは、あと1〜2回引いて結果を追加し、再検索してください。</li>
+        <li><b>テーブルを読む</b>: Aの一番上(▶次)が次に引けるキャラです。実際に引いたら、そのセルを押して「ここまで引いた」を選ぶと位置(シード)が進みます。11連を引いたときはセルを押して「11連を引いた」を選びます。間違えたら「1つ戻す」。</li>
+        <li><b>評価と取り方</b>: テーブル上のカードに、次の30回の超激レアの数をそのガチャの平均と比べた評価(大当たり/かなり良い/良い/普通/やや悪い/悪い)と、「一番の当たり」(伝説レア → 狙いのキャラ → 一番近い超激レア)までの最短の取り方が出ます。「狙いのキャラ」を選ぶと、そのキャラまでの取り方も出ます。</li>
+        <li><b>シードの保存</b>: このブラウザに自動保存されます。別の端末で使うときのために、上部のシードの数字をメモしておくと安心です(数字を「シード(現在)」に入れれば同じテーブルが出ます)。</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h2>AとBのトラック、R(被り)とG(確定枠)</h2>
+      <ul>
+        <li>あなたは常に <b>A の一番上(1A)</b> にいます。単発で引くと 1A → 2A → 3A… と進みます。</li>
+        <li><b>B はもう一方のトラック</b>です。乱数を「半回し」する操作、つまり <b>11連・15連の確定枠(G)</b> と <b>レア被りの引き直し(R)</b> が起きたときに A↔B が入れ替わります。セルの「→5B」は、そこを引いた後の位置です。</li>
+        <li><b>レア被り</b>: 直前に引いたレアキャラと同じレアキャラが出そうになると、ゲームは乱数を追加で1回使って別のレアに引き直します。セルの「被り時」がそのキャラです。</li>
+        <li>セルの <span class="badge">祭:超激レア</span> は、同じ位置を超ネコ祭・極ネコ祭で引くと超激レアになることを示します(シードは全ガチャ共通なので、ガチャを切り替えて評価を見比べられます)。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>仕組み</h2>
+      <ul>
+        <li>セーブデータにはガチャ用の乱数の種(シード)が1つあり、レアガチャを引くたびに決まった計算式(xorshift32)で進みます。チケットでもネコカンでも、どのイベントでも同じシードを使います。</li>
+        <li>1回引くごとに乱数を2回使います(レアリティ → そのレアリティの何番目か)。確定枠と被りの引き直しは1回だけ使うため、半分ずれてトラックが入れ替わります。</li>
+        <li>排出率は 1/10000 単位(通常 69.7 / 25 / 5 / 0.3%、超ネコ祭・極ネコ祭 64.7 / 26 / 9 / 0.3% など)で、イベントデータの値をそのまま使っています。</li>
+        <li>計算方法とデータは <a href="https://gitlab.com/godfat/battle-cats-rolls" target="_blank" rel="noopener">godfat/battle-cats-rolls</a>(Apache-2.0)の Ruby 実装と日本版データを移植・同梱したもので、同じシードを入れれば同サイトと同じテーブルになります。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>注意</h2>
+      <ul>
+        <li>非公式ツールです。ゲームのアップデートで計算式やデータが変わると合わなくなることがあります。</li>
+        <li>ガチャに新しい超激レアが追加されると超激レアの並びが変わり、超激レアの位置のキャラが入れ替わることがあります(レア・激レアの位置は基本的に変わりません)。</li>
+        <li>同じキャラが複数回入っているガチャでは、どちらを引いたか判別できないため見つかりにくいことがあります。</li>
+        <li>プラチナ・レジェンドガチャも同じシードを使いますが「確定枠」ではありません(1回につき乱数2回)。</li>
+        <li>開催期間はデータ上の日付です(実際の切り替えは11:00が多いです)。このページは通信を一切行わず、すべて端末内で計算します。</li>
+      </ul>
+    </div>
+  </section>
 </main>
-<footer>データ・アルゴリズム: godfat/battle-cats-rolls (Apache License 2.0) / このページはサーバーに何も送信しません(すべて端末内で計算)。</footer>
+<footer>データ・アルゴリズム: godfat/battle-cats-rolls (Apache License 2.0)。このページはサーバーに何も送信しません。</footer>
+<div class="backdrop" id="backdrop" hidden></div>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast" hidden></div>
 
 <script id="core">/*__CORE__*/</script>
 <script id="data">/*__DATA__*/</script>
@@ -248,13 +346,14 @@
 (function () {
 'use strict';
 var $ = function (s) { return document.querySelector(s); };
+var $$ = function (s, root) { return Array.prototype.slice.call((root || document).querySelectorAll(s)); };
 var CATS = {};
 Object.keys(DATA.cats).forEach(function (id) { CATS[id] = { id: +id, rarity: DATA.cats[id][0], name: DATA.cats[id][1] }; });
-var EVENTS = DATA.events; // 開始日順
-var GACHA = DATA.gacha;
+var EVENTS = DATA.events, GACHA = DATA.gacha;
 var EV_BY_KEY = {}, LATEST_EVENT_OF = {};
 EVENTS.forEach(function (e) { EV_BY_KEY[e.k] = e; LATEST_EVENT_OF[e.id] = e; });
 var RJP = { 2: 'レア', 3: '激レア', 4: '超激レア', 5: '伝説レア' };
+var RSHORT = { 2: 'レア', 3: '激レア', 4: '超激', 5: '伝説' };
 var RCLS = { 2: 'rare', 3: 'supa', 4: 'uber', 5: 'legend' };
 var PRESETS = [
   { key: 'regular', tag: '通常', label: '通常 (伝説あり) 69.7/25/5/0.3%', rare: 6970, supa: 2500, uber: 500 },
@@ -279,10 +378,8 @@ function pad2(n) { return (n < 10 ? '0' : '') + n; }
 function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
 function mmdd(s) { return s.slice(5).replace('-', '/'); }
 function pct(x) { return (x / 100).toFixed(x % 100 ? (x % 10 ? 2 : 1) : 0) + '%'; }
-function presetFor(r) {
-  for (var i = 0; i < PRESETS.length; i++) { var p = PRESETS[i]; if (p.rare === r.rare && p.supa === r.supa && p.uber === r.uber) return p; }
-  return null;
-}
+function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function presetFor(r) { for (var i = 0; i < PRESETS.length; i++) { var p = PRESETS[i]; if (p.rare === r.rare && p.supa === r.supa && p.uber === r.uber) return p; } return null; }
 function rateTag(r) { var p = presetFor(r); return p ? p.tag : (pct(r.uber) + '超激'); }
 function shortName(s, n) { s = (s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n) + '…' : s; }
 function gachaDisplayName(id) { var e = LATEST_EVENT_OF[id]; return e ? e.n : ((GACHA[id] && GACHA[id].n) || '(名称不明)'); }
@@ -293,12 +390,13 @@ function nm(id, form) {
   for (var i = Math.min(f, c.name.length - 1); i >= 0; i--) if (c.name[i]) return c.name[i];
   return '(ID ' + id + ')';
 }
+function rch(r) { return '<span class="rchip r' + r + '">' + RSHORT[r] + '</span>'; }
 
 // ---- 状態 ----
 var state = { event: null, custom: null, rates: { rare: 6970, supa: 2500, uber: 500 }, ratePreset: 'regular', g: 'auto',
   seed: 0, last: 0, count: 100, find: 0, form: 0, plat: false };
 var history = [];
-var rowsCache = null, labelMap = {}, currentPoolCache = null, lastPlan = null;
+var rowsCache = null, labelMap = {}, currentPoolCache = null, lastPlan = null, lastSummary = null, currentTab = null;
 
 function save() {
   try { localStorage.setItem('nyanko-seed-state', JSON.stringify(state)); } catch (e) {}
@@ -333,8 +431,6 @@ function defaultEvent() {
   for (var i = 0; i < list.length; i++) if (!list[i].p) return list[i].k;
   return list.length ? list[0].k : EVENTS[EVENTS.length - 1].k;
 }
-
-// 現在の設定からプール情報を作る
 function currentInfo() {
   var info = {};
   if (state.event === 'custom') {
@@ -353,7 +449,24 @@ function currentInfo() {
 }
 function uniqIds(list) { var seen = {}, out = []; list.forEach(function (id) { if (!seen[id]) { seen[id] = 1; out.push(id); } }); return out; }
 
-// ---- セクション1 ----
+// ---- タブ・トースト・シート ----
+function showTab(name) {
+  currentTab = name;
+  $$('.tab').forEach(function (b) { b.setAttribute('aria-selected', b.getAttribute('data-tab') === name ? 'true' : 'false'); });
+  $$('.tabpane').forEach(function (s) { s.hidden = s.getAttribute('data-tab') !== name; });
+  try { sessionStorage.setItem('nyanko-tab', name); } catch (e) {}
+  window.scrollTo(0, 0);
+}
+var toastTimer = null;
+function toast(msg) {
+  var t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3200);
+}
+function openSheet(html) { $('#sheet').innerHTML = html; $('#sheet').hidden = false; $('#backdrop').hidden = false; }
+function closeSheet() { $('#sheet').hidden = true; $('#backdrop').hidden = true; }
+function updateSbHeight() { var h = $('#sb').offsetHeight; document.documentElement.style.setProperty('--sb-h', h + 'px'); }
+
+// ---- ガチャ選択(固定バー)と詳細 ----
 function renderEventSelect() {
   var sel = $('#event'), g = groupedEvents(), html = '';
   function opt(e) {
@@ -362,21 +475,20 @@ function renderEventSelect() {
   }
   if (g.ongoing.length) html += '<optgroup label="開催中">' + g.ongoing.map(opt).join('') + '</optgroup>';
   if (g.upcoming.length) html += '<optgroup label="今後">' + g.upcoming.map(opt).join('') + '</optgroup>';
-  var past = g.past.slice().reverse();
-  html += '<optgroup label="過去">' + past.map(opt).join('') + '</optgroup>';
+  html += '<optgroup label="過去">' + g.past.slice().reverse().map(opt).join('') + '</optgroup>';
   html += '<option value="custom"' + (state.event === 'custom' ? ' selected' : '') + '>カスタム(ガチャIDと排出率を指定)</option>';
   sel.innerHTML = html;
-  if (sel.value !== state.event) { state.event = sel.value; }
+  if (sel.value !== state.event) state.event = sel.value;
   $('#gsel').value = String(state.g);
   renderCustom();
   renderEventInfo();
 }
 function renderCustom() {
-  var box = $('#customBox'); box.hidden = state.event !== 'custom';
+  var isCustom = state.event === 'custom';
+  $('#customBox').hidden = !isCustom;
+  if (isCustom) { $('#gachaDetails').hidden = false; $('#detailsBtn').setAttribute('aria-expanded', 'true'); }
   var ids = Object.keys(GACHA).map(Number).sort(function (a, b) { return b - a; });
-  $('#customGacha').innerHTML = ids.map(function (id) {
-    return '<option value="' + id + '"' + (id === state.custom ? ' selected' : '') + '>' + id + ': ' + esc(shortName(gachaDisplayName(id), 40)) + '</option>';
-  }).join('');
+  $('#customGacha').innerHTML = ids.map(function (id) { return '<option value="' + id + '"' + (id === state.custom ? ' selected' : '') + '>' + id + ': ' + esc(shortName(gachaDisplayName(id), 40)) + '</option>'; }).join('');
   $('#customRate').innerHTML = PRESETS.map(function (p) { return '<option value="' + p.key + '"' + (p.key === state.ratePreset ? ' selected' : '') + '>' + esc(p.label) + '</option>'; }).join('');
   $('#customNums').hidden = state.ratePreset !== 'custom';
   $('#cRare').value = state.rates.rare; $('#cSupa').value = state.rates.supa; $('#cUber').value = state.rates.uber;
@@ -385,16 +497,13 @@ function renderCustom() {
 function renderEventInfo() {
   var info = currentInfo(), p = info.pool, r = p.rates, html = '';
   var gtxt = info.g === 11 ? '11連確定あり' : info.g === 15 ? '15連ステップアップ' : 'なし';
-  html += '<div class="rates"><b>' + esc(shortName(info.name, 80)) + '</b><br>排出率: レア <b>' + pct(r.rare) + '</b> / 激レア <b>' + pct(r.supa) + '</b> / 超激レア <b>' + pct(r.uber) + '</b> / 伝説レア <b>' + pct(r.legend) + '</b>　確定枠: ' + gtxt +
-    (info.event ? '　期間: ' + info.event.s + ' 〜 ' + info.event.e + (info.event.p ? '　(' + { platinum: 'プラチナガチャ', legend: 'レジェンドガチャ', 'dl-100m': '1億DL記念' }[info.event.p] + ')' : '') : '') + '</div>';
-  if (!p.exist) {
-    html += '<div class="err">このガチャの中身のデータがありません' + (p.missing.length ? '(未知のキャラID: ' + p.missing.join(', ') + ')' : '') + '。データ更新をお待ちいただくか、別のガチャを選んでください。</div>';
-  } else {
-    html += '<details class="pool"><summary>排出テーブル(レア ' + p.slots[2].length + '体 / 激レア ' + p.slots[3].length + '体 / 超激レア ' + p.slots[4].length + '体 / 伝説レア ' + p.slots[5].length + '体)</summary>';
-    [2, 3, 4, 5].forEach(function (rr) {
-      if (!p.slots[rr].length) return;
-      html += '<h3>' + RJP[rr] + '</h3><ul>' + p.slots[rr].map(function (id, i) { return '<li>' + i + ': ' + esc(nm(id)) + '</li>'; }).join('') + '</ul>';
-    });
+  html += '<div style="font-weight:700;margin-bottom:4px">' + esc(shortName(info.name, 90)) + '</div>';
+  html += '<div class="rates"><span>レア <b>' + pct(r.rare) + '</b></span><span>激レア <b>' + pct(r.supa) + '</b></span><span>超激レア <b>' + pct(r.uber) + '</b></span><span>伝説レア <b>' + pct(r.legend) + '</b></span><span>確定枠: <b>' + gtxt + '</b></span>' +
+    (info.event ? '<span>期間: ' + info.event.s + ' 〜 ' + info.event.e + (info.event.p ? '(' + { platinum: 'プラチナガチャ', legend: 'レジェンドガチャ', 'dl-100m': '1億DL記念' }[info.event.p] + ')' : '') + '</span>' : '') + '</div>';
+  if (!p.exist) html += '<div class="msg err">このガチャの中身のデータがありません' + (p.missing.length ? '(未知のキャラID: ' + p.missing.join(', ') + ')' : '') + '。別のガチャを選んでください。</div>';
+  else {
+    html += '<details class="plain pool" style="margin-top:8px"><summary>排出テーブル(レア ' + p.slots[2].length + ' / 激レア ' + p.slots[3].length + ' / 超激レア ' + p.slots[4].length + ' / 伝説レア ' + p.slots[5].length + ')</summary>';
+    [2, 3, 4, 5].forEach(function (rr) { if (!p.slots[rr].length) return; html += '<h3>' + RJP[rr] + '</h3><ul>' + p.slots[rr].map(function (id, i) { return '<li>' + i + ': ' + esc(nm(id)) + '</li>'; }).join('') + '</ul>'; });
     html += '</details>';
   }
   $('#eventInfo').innerHTML = html;
@@ -402,8 +511,23 @@ function renderEventInfo() {
   renderLastSelect();
   renderFindSelect();
 }
+function renderStatus() {
+  var box = $('#sbInfo'), info = currentPoolCache, h = '';
+  if (!state.seed) {
+    h = '<span class="kv">シード: <b>未設定</b></span><span class="note" style="margin:0">「シードを調べる」タブで見つけるか、分かっていれば「テーブル・評価」タブで入力してください。</span>';
+  } else {
+    var s = startCat();
+    h += '<span class="kv">シード <b>' + state.seed + '</b> <button class="btn ghost sm" id="sbCopy" title="コピー">コピー</button></span>';
+    if (s) h += '<span class="nextcat">次に引く: <b>' + BC.catLabel(s) + '</b> ' + rch(s.rarity) + ' <b class="' + RCLS[s.rarity] + 'txt">' + esc(nm(s.id)) + '</b></span>';
+    if (lastSummary && lastSummary.verdict) h += '<span class="kv">評価: <span class="chip ' + (lastSummary.verdict.grade === 'S' ? 'gold' : lastSummary.verdict.grade === 'B' || lastSummary.verdict.grade === 'A' ? 'blue' : '') + '">' + esc(lastSummary.verdict.text) + '</span></span>';
+    if (!info.pool.exist) h += '<span class="chip">データ無し</span>';
+  }
+  box.innerHTML = h;
+  var c = $('#sbCopy'); if (c) c.onclick = copySeed;
+  updateSbHeight();
+}
 
-// ---- セクション2 ----
+// ---- シード検索 ----
 var ROLL_ROWS = 10;
 function rollOptionsHtml(p) {
   var html = '<option value="">(未入力)</option>';
@@ -417,16 +541,20 @@ function rollOptionsHtml(p) {
 }
 function renderRollSelects() {
   var ol = $('#rolls'), p = currentPoolCache.pool;
-  var prev = Array.prototype.map.call(ol.querySelectorAll('select'), function (s) { return s.value; });
+  var prev = $$('select', ol).map(function (s) { return s.value; });
   var n = Math.max(ROLL_ROWS, prev.length), opts = rollOptionsHtml(p), html = '';
-  for (var i = 0; i < n; i++) html += '<li><span>' + (i + 1) + '.</span><select class="roll" data-i="' + i + '">' + opts + '</select></li>';
+  for (var i = 0; i < n; i++) html += '<li><span>' + (i + 1) + '.</span><select class="roll" aria-label="' + (i + 1) + '体目">' + opts + '</select></li>';
   ol.innerHTML = html;
-  var sels = ol.querySelectorAll('select');
+  var sels = $$('select', ol);
   prev.forEach(function (v, i) { if (v && sels[i]) sels[i].value = v; });
+}
+function addRollRows(n) {
+  var ol = $('#rolls'), cur = $$('select', ol).length, opts = rollOptionsHtml(currentPoolCache.pool);
+  for (var i = 0; i < n; i++) { var li = document.createElement('li'); li.innerHTML = '<span>' + (cur + i + 1) + '.</span><select class="roll">' + opts + '</select>'; ol.appendChild(li); }
 }
 function readEntries() {
   var es = [];
-  Array.prototype.forEach.call($('#rolls').querySelectorAll('select'), function (s) {
+  $$('select', $('#rolls')).forEach(function (s) {
     if (!s.value) return;
     var a = s.value.split(':');
     es.push(a[0] === 'g' ? { type: 'g', id: +a[1] } : { type: 'roll', rarity: +a[0], id: +a[1] });
@@ -436,7 +564,7 @@ function readEntries() {
 function normalizeName(s) { return s.normalize('NFKC').replace(/[\s　]+/g, '').toLowerCase(); }
 function matchCat(token, p) {
   var ids = uniqIds([].concat(p.slots[2], p.slots[3], p.slots[4], p.slots[5]));
-  var q = normalizeName(token); if (!q) return null;
+  var q = normalizeName(token); if (!q) return [];
   var tiers = [[], [], []];
   ids.forEach(function (id) {
     var names = (CATS[id] ? CATS[id].name : []).map(normalizeName);
@@ -451,24 +579,19 @@ function applyQuick() {
   var p = currentPoolCache.pool, lines = $('#quick').value.split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean);
   var out = [], msgs = [];
   lines.forEach(function (line, i) {
-    var g = false, t = line;
-    var m = /^(確定枠?|g|G)[\s:：]*(.*)$/.exec(t); if (m) { g = true; t = m[2]; }
+    var g = false, t = line, m = /^(確定枠?|g|G)[\s:：]*(.*)$/.exec(t);
+    if (m) { g = true; t = m[2]; }
     var ids = matchCat(t, p);
     if (ids.length === 1) {
       var id = ids[0], r = CATS[id].rarity;
       if (g && r !== 4) msgs.push((i + 1) + '行目「' + esc(line) + '」: 確定枠は超激レアのみです(' + esc(nm(id)) + 'は' + RJP[r] + ')');
       else out.push(g ? 'g:' + id : r + ':' + id);
-    } else if (ids.length > 1) msgs.push((i + 1) + '行目「' + esc(line) + '」: 複数に一致 → ' + ids.map(function (id) { return esc(nm(id)); }).join(' / ') + '(もう少し長く入力してください)');
+    } else if (ids.length > 1) msgs.push((i + 1) + '行目「' + esc(line) + '」: 複数に一致 → ' + ids.slice(0, 12).map(function (id) { return esc(nm(id)); }).join(' / ') + (ids.length > 12 ? ' …' : '') + '(もう少し長く入力してください)');
     else msgs.push((i + 1) + '行目「' + esc(line) + '」: このガチャに見つかりません');
   });
-  while ($('#rolls').querySelectorAll('select').length < out.length) addRollRows(5);
-  var sels = $('#rolls').querySelectorAll('select');
-  Array.prototype.forEach.call(sels, function (s, i) { s.value = out[i] || ''; });
-  $('#quickMsg').innerHTML = (out.length ? '<div class="ok">' + out.length + '体を反映しました。</div>' : '') + (msgs.length ? '<div class="warn">' + msgs.join('<br>') + '</div>' : '');
-}
-function addRollRows(n) {
-  var ol = $('#rolls'), cur = ol.querySelectorAll('select').length, opts = rollOptionsHtml(currentPoolCache.pool);
-  for (var i = 0; i < n; i++) { var li = document.createElement('li'); li.innerHTML = '<span>' + (cur + i + 1) + '.</span><select class="roll">' + opts + '</select>'; ol.appendChild(li); }
+  while ($$('select', $('#rolls')).length < out.length) addRollRows(5);
+  $$('select', $('#rolls')).forEach(function (s, i) { s.value = out[i] || ''; });
+  $('#quickMsg').innerHTML = (out.length ? '<div class="msg ok">' + out.length + '体を反映しました。</div>' : '') + (msgs.length ? '<div class="msg warn">' + msgs.join('<br>') + '</div>' : '');
 }
 
 var WORKER_SRC = document.getElementById('core').textContent +
@@ -476,67 +599,56 @@ var WORKER_SRC = document.getElementById('core').textContent +
   'var r=BC.seekRange(s,d.lo,d.hi,d.max,function(f){postMessage({t:"p",f:f})});postMessage({t:"d",found:r.found,truncated:r.truncated});};';
 var blobUrl = null, active = { workers: [], cancelled: false, running: false };
 var MAX_FOUND = 60;
-
 function runSearch(entries, pool, mode, onProgress) {
   return new Promise(function (resolve) {
     var TOTAL = 4294967296;
     var par = Math.min(Math.max(1, navigator.hardwareConcurrency || 4), 8);
     var useWorker = typeof Worker !== 'undefined' && typeof Blob !== 'undefined' && window.URL && URL.createObjectURL;
     if (useWorker && !blobUrl) { try { blobUrl = URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' })); } catch (e) { useWorker = false; } }
-    var test = null;
-    if (useWorker) { try { test = new Worker(blobUrl); test.terminate(); } catch (e) { useWorker = false; } }
+    if (useWorker) { try { var tw = new Worker(blobUrl); tw.terminate(); } catch (e) { useWorker = false; } }
     if (!useWorker) par = 1;
     var step = Math.ceil(TOTAL / par), prog = [], done = 0, found = [], trunc = false;
     var slots = pool.slots, rates = pool.rates;
-    function finishOne(res) {
-      found = found.concat(res.found); trunc = trunc || res.truncated;
-      if (++done === par) resolve({ found: found, truncated: trunc });
-    }
+    function finishOne(res) { found = found.concat(res.found); trunc = trunc || res.truncated; if (++done === par) resolve({ found: found, truncated: trunc }); }
     function report() { var s = 0; for (var i = 0; i < par; i++) s += prog[i] || 0; onProgress(s / par); }
+    function runMain(i, lo, hi) {
+      var search = BC.makeSearch(entries, { slots: slots, rates: rates }, mode), CH = 1 << 25, a = lo, acc = [], tr = false;
+      (function tickRun() {
+        if (active.cancelled) return;
+        var b = Math.min(hi, a + CH);
+        var r = BC.seekRange(search, a, b, MAX_FOUND - acc.length, null);
+        acc = acc.concat(r.found); tr = tr || r.truncated; a = b;
+        prog[i] = (a - lo) / (hi - lo); report();
+        if (a < hi && !tr) setTimeout(tickRun, 0); else finishOne({ found: acc, truncated: tr });
+      })();
+    }
     for (var i = 0; i < par; i++) {
       (function (i) {
         var lo = i * step, hi = Math.min(TOTAL, lo + step);
         prog[i] = 0;
-        if (useWorker) {
-          var w = new Worker(blobUrl); active.workers.push(w);
-          w.onmessage = function (e) {
-            var d = e.data;
-            if (d.t === 'p') { prog[i] = d.f; report(); return; }
-            prog[i] = 1; report(); finishOne(d);
-          };
-          w.onerror = function () { prog[i] = 1; finishOne({ found: [], truncated: false }); };
-          w.postMessage({ entries: entries, slots: slots, rates: rates, mode: mode, lo: lo, hi: hi, max: MAX_FOUND });
-        } else {
-          // Worker が使えない環境: メインスレッドで小分けに実行
-          var search = BC.makeSearch(entries, { slots: slots, rates: rates }, mode), CH = 1 << 25, a = lo, acc = [], tr = false;
-          (function tickRun() {
-            if (active.cancelled) return;
-            var b = Math.min(hi, a + CH);
-            var r = BC.seekRange(search, a, b, MAX_FOUND - acc.length, null);
-            acc = acc.concat(r.found); tr = tr || r.truncated; a = b;
-            prog[i] = (a - lo) / (hi - lo); report();
-            if (a < hi && !tr) setTimeout(tickRun, 0); else finishOne({ found: acc, truncated: tr });
-          })();
-        }
+        if (!useWorker) { runMain(i, lo, hi); return; }
+        var w = new Worker(blobUrl); active.workers.push(w);
+        var failed = false;
+        w.onmessage = function (e) { var d = e.data; if (d.t === 'p') { prog[i] = d.f; report(); return; } prog[i] = 1; report(); finishOne(d); };
+        w.onerror = function () { if (failed) return; failed = true; try { w.terminate(); } catch (e2) {} runMain(i, lo, hi); }; // Worker が動かない環境ではメインスレッドで続行
+        w.postMessage({ entries: entries, slots: slots, rates: rates, mode: mode, lo: lo, hi: hi, max: MAX_FOUND });
       })(i);
     }
   });
 }
 function stopSearch() { active.cancelled = true; active.workers.forEach(function (w) { w.terminate(); }); active.workers = []; active.running = false; $('#seekBtn').disabled = false; $('#stopBtn').disabled = true; }
-
 function seek() {
   var info = currentInfo(), pool = info.pool, entries = readEntries();
   var st = $('#seekStatus'), out = $('#seekResults');
   out.innerHTML = '';
-  if (!pool.exist) { st.innerHTML = '<div class="err">このガチャはデータが無いため検索できません。</div>'; return; }
-  if (!entries.length) { st.innerHTML = '<div class="err">引いた結果を1つ以上選んでください。</div>'; return; }
-  if (entries.length < 5) st.innerHTML = '<div class="warn">入力が' + entries.length + '体だけなので候補が多数出る可能性があります。できれば7体以上入力してください。</div>';
+  if (!pool.exist) { st.innerHTML = '<div class="msg err">このガチャはデータが無いため検索できません。</div>'; return; }
+  if (!entries.length) { st.innerHTML = '<div class="msg err">引いた結果を1つ以上選んでください。</div>'; return; }
   var primary = BC.makeSearch(entries, pool, null);
   active = { workers: [], cancelled: false, running: true };
   $('#seekBtn').disabled = true; $('#stopBtn').disabled = false;
   var prog = $('#prog'); prog.hidden = false; prog.value = 0;
   var t0 = Date.now();
-  function status(txt) { st.innerHTML = '<div>' + txt + '</div>'; }
+  function status(txt) { st.innerHTML = txt; }
   function onProg(f) { prog.value = f; status('検索中… ' + Math.round(f * 100) + '%(' + ((Date.now() - t0) / 1000).toFixed(1) + '秒)'); }
   status('検索を開始します…');
   runSearch(entries, pool, primary.mode, onProg).then(function (res) {
@@ -553,32 +665,31 @@ function seek() {
     var seen = {}, found = res.found.filter(function (f) { var k = f.seed + ':' + f.end; if (seen[k]) return false; seen[k] = 1; return true; }).sort(function (a, b) { return a.seed - b.seed; });
     var lastEntry = entries[entries.length - 1];
     if (!found.length) {
-      status('<div class="err">該当するシードが見つかりませんでした(' + sec + '秒)。<br>・ガチャの選択が実際に引いたものと違う(超ネコ祭と通常など)<br>・入力順や選んだキャラが違う<br>・11連の最後の1体を「確定枠」から選んでいない<br>のいずれかが考えられます。入力を見直して再検索してください。</div>');
+      status('<div class="msg err"><b>該当するシードが見つかりませんでした</b>(' + sec + '秒)。<br>・ガチャの選択が実際に引いたものと違う(超ネコ祭と通常など)<br>・入力順や選んだキャラが違う<br>・11連の最後の1体を「確定枠」から選んでいない<br>のいずれかが考えられます。' + (entries.length < 6 ? '入力が' + entries.length + '体と少ないので、増やすと見つかりやすくなります。' : '') + '</div>');
       return;
     }
     var html = '';
-    if (found.length > 1 || res.truncated) html += '<div class="warn">候補が' + (res.truncated ? found.length + '件以上' : found.length + '件') + '見つかりました。<b>あと1〜2回引いて結果を追加し、再検索</b>すると絞り込めます。または各候補のテーブルを表示して、次に引いたキャラと照らし合わせてください。</div>';
-    else html += '<div class="ok">シードが1つに決まりました(' + sec + '秒)。</div>';
+    if (found.length > 1 || res.truncated) html += '<div class="msg warn">候補が' + (res.truncated ? found.length + '件以上' : found.length + '件') + 'あります。<b>あと1〜2回引いて結果を追加し、再検索</b>すると絞り込めます。各候補のテーブルを見て、次に引いたキャラと照らし合わせる方法もあります。</div>';
+    else html += '<div class="msg ok">シードが1つに決まりました(' + sec + '秒)。</div>';
     found.forEach(function (f, i) {
-      html += '<div class="result"><div>候補' + (i + 1) + ': <b>現在のシード</b>(入力した最後の1体を引いた後) = <span class="seedv">' + f.end + '</span>　<small>開始シード(1体目を引く前) = ' + f.seed + '</small></div>';
+      html += '<div class="card result"><div>候補' + (i + 1) + '　<span class="note" style="margin:0">現在のシード(最後の1体を引いた後)</span><br><span class="seedv">' + f.end + '</span></div>';
       if (f.run) html += '<div class="note">1体目は、直前に引いていた「' + esc(nm(f.prevId)) + '」との被りによる引き直しで出たものとして一致しました。</div>';
-      html += '<div class="note">' + quickVerdict(f.end, lastEntry.id, info) + '</div>';
-      html += '<div class="row" style="margin-top:6px"><div class="btns"><button class="useSeed" data-seed="' + f.end + '" data-last="' + lastEntry.id + '">現在のシードでテーブルを表示(次に引くのが1A)</button>' +
-        '<button class="sub useSeed" data-seed="' + f.seed + '" data-last="' + (f.prevId || 0) + '">開始シードで確認(入力した結果が1Aから並ぶはず)</button></div></div></div>';
+      html += '<div style="margin-top:6px">' + quickVerdict(f.end, lastEntry.id, info) + '</div>';
+      html += '<div class="acts"><button class="btn primary useSeed" data-seed="' + f.end + '" data-last="' + lastEntry.id + '">このシードでテーブルを見る</button>' +
+        '<button class="btn sec sm useSeed" data-seed="' + f.seed + '" data-last="' + (f.prevId || 0) + '" title="入力した結果が1Aから順に並ぶはずです">引く前の状態で確認</button></div></div>';
     });
     out.innerHTML = html;
-    Array.prototype.forEach.call(out.querySelectorAll('.useSeed'), function (b) {
+    $$('.useSeed', out).forEach(function (b) {
       b.onclick = function () {
         pushHistory();
         state.seed = (+b.getAttribute('data-seed')) >>> 0; state.last = +b.getAttribute('data-last');
-        save(); syncTableInputs(); renderTable();
-        $('#sec-table').scrollIntoView({ behavior: 'smooth' });
+        save(); syncTableInputs(); renderTable(); showTab('table');
       };
     });
   });
 }
 
-// ---- セクション3 ----
+// ---- テーブル ----
 function renderLastSelect() {
   var p = currentPoolCache.pool, sel = $('#last'), rares = uniqIds(p.slots[2]);
   var html = '<option value="0">なし / 不明 / レア以外</option>' + rares.map(function (id) { return '<option value="' + id + '">' + esc(nm(id)) + '</option>'; }).join('');
@@ -619,47 +730,104 @@ function startCat() {
   return (state.last && a.id === state.last && a.rerolled) ? a.rerolled : a;
 }
 function renderTable() {
-  var info = currentInfo(), p = info.pool, msg = $('#tableMsg'), wrap = $('#tablewrap');
+  var info = currentInfo(), p = info.pool, wrap = $('#tablewrap');
   $('#pathInfo').textContent = '';
-  rowsCache = null; labelMap = {};
-  if (!state.seed) { msg.innerHTML = '<div class="note">シードが未設定です。上の「シードを調べる」で見つけるか、分かっている場合は入力して「表示 / 更新」を押してください。</div>'; wrap.innerHTML = ''; return; }
-  if (!p.exist) { msg.innerHTML = '<div class="err">このガチャはデータが無いため表示できません。</div>'; wrap.innerHTML = ''; return; }
-  msg.innerHTML = '';
+  rowsCache = null; labelMap = {}; lastSummary = null;
+  if (!state.seed) {
+    wrap.innerHTML = '<div class="card"><b>シードが未設定です。</b><div class="note">「シードを調べる」タブで見つけるか、分かっている場合は上の「シード(現在)」に入力して「表示」を押してください。</div></div>';
+    renderEval(); renderStatus(); return;
+  }
+  if (!p.exist) { wrap.innerHTML = '<div class="msg err">このガチャはデータが無いため表示できません。</div>'; renderEval(); renderStatus(); return; }
   var rows = BC.tracks({ seed: state.seed, pool: p, count: state.count, last: state.last, guaranteedRolls: info.g });
   rowsCache = rows;
   var g = info.g;
-  function cell(cat, isG) {
-    if (!cat) return '<td class="' + (isG ? 'gcell' : 'cell') + '"></td>';
+  function cell(cat) {
     var lab = BC.catLabel(cat); labelMap[lab] = cat;
-    var cls = (isG ? 'gcell cell' : 'cell ' + RCLS[cat.rarity]) + (state.find && cat.id === state.find ? ' found' : '');
-    var h = '<span class="nm">' + esc(nm(cat.id)) + '</span>' + (isG ? '' : festBadge(cat));
-    if (isG) h += ' <span class="nx">→' + (cat.next ? BC.catLabel(cat.next) : '?') + '</span>';
-    else if (cat.next && cat.next.track !== cat.track) h += ' <span class="nx">→' + BC.catLabel(cat.next) + '</span>';
-    h += '<button class="adv mini" data-label="' + lab + '" title="' + (isG ? 'ここで' + g + '連を引いた' : 'このキャラまで引いた') + 'ことにして位置を進める">' + (isG ? g + '連を引いた' : 'ここまで引いた') + '</button>';
-    if (cat.rerolled && !isG) {
+    var h = '<div class="cell r' + cat.rarity + (state.find && cat.id === state.find ? ' found' : '') + '" data-label="' + lab + '" role="button" tabindex="0">';
+    h += '<div class="c-top"><span class="pos">' + lab + '</span>' + rch(cat.rarity) + festBadge(cat) + (cat.next && cat.next.track !== cat.track ? '<span class="nx">→' + BC.catLabel(cat.next) + '</span>' : '') + '</div>';
+    h += '<div class="nm">' + esc(nm(cat.id)) + '</div>';
+    if (cat.rerolled) {
       var rr = cat.rerolled, rl = BC.catLabel(rr); labelMap[rl] = rr;
-      h += '<div class="rr" data-label="' + rl + '"><span class="tag">被り時</span><span class="nm">' + esc(nm(rr.id)) + '</span> <span class="nx">→' + (rr.next ? BC.catLabel(rr.next) : '?') + '</span><button class="adv mini" data-label="' + rl + '">ここまで引いた</button></div>';
+      h += '<div class="c-sub rr" data-label="' + rl + '"><span class="k">被り時</span><span>' + esc(nm(rr.id)) + '</span><span class="nx">→' + (rr.next ? BC.catLabel(rr.next) : '?') + '</span></div>';
     }
-    return '<td class="' + cls + '" data-label="' + lab + '">' + h + '</td>';
+    if (g && cat.guaranteed) {
+      var gc = cat.guaranteed, gl = BC.catLabel(gc); labelMap[gl] = gc;
+      h += '<div class="c-sub gg" data-label="' + gl + '"><span class="k">' + g + '連</span><span class="gnm">' + esc(nm(gc.id)) + '</span><span class="nx">→' + (gc.next ? BC.catLabel(gc.next) : '?') + '</span></div>';
+    }
+    if (g && cat.rerolled && cat.rerolled.guaranteed) {
+      var rg = cat.rerolled.guaranteed, rgl = BC.catLabel(rg); labelMap[rgl] = rg;
+      h += '<div class="c-sub gg" data-label="' + rgl + '"><span class="k">被り時' + g + '連</span><span class="gnm">' + esc(nm(rg.id)) + '</span><span class="nx">→' + (rg.next ? BC.catLabel(rg.next) : '?') + '</span></div>';
+    }
+    return h + '</div>';
   }
-  function gcell(cat) {
-    if (!g) return '';
-    if (!cat.guaranteed && !(cat.rerolled && cat.rerolled.guaranteed)) return '<td class="gcell"></td>';
-    var h = '';
-    if (cat.guaranteed) { var gc = cat.guaranteed, gl = BC.catLabel(gc); labelMap[gl] = gc; h += '<div data-label="' + gl + '"><span class="nm">' + esc(nm(gc.id)) + '</span> <span class="nx">→' + (gc.next ? BC.catLabel(gc.next) : '?') + '</span><button class="adv mini" data-label="' + gl + '">' + g + '連を引いた</button></div>'; }
-    if (cat.rerolled && cat.rerolled.guaranteed) { var rg = cat.rerolled.guaranteed, rgl = BC.catLabel(rg); labelMap[rgl] = rg; h += '<div class="rr" data-label="' + rgl + '"><span class="tag">被り時</span><span class="nm">' + esc(nm(rg.id)) + '</span> <span class="nx">→' + (rg.next ? BC.catLabel(rg.next) : '?') + '</span><button class="adv mini" data-label="' + rgl + '">' + g + '連を引いた</button></div>'; }
-    return '<td class="gcell cell" data-label="' + (cat.guaranteed ? BC.catLabel(cat.guaranteed) : BC.catLabel(cat.rerolled.guaranteed)) + '">' + h + '</td>';
-  }
-  var head = '<tr><th class="no">No.</th><th>A の結果</th>' + (g ? '<th>A で' + g + '連の確定枠</th>' : '') + '<th>B の結果</th>' + (g ? '<th>B で' + g + '連の確定枠</th>' : '') + '<th class="no">No.</th></tr>';
-  var body = rows.map(function (row, i) {
-    var a = row[0], b = row[1];
-    return '<tr><th class="no">' + (i + 1) + 'A</th>' + cell(a, false) + gcell(a) + cell(b, false) + gcell(b) + '<th class="no">' + (i + 1) + 'B</th></tr>';
-  }).join('');
-  wrap.innerHTML = '<table class="tracks"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
+  var body = rows.map(function (row) { return '<div class="trow">' + cell(row[0]) + cell(row[1]) + '</div>'; }).join('');
+  wrap.innerHTML = '<div class="thead"><div class="th">A <small>あなたのトラック</small></div><div class="th b">B <small>もう一方のトラック</small></div></div><div class="rows" id="rows">' + body + '</div>';
   var s = startCat();
-  if (s) { var el = elFor(BC.catLabel(s)); if (el) el.classList.add('nextpos'); }
-  $('#pathInfo').innerHTML = '次に引く位置: <b>' + (s ? BC.catLabel(s) : '1A') + '</b>(' + esc(nm(s ? s.id : -1)) + ')。セルをクリックすると、そこまで引いたときに出るキャラと次の位置を強調表示します。';
+  if (s) { var el = elFor(BC.catLabel(s)); if (el) { el.classList.add('nextpos'); if (el.classList.contains('cell')) el.insertAdjacentHTML('afterbegin', '<span class="nexttag">▶ 次に引く</span>'); } }
+  $('#pathInfo').innerHTML = 'セルを押すと「ここまで引いた」などの操作ができます。次に引く位置: <b>' + (s ? BC.catLabel(s) : '1A') + '</b>(' + esc(nm(s ? s.id : -1)) + ')';
   renderEval();
+  renderStatus();
+}
+function elFor(label) {
+  var wrap = $('#tablewrap');
+  return wrap.querySelector('.c-sub[data-label="' + label + '"]') || wrap.querySelector('.cell[data-label="' + label + '"]');
+}
+function clearMarks() { $$('.picked, .pickedc, .nextpos, .plat', $('#tablewrap')).forEach(function (el) { el.classList.remove('picked', 'pickedc', 'nextpos', 'plat'); }); }
+function pathTo(target) {
+  var c = startCat(), path = [], limit = rowsCache.length * 2 + 20;
+  while (c && c !== target && path.length < limit) { path.push(c); c = c.next; }
+  return c === target ? path : null;
+}
+function mark(cat, cls) { var el = elFor(BC.catLabel(cat)); if (el) el.classList.add(cls); }
+function highlight(label) {
+  var target = labelMap[label]; if (!target || !rowsCache) return;
+  clearMarks();
+  var g = currentPoolCache.g, next = null, text = '';
+  if (/G$/.test(label)) {
+    var base = labelMap[label.replace(/G$/, '')], pre = base ? pathTo(base) : null;
+    if (pre) pre.forEach(function (c) { mark(c, 'picked'); });
+    var c = base, run = [];
+    for (var i = 0; i < g - 1 && c; i++) { run.push(c); mark(c, 'pickedc'); c = c.next; }
+    mark(target, 'pickedc');
+    next = target.next;
+    text = (pre && pre.length ? '単発で' + pre.length + '回引いてから ' : '') + label.replace(/G$/, '') + ' で' + g + '連: ' + run.map(function (x) { return nm(x.id); }).join('、') + '、確定枠 ' + nm(target.id) + (pre ? '' : '(現在位置からの経路が見つからないため、' + label.replace(/G$/, '') + ' に居る前提)');
+  } else {
+    var path = pathTo(target);
+    if (path) path.forEach(function (c) { mark(c, 'picked'); });
+    mark(target, 'picked');
+    next = target.next;
+    var all = (path || []).concat([target]);
+    text = path ? all.length + '回引くと出るキャラ: ' + all.map(function (x) { return nm(x.id); }).join('、') : '現在位置からの経路が見つかりません(' + label + ' に居る前提)。';
+  }
+  if (next) { mark(next, 'nextpos'); text += ' → 次の位置 ' + BC.catLabel(next) + '(' + nm(next.id) + ')'; }
+  $('#pathInfo').textContent = text;
+}
+function advanceTo(label) {
+  var cat = labelMap[label]; if (!cat) return;
+  pushHistory();
+  state.seed = cat.slotSeed >>> 0; state.last = cat.id;
+  save(); syncTableInputs(); renderTable(); closeSheet();
+  toast(label + '(' + nm(cat.id) + ')まで引いたことにして進めました。新しいシード: ' + state.seed);
+}
+function copySeed() {
+  var txt = String(state.seed);
+  function done(ok) { toast(ok ? 'シード ' + txt + ' をコピーしました' : 'コピーできませんでした。シード: ' + txt); }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { done(true); }, function () { done(false); });
+  else { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(ok); }
+}
+function sheetFor(label) {
+  var base = label.replace(/[RG]+$/, ''), cat = labelMap[base]; if (!cat) return;
+  var g = currentPoolCache.g, h = '';
+  h += '<div class="sh-head"><span class="pos">' + base + '</span>' + rch(cat.rarity) + '<b class="' + RCLS[cat.rarity] + 'txt">' + esc(nm(cat.id)) + '</b>' + festBadge(cat) + '</div>';
+  h += '<div class="sh-sub">単発でここまで引くと、次の位置は ' + (cat.next ? BC.catLabel(cat.next) + '(' + esc(nm(cat.next.id)) + ')' : '表示範囲外') + '</div>';
+  h += '<button class="btn primary block" data-act="adv" data-label="' + base + '">' + base + ' まで引いた(位置を進める)</button>';
+  if (cat.rerolled) h += '<button class="btn sec block" data-act="adv" data-label="' + BC.catLabel(cat.rerolled) + '">被り時の「' + esc(nm(cat.rerolled.id)) + '」として ' + base + ' まで引いた(次は ' + (cat.rerolled.next ? BC.catLabel(cat.rerolled.next) : '?') + ')</button>';
+  if (g && cat.guaranteed) h += '<button class="btn sec block" data-act="adv" data-label="' + BC.catLabel(cat.guaranteed) + '">' + base + ' から' + g + '連を引いた(確定枠: ' + esc(nm(cat.guaranteed.id)) + ' → 次は ' + (cat.guaranteed.next ? BC.catLabel(cat.guaranteed.next) : '?') + ')</button>';
+  if (g && cat.rerolled && cat.rerolled.guaranteed) h += '<button class="btn sec block" data-act="adv" data-label="' + BC.catLabel(cat.rerolled.guaranteed) + '">被り時として ' + base + ' から' + g + '連を引いた(確定枠: ' + esc(nm(cat.rerolled.guaranteed.id)) + ' → 次は ' + (cat.rerolled.guaranteed.next ? BC.catLabel(cat.rerolled.guaranteed.next) : '?') + ')</button>';
+  h += '<button class="btn ghost block" data-act="path" data-label="' + label + '">' + label + ' までの経路をテーブルに表示</button>';
+  if (g && cat.guaranteed) h += '<button class="btn ghost block" data-act="path" data-label="' + BC.catLabel(cat.guaranteed) + '">' + base + ' から' + g + '連を引いたときの経路を表示</button>';
+  h += '<button class="btn ghost block" data-act="close">閉じる</button>';
+  openSheet(h);
 }
 
 // ---- 評価と取り方 ----
@@ -683,40 +851,38 @@ function summarize(rows, start, info) {
   return res;
 }
 function multiCost(g) { return g === 15 ? 2100 : 1500; }
-function planCostText(d, g) {
-  var food = d.singles * 150 + d.multis * multiCost(g), parts = [];
-  if (d.singles) parts.push('単発' + d.singles + '回');
-  if (d.multis) parts.push(g + '連' + d.multis + '回');
-  if (d.plat) parts.push('チケット' + d.plat + '枚');
-  return parts.join(' + ') + '、ネコカン約' + food + '個相当(単発はレアチケットでも可)';
-}
 function describePlan(P, tail, info) {
-  var g = info.g, steps = P.steps(tail), lines = [], i = 0, singles = 0, multis = 0, plats = 0;
+  var g = info.g, steps = P.steps(tail), out = [], i = 0, singles = 0, multis = 0, plats = 0;
   while (i < steps.length) {
     var s = steps[i];
     if (s.move === 'single') {
       var j = i, parts = [];
       while (j < steps.length && steps[j].move === 'single') { parts.push(steps[j].from); j++; }
       singles += parts.length;
-      var txt = '単発で' + parts.length + '回引く: ' + parts.map(function (f) { return BC.catLabel(f) + ' ' + nm(f.id) + (f.rarity >= 4 ? '★' : ''); }).join(' → ');
-      parts.forEach(function (f) {
-        if (/R$/.test(BC.catLabel(f))) txt += '。' + BC.catLabel(f).replace(/R$/, '') + ' は直前と同じレアになるため「' + nm(f.id) + '」に引き直され、次は ' + (f.next ? BC.catLabel(f.next) : '?') + ' に移る';
-      });
-      lines.push(txt); i = j;
+      var isLast = j === steps.length;
+      var detail = parts.map(function (f, k) { var star = f.rarity >= 4 || (isLast && k === parts.length - 1); return BC.catLabel(f) + ' ' + (star ? '<b>' : '') + esc(nm(f.id)) + (f.rarity >= 4 ? '★' : '') + (star ? '</b>' : ''); }).join(' → ');
+      var sw = [];
+      parts.forEach(function (f) { if (/R$/.test(BC.catLabel(f))) sw.push(BC.catLabel(f).replace(/R$/, '') + ' は直前と同じレアのため「' + esc(nm(f.id)) + '」に引き直し → 次は ' + (f.next ? BC.catLabel(f.next) : '?')); });
+      out.push({ kind: 'single', title: '単発 ×' + parts.length, detail: detail + (sw.length ? '<div class="sw">※ ' + sw.join('／') + '</div>' : ''), plain: '単発で' + parts.length + '回(' + parts.map(function (f) { return BC.catLabel(f) + ' ' + nm(f.id); }).join(' → ') + ')' });
+      i = j;
     } else if (s.move === 'multi') {
       var f2 = s.from, hits = s.got.filter(function (t) { return t.rarity >= 4; });
       multis++;
-      lines.push(BC.catLabel(f2) + ' から' + g + '連を引く(確定枠: ' + nm(f2.guaranteed.id) + ')' +
-        (hits.length ? '。この' + g + '体の中に ' + hits.map(function (t) { return (/G$/.test(BC.catLabel(t)) ? '確定枠' : BC.catLabel(t)) + ' ' + nm(t.id) + '★'; }).join('、') + ' が入っている' : '') +
-        '。終わると ' + (f2.guaranteed.next ? BC.catLabel(f2.guaranteed.next) : '?') + ' へ');
+      var hitTxt = hits.map(function (t) { return (/G$/.test(BC.catLabel(t)) ? '確定枠 ' : BC.catLabel(t) + ' ') + '<b>' + esc(nm(t.id)) + '</b>★'; }).join('、');
+      out.push({ kind: 'multi', title: g + '連 @' + BC.catLabel(f2), detail: '確定枠: ' + esc(nm(f2.guaranteed.id)) + (hits.length ? '　この' + g + '体に含まれる: ' + hitTxt : '') + '　→ 終わると ' + (f2.guaranteed.next ? BC.catLabel(f2.guaranteed.next) : '?'), plain: BC.catLabel(f2) + 'から' + g + '連(確定枠 ' + nm(f2.guaranteed.id) + ')' });
       i++;
     } else {
       var f3 = s.from, to = P.moveTo(f3, 'plat'); plats++;
-      lines.push(BC.catLabel(f3) + ' でプラチナ(またはレジェンド)チケットを1枚使う。この位置の分だけ進んで ' + (to ? BC.catLabel(to) : '?') + ' へ(レア被りによるトラック移動を避けられる)');
+      out.push({ kind: 'plat', title: 'チケット @' + BC.catLabel(f3), detail: 'プラチナ(またはレジェンド)チケットを1枚使い、この位置の分だけ進んで ' + (to ? BC.catLabel(to) : '?') + ' へ(レア被りによるトラック移動を避ける)', plain: BC.catLabel(f3) + 'でチケット1枚' });
       i++;
     }
   }
-  return { lines: lines, rolls: tail.rolls, singles: singles, multis: multis, plat: plats, after: P.after(tail) };
+  var food = singles * 150 + multis * multiCost(g), parts2 = [];
+  if (singles) parts2.push('単発' + singles + '回'); if (multis) parts2.push(g + '連' + multis + '回'); if (plats) parts2.push('チケット' + plats + '枚');
+  return { steps: out, rolls: tail.rolls, singles: singles, multis: multis, plat: plats, after: P.after(tail), food: food, costText: parts2.join(' + ') + '、ネコカン約' + fmt(food) + '個相当(単発はレアチケットでも可)' };
+}
+function stepsHtml(d) {
+  return '<ol class="steps">' + d.steps.map(function (s, i) { return '<li><span class="stp ' + (s.kind === 'multi' ? 'm' : s.kind === 'plat' ? 'p' : '') + '">' + (i + 1) + '</span><div><div class="st-t">' + s.title + '</div><div class="st-d">' + s.detail + '</div></div></li>'; }).join('') + '</ol>';
 }
 function bestMultiOnTrack(start, P, info) {
   var g = info.g; if (!g) return null;
@@ -739,58 +905,62 @@ function collectPrizes(P) {
   legends.sort(byCost); ubers.sort(byCost); targets.sort(byCost);
   return { legends: legends, ubers: ubers, targets: targets };
 }
+function gradeChip(v) { return '<span class="chip ' + (v.grade === 'S' ? 'gold' : (v.grade === 'A' || v.grade === 'B') ? 'blue' : '') + '">' + esc(v.text) + '</span>'; }
 function quickVerdict(seed, lastId, info) {
   var rows = BC.tracks({ seed: seed, pool: info.pool, count: 100, last: lastId, guaranteedRolls: info.g });
   var a = rows[0][0], start = (lastId && a.id === lastId && a.rerolled) ? a.rerolled : a;
   var sm = summarize(rows, start, info);
   var P = BC.plan(rows, start, { guaranteedRolls: info.g, platinum: false });
   var pz = collectPrizes(P), best = pz.legends[0] || pz.targets[0] || pz.ubers[0];
-  var txt = '評価: <b>' + sm.verdict.text + '</b>';
-  if (!sm.platinumLike) txt += '(次の30回で超激レア' + sm.n30 + '体' + (sm.l30 ? '・伝説レア' + sm.l30 + '体' : '') + '、平均' + sm.exp30.toFixed(1) + '体' + (sm.first ? '、最初は' + sm.first + '回目' : '') + ')';
-  if (best) txt += '　' + (pz.legends[0] ? '一番の当たり' : pz.targets[0] ? '狙いのキャラ' : '一番近い超激レア') + ': ' + RJP[best.node.rarity] + '「' + esc(nm(best.node.id)) + '」が ' + best.label + '(' + best.tail.rolls + '体で到達)。取り方は下のテーブル欄に出ます。';
+  var txt = '評価 ' + gradeChip(sm.verdict);
+  if (!sm.platinumLike) txt += '　次の30回で超激レア <b>' + sm.n30 + '体</b>' + (sm.l30 ? '・伝説レア <b>' + sm.l30 + '体</b>' : '') + '(平均 ' + sm.exp30.toFixed(1) + '体)' + (sm.first ? '、最初は <b>' + sm.first + '回目</b>' : '');
+  txt += '<br>次に引く: ' + rch(start.rarity) + ' <b class="' + RCLS[start.rarity] + 'txt">' + esc(nm(start.id)) + '</b>';
+  if (best) txt += '　／　' + (pz.legends[0] ? '一番の当たり' : pz.targets[0] ? '狙いのキャラ' : '一番近い超激レア') + ': ' + rch(best.node.rarity) + ' <b class="' + RCLS[best.node.rarity] + 'txt">' + esc(nm(best.node.id)) + '</b>(' + best.label + '、' + best.tail.rolls + '体で到達)';
   return txt;
 }
 function renderEval() {
   var box = $('#evalBox');
-  if (!rowsCache) { box.innerHTML = ''; box.hidden = true; return; }
+  if (!rowsCache) { box.innerHTML = ''; box.hidden = true; lastSummary = null; return; }
   box.hidden = false;
   var info = currentPoolCache, start = startCat(), g = info.g;
   var P = BC.plan(rowsCache, start, { guaranteedRolls: g, platinum: state.plat });
   lastPlan = P;
-  var sm = summarize(rowsCache, start, info);
-  var h = '<div class="evalhead">この位置の評価(シード ' + state.seed + '、' + esc(shortName(info.name, 30)) + ')</div>';
-  h += '<div class="verdict g' + sm.verdict.grade + '">評価: <b>' + sm.verdict.text + '</b><small>' + sm.verdict.why + '</small></div>';
-  if (!sm.platinumLike) {
-    h += '<div class="note">次の30回を単発(レアチケット / ネコカン150)で引くと: 超激レア <b>' + sm.n30 + '体</b>' + (sm.l30 ? '、伝説レア <b>' + sm.l30 + '体</b>' : '') + '(このガチャの平均は約 ' + sm.exp30.toFixed(1) + ' 体)。最初の超激レア以上は ' + (sm.first ? '<b>' + sm.first + '回目</b>' : '30回以内に無し') + '。</div>';
+  var sm = summarize(rowsCache, start, info); lastSummary = sm;
+  var h = '<div class="eval-top">';
+  h += '<div class="grade g' + sm.verdict.grade + '"><div class="g">' + (sm.verdict.grade === '-' ? '–' : sm.verdict.grade) + '</div><div class="gt">' + esc(sm.verdict.text) + '</div></div>';
+  h += '<div class="stats">';
+  if (sm.platinumLike) h += '<div class="stat"><div class="k">評価</div><div class="s">' + esc(sm.verdict.why) + '</div></div>';
+  else {
+    h += '<div class="stat"><div class="k">次の30回(単発)の超激レア</div><div class="v">' + (sm.n30 + sm.l30) + '<small>体</small></div><div class="s">このガチャの平均 ' + sm.exp30.toFixed(1) + '体' + (sm.l30 ? '・うち伝説レア' + sm.l30 + '体' : '') + '</div></div>';
+    h += '<div class="stat"><div class="k">最初の超激レアまで</div><div class="v">' + (sm.first ? sm.first + '<small>回目</small>' : '–') + '</div><div class="s">' + (sm.first ? 'ネコカン約' + fmt(sm.first * 150) + '個' : '30回以内に無し') + '</div></div>';
     var bm = bestMultiOnTrack(start, P, info);
-    if (bm) h += '<div class="note">' + g + '連のおすすめ: ' + (bm.rolls ? '単発を <b>' + bm.rolls + '回</b>引いてから ' : '今すぐ ') + '<b>' + bm.label + '</b> で' + g + '連を引くと、超激レア以上が <b>' + bm.n + '体</b>(確定枠を含む)出ます。</div>';
+    if (bm) h += '<div class="stat"><div class="k">' + g + '連のおすすめ開始位置</div><div class="v">' + bm.label + '</div><div class="s">' + (bm.rolls ? '単発' + bm.rolls + '回の後に' : '今すぐ') + g + '連 → 超激レア以上 ' + bm.n + '体(確定枠含む)</div></div>';
+    else if (!g) h += '<div class="stat"><div class="k">11連</div><div class="s">このガチャには確定枠がありません。上の「確定枠」で 11連確定 を選ぶと11連の計算もします。</div></div>';
   }
+  h += '</div></div>';
   var pz = collectPrizes(P), best = pz.legends[0] || pz.targets[0] || pz.ubers[0];
   var unreachable = [];
   P.nodes.forEach(function (x) { if (x.rarity === 5 && x.id > 0 && !P.best.has(x)) unreachable.push(x); });
   if (best) {
     var d = describePlan(P, best.tail, info);
     var kind = pz.legends[0] ? '一番の当たり(伝説レア)' : pz.targets[0] ? '狙いのキャラ' : '一番近い超激レア';
-    h += '<div class="bestbox"><div class="besthead"><span class="tag">' + kind + '</span> <b class="' + RCLS[best.node.rarity] + 'txt">' + esc(nm(best.node.id)) + '</b>(' + RJP[best.node.rarity] + ')は <b>' + best.label + '</b> にあります。</div>';
-    h += '<div>取り方: 合計 ' + d.rolls + '体(' + planCostText(d, g) + ')</div><ol>' + d.lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ol>';
-    h += '<div class="note">取った後の位置: ' + (d.after ? BC.catLabel(d.after) + '(' + esc(nm(d.after.id)) + ')' : '表示範囲外') + '</div>';
-    h += '<button class="sub mini showPlan" data-label="' + best.label + '">テーブルで経路を見る</button></div>';
-  } else {
-    h += '<div class="note">表示範囲内に届く超激レアがありません。行数を増やすか、別のガチャで確認してください。</div>';
-  }
-  if (unreachable.length) h += '<div class="warn">伝説レア ' + unreachable.map(function (x) { return BC.catLabel(x) + ' ' + esc(nm(x.id)); }).join('、') + ' は反対のトラックにあり、このガチャの操作だけでは届きません。確定枠のある11連(別のガチャでも可)を1回引くとA↔Bが入れ替わるので、そのあと改めてここで確認してください。</div>';
+    h += '<div class="prize"><div class="prize-h"><span class="chip gold">' + kind + '</span>' + rch(best.node.rarity) + '<b class="' + RCLS[best.node.rarity] + 'txt">' + esc(nm(best.node.id)) + '</b><span>は <b>' + best.label + '</b> にあります</span></div>';
+    h += stepsHtml(d);
+    h += '<div class="total">合計 <b>' + d.rolls + '体</b>(' + d.costText + ')　取った後の位置: ' + (d.after ? BC.catLabel(d.after) + '(' + esc(nm(d.after.id)) + ')' : '表示範囲外') + '</div>';
+    h += '<div style="margin-top:8px"><button class="btn sec sm showPlan" data-label="' + best.label + '">テーブルで経路を見る</button></div></div>';
+  } else h += '<div class="prize"><div class="note">表示範囲内に届く超激レアがありません。行数を増やすか、別のガチャで確認してください。</div></div>';
+  if (unreachable.length) h += '<div class="msg warn">伝説レア ' + unreachable.map(function (x) { return x.seq + (x.track ? 'B' : 'A') + ' ' + esc(nm(x.id)); }).join('、') + ' は反対のトラックにあり、このガチャの操作だけでは届きません。確定枠のある11連(別のガチャでも可)を1回引くとA↔Bが入れ替わるので、そのあと改めて確認してください。</div>';
   if (state.find && !pz.targets.length) h += '<div class="note">狙いのキャラ「' + esc(nm(state.find)) + '」は、表示範囲内の届く位置にありません(行数を増やすと見つかることがあります)。</div>';
   var list = pz.legends.concat(pz.targets.filter(function (t) { return t.node.rarity < 4; }), pz.ubers).slice(0, 12);
   if (list.length) {
-    h += '<details><summary>超激レア以上の位置と取り方(近い順、' + list.length + '件)</summary><div class="tablewrap"><table class="plans"><tr><th>位置</th><th>キャラ</th><th>必要数</th><th>取り方</th><th></th></tr>' +
+    h += '<details class="plain" style="margin-top:10px"><summary>超激レア以上の位置と取り方(近い順、' + list.length + '件)</summary><div class="tablewrap-x"><table class="plans"><tr><th>位置</th><th>キャラ</th><th>必要数</th><th>取り方</th><th></th></tr>' +
       list.map(function (rec) {
         var d2 = describePlan(P, rec.tail, info);
-        return '<tr><td>' + rec.label + '</td><td class="' + RCLS[rec.node.rarity] + 'txt">' + esc(nm(rec.node.id)) + '</td><td>' + d2.rolls + '体<br><small>' + planCostText(d2, g) + '</small></td><td>' + d2.lines.map(esc).join('<br>') + '</td><td><button class="sub mini showPlan" data-label="' + rec.label + '">経路</button></td></tr>';
+        return '<tr><td>' + rec.label + '</td><td class="' + RCLS[rec.node.rarity] + 'txt"><b>' + esc(nm(rec.node.id)) + '</b></td><td>' + d2.rolls + '体<br><small>ネコカン約' + fmt(d2.food) + (d2.plat ? '・チケット' + d2.plat : '') + '</small></td><td>' + d2.steps.map(function (s) { return '<b>' + s.title + '</b> ' + s.detail; }).join('<br>') + '</td><td><button class="btn ghost sm showPlan" data-label="' + rec.label + '">経路</button></td></tr>';
       }).join('') + '</table></div></details>';
   }
   box.innerHTML = h;
 }
-function mark(cat, cls) { var el = elFor(BC.catLabel(cat)); if (el) el.classList.add(cls); }
 function markPlan(label) {
   var P = lastPlan; if (!P) return;
   var target = null, tail = null;
@@ -805,93 +975,53 @@ function markPlan(label) {
   var after = P.after(tail);
   if (after) mark(after, 'nextpos');
   var d = describePlan(P, tail, currentPoolCache);
-  $('#pathInfo').textContent = label + ' ' + nm(target.id) + ' の取り方: ' + d.lines.join(' / ') + (after ? ' → 取った後の位置: ' + BC.catLabel(after) : '');
+  $('#pathInfo').textContent = label + ' ' + nm(target.id) + ' の取り方: ' + d.steps.map(function (s) { return s.plain; }).join(' → ') + (after ? ' → 取った後の位置 ' + BC.catLabel(after) : '');
   var el = elFor(label);
-  if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-}
-function elFor(label) {
-  var wrap = $('#tablewrap');
-  return wrap.querySelector('.rr[data-label="' + label + '"]') || wrap.querySelector('div[data-label="' + label + '"]') || wrap.querySelector('td[data-label="' + label + '"]');
-}
-function clearMarks() {
-  Array.prototype.forEach.call($('#tablewrap').querySelectorAll('.picked, .pickedc, .nextpos'), function (el) { el.classList.remove('picked', 'pickedc', 'nextpos'); });
-}
-function pathTo(target) {
-  var c = startCat(), path = [], limit = rowsCache.length * 2 + 20;
-  while (c && c !== target && path.length < limit) { path.push(c); c = c.next; }
-  return c === target ? path : null;
-}
-function highlight(label) {
-  var target = labelMap[label]; if (!target) return;
-  clearMarks();
-  var info = currentPoolCache, g = info.g, picked = [], next = null, text = '';
-  if (/G$/.test(label)) {
-    var base = labelMap[label.replace(/G$/, '')];
-    var pre = base ? pathTo(base) : null;
-    if (pre) pre.forEach(function (c) { picked.push([c, 'picked']); });
-    var c = base, run = [];
-    for (var i = 0; i < g - 1 && c; i++) { run.push(c); picked.push([c, 'pickedc']); c = c.next; }
-    picked.push([target, 'pickedc']);
-    next = target.next;
-    text = (pre && pre.length ? pre.length + '回引いてから' : '') + g + '連(' + label.replace(/G$/, '') + 'から)で出るキャラ: ' + run.map(function (x) { return nm(x.id); }).join('、') + '、確定枠: ' + nm(target.id) +
-      (pre ? '' : '(現在位置からの経路が見つからないため、' + label.replace(/G$/, '') + 'に居る前提)');
-  } else {
-    var path = pathTo(target);
-    if (path) path.forEach(function (c) { picked.push([c, 'picked']); });
-    picked.push([target, 'picked']);
-    next = target.next;
-    var all = (path || []).concat([target]);
-    text = (path ? all.length + '回引くと出るキャラ: ' : '現在位置からの経路が見つかりません(' + label + 'に居る前提)。') + (path ? all.map(function (x) { return nm(x.id); }).join('、') : '');
-  }
-  picked.forEach(function (pc) { var el = elFor(BC.catLabel(pc[0])); if (el) el.classList.add(pc[1]); });
-  if (next) { var ne = elFor(BC.catLabel(next)); if (ne) ne.classList.add('nextpos'); text += ' → 次の位置: ' + BC.catLabel(next) + '(' + nm(next.id) + ')'; }
-  $('#pathInfo').textContent = text;
-}
-function advanceTo(label) {
-  var cat = labelMap[label]; if (!cat) return;
-  pushHistory();
-  state.seed = cat.slotSeed >>> 0; state.last = cat.id;
-  save(); syncTableInputs(); renderTable();
-  $('#tableMsg').innerHTML = '<div class="ok">' + esc(label) + '(' + esc(nm(cat.id)) + ')まで引いたことにして位置を進めました。新しいシード: <b>' + state.seed + '</b></div>';
-}
-function copySeed() {
-  var txt = String(state.seed);
-  function done(ok) { $('#tableMsg').innerHTML = ok ? '<div class="ok">シード ' + txt + ' をコピーしました。</div>' : '<div class="warn">コピーできませんでした。シード: ' + txt + '</div>'; }
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { done(true); }, function () { done(false); });
-  else { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(ok); }
+  if (el && el.scrollIntoView) setTimeout(function () { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 50);
 }
 
 // ---- イベント登録 ----
-$('#event').addEventListener('change', function () { state.event = this.value; save(); renderCustom(); renderEventInfo(); renderTable(); });
-$('#gsel').addEventListener('change', function () { state.g = this.value; save(); renderEventInfo(); renderTable(); });
-$('#customGacha').addEventListener('change', function () { state.custom = +this.value; var r = GACHA[state.custom] && GACHA[state.custom].r; var pp = null; PRESETS.forEach(function (x) { if (x.key === r) pp = x; }); if (pp) { state.ratePreset = pp.key; state.rates = { rare: pp.rare, supa: pp.supa, uber: pp.uber }; } save(); renderCustom(); renderEventInfo(); renderTable(); });
-$('#customRate').addEventListener('change', function () { state.ratePreset = this.value; var pp = null; PRESETS.forEach(function (x) { if (x.key === state.ratePreset) pp = x; }); if (pp && pp.rare != null) state.rates = { rare: pp.rare, supa: pp.supa, uber: pp.uber }; save(); renderCustom(); renderEventInfo(); renderTable(); });
+function rerenderAll() { save(); renderCustom(); renderEventInfo(); renderTable(); }
+$('#event').addEventListener('change', function () { state.event = this.value; rerenderAll(); });
+$('#gsel').addEventListener('change', function () { state.g = this.value; rerenderAll(); });
+$('#detailsBtn').addEventListener('click', function () { var d = $('#gachaDetails'); d.hidden = !d.hidden; this.setAttribute('aria-expanded', d.hidden ? 'false' : 'true'); });
+$('#customGacha').addEventListener('change', function () { state.custom = +this.value; var r = GACHA[state.custom] && GACHA[state.custom].r, pp = null; PRESETS.forEach(function (x) { if (x.key === r) pp = x; }); if (pp) { state.ratePreset = pp.key; state.rates = { rare: pp.rare, supa: pp.supa, uber: pp.uber }; } rerenderAll(); });
+$('#customRate').addEventListener('change', function () { state.ratePreset = this.value; var pp = null; PRESETS.forEach(function (x) { if (x.key === state.ratePreset) pp = x; }); if (pp && pp.rare != null) state.rates = { rare: pp.rare, supa: pp.supa, uber: pp.uber }; rerenderAll(); });
 ['#cRare', '#cSupa', '#cUber'].forEach(function (id) { $(id).addEventListener('change', function () {
   var r = Math.max(0, parseInt($('#cRare').value, 10) || 0), s = Math.max(0, parseInt($('#cSupa').value, 10) || 0), u = Math.max(0, parseInt($('#cUber').value, 10) || 0);
-  if (r + s + u > 10000) { $('#eventInfo').innerHTML = '<div class="err">合計が10000を超えています。</div>'; return; }
-  state.rates = { rare: r, supa: s, uber: u }; state.ratePreset = 'custom'; save(); renderCustom(); renderEventInfo(); renderTable();
+  if (r + s + u > 10000) { toast('排出率の合計が10000を超えています'); return; }
+  state.rates = { rare: r, supa: s, uber: u }; state.ratePreset = 'custom'; rerenderAll();
 }); });
+$$('.tab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.getAttribute('data-tab')); }); });
+$('#quickToggle').addEventListener('click', function () { var q = $('#quickBox'); q.hidden = !q.hidden; if (!q.hidden) $('#quick').focus(); });
 $('#quickApply').addEventListener('click', applyQuick);
 $('#addRows').addEventListener('click', function () { addRollRows(5); });
-$('#clearRows').addEventListener('click', function () { Array.prototype.forEach.call($('#rolls').querySelectorAll('select'), function (s) { s.value = ''; }); $('#seekResults').innerHTML = ''; $('#seekStatus').innerHTML = ''; });
+$('#clearRows').addEventListener('click', function () { $$('select', $('#rolls')).forEach(function (s) { s.value = ''; }); $('#seekResults').innerHTML = ''; $('#seekStatus').innerHTML = ''; });
 $('#seekBtn').addEventListener('click', seek);
-$('#stopBtn').addEventListener('click', function () { stopSearch(); $('#prog').hidden = true; $('#seekStatus').innerHTML = '<div>中止しました。</div>'; });
+$('#stopBtn').addEventListener('click', function () { stopSearch(); $('#prog').hidden = true; $('#seekStatus').innerHTML = '中止しました。'; });
 $('#showBtn').addEventListener('click', function () { readTableInputs(); save(); syncTableInputs(); renderTable(); });
 $('#seed').addEventListener('keydown', function (e) { if (e.key === 'Enter') { readTableInputs(); save(); syncTableInputs(); renderTable(); } });
 ['#last', '#find', '#nameForm', '#count'].forEach(function (id) { $(id).addEventListener('change', function () { readTableInputs(); save(); syncTableInputs(); renderTable(); }); });
-$('#undoBtn').addEventListener('click', function () { var h = history.pop(); if (!h) return; state.seed = h.seed; state.last = h.last; save(); syncTableInputs(); renderTable(); $('#tableMsg').innerHTML = '<div class="ok">1つ前の位置に戻しました。</div>'; });
+$('#undoBtn').addEventListener('click', function () { var h = history.pop(); if (!h) return; state.seed = h.seed; state.last = h.last; save(); syncTableInputs(); renderTable(); toast('1つ前の位置に戻しました'); });
 $('#copyBtn').addEventListener('click', copySeed);
-$('#tablewrap').addEventListener('click', function (e) {
-  var btn = e.target.closest('button.adv');
-  if (btn) { e.stopPropagation(); advanceTo(btn.getAttribute('data-label')); return; }
-  var el = e.target.closest('[data-label]');
-  if (el) highlight(el.getAttribute('data-label'));
-});
-$('#evalBox').addEventListener('click', function (e) {
-  var b = e.target.closest('button.showPlan');
-  if (b) markPlan(b.getAttribute('data-label'));
-});
 $('#usePlat').addEventListener('change', function () { state.plat = this.checked; save(); renderEval(); });
+$('#tablewrap').addEventListener('click', function (e) {
+  var el = e.target.closest('.cell'); if (!el) return;
+  var sub = e.target.closest('.c-sub');
+  sheetFor(sub ? sub.getAttribute('data-label') : el.getAttribute('data-label'));
+});
+$('#tablewrap').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { var el = e.target.closest('.cell'); if (el) { e.preventDefault(); sheetFor(el.getAttribute('data-label')); } } });
+$('#evalBox').addEventListener('click', function (e) { var b = e.target.closest('button.showPlan'); if (b) markPlan(b.getAttribute('data-label')); });
+$('#sheet').addEventListener('click', function (e) {
+  var b = e.target.closest('button[data-act]'); if (!b) return;
+  var act = b.getAttribute('data-act'), label = b.getAttribute('data-label');
+  if (act === 'adv') advanceTo(label);
+  else if (act === 'path') { closeSheet(); highlight(label); var el = elFor(label); if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+  else closeSheet();
+});
+$('#backdrop').addEventListener('click', closeSheet);
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
+window.addEventListener('resize', updateSbHeight);
 
 // ---- 初期化 ----
 load();
@@ -899,6 +1029,9 @@ renderEventSelect();
 syncTableInputs();
 renderTable();
 save();
+var savedTab = null; try { savedTab = sessionStorage.getItem('nyanko-tab'); } catch (e) {}
+showTab(savedTab || (state.seed ? 'table' : 'seek'));
+updateSbHeight();
 window.addEventListener('hashchange', function () {
   if (location.protocol !== 'file:' || !location.hash) return;
   load(); renderEventSelect(); syncTableInputs(); renderTable();
