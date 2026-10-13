@@ -52,7 +52,7 @@
   .sb-info { font-size:13.5px; gap:4px 14px; }
   .sb-info .kv b { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:14px; }
   .sb-info .kv { white-space:nowrap; }
-  @media (max-width:640px) { .gpick { flex-basis:100%; } .gpick .gname { white-space:normal; font-size:13px; line-height:1.35; max-height:2.7em; } #gsel { flex:1 1 130px; } .sb-info { font-size:12.5px; gap:3px 10px; } .sb-info .kv b { font-size:13px; } }
+  @media (max-width:640px) { .gpick { flex-basis:100%; flex-wrap:wrap; row-gap:2px; } .gpick .gname { order:3; flex-basis:100%; white-space:normal; font-size:13px; line-height:1.35; max-height:2.7em; overflow:hidden; } .gpick .chev { margin-left:auto; } #gsel { flex:1 1 130px; } .sb-info { font-size:12.5px; gap:3px 10px; } .sb-info .kv b { font-size:13px; } }
 
   /* 部品 */
   select, input[type=text], input[type=number], textarea { font:inherit; padding:7px 9px; border:1px solid var(--line2); border-radius:8px; background:#fff; color:var(--fg); max-width:100%; }
