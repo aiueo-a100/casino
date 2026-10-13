@@ -102,6 +102,7 @@
   .rc.r4 { background:var(--uber-bg2); border-color:var(--uber-bd); color:var(--uber-fg); font-weight:700; }
   .rc.r5 { background:var(--legend-bg2); border-color:var(--legend-bd); color:var(--legend-fg); font-weight:700; }
   .rc .gk { font-size:10.5px; background:#b45309; color:#fff; border-radius:4px; padding:0 4px; }
+  .rc.bad { background:#fdecec !important; border-color:#e03131 !important; color:#a32020 !important; }
   .rc .x { border:0; background:transparent; color:inherit; font-size:15px; cursor:pointer; padding:0 4px; opacity:.7; }
   .rc .x:hover { opacity:1; }
   .seek-actions { display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
@@ -590,10 +591,17 @@ function entryInfo(v) { var a = v.split(':'); return a[0] === 'g' ? { g: true, r
 function renderRollChips() {
   var box = $('#rollChips');
   if (!rollEntries.length) { box.innerHTML = '<div class="empty">まだ選ばれていません。「＋ 次のキャラを選ぶ」から、引いた順に選んでください。</div>'; return; }
+  var bad = 0;
   box.innerHTML = rollEntries.map(function (v, i) {
-    var e = entryInfo(v);
-    return '<span class="rc r' + e.rarity + '"><span class="n">' + (i + 1) + '</span>' + (e.g ? '<span class="gk">確定</span>' : '') + '<span>' + esc(nm(e.id)) + '</span><button class="x" data-i="' + i + '" aria-label="' + (i + 1) + '体目を削除">×</button></span>';
-  }).join('');
+    var e = entryInfo(v), ok = entryValid(e);
+    if (!ok) bad++;
+    return '<span class="rc r' + e.rarity + (ok ? '' : ' bad') + '"' + (ok ? '' : ' title="選択中のガチャには入っていないキャラです"') + '><span class="n">' + (i + 1) + '</span>' + (e.g ? '<span class="gk">確定</span>' : '') + '<span>' + esc(nm(e.id)) + (ok ? '' : ' ⚠') + '</span><button class="x" data-i="' + i + '" aria-label="' + (i + 1) + '体目を削除">×</button></span>';
+  }).join('') + (bad ? '<div class="msg warn" style="flex-basis:100%;margin:4px 0 0">⚠ の付いたキャラは、今選んでいるガチャの排出テーブルにありません。別のガチャで引いた結果なら、上のガチャをそのガチャに戻すか、該当キャラを × で消してください。</div>' : '');
+}
+function entryValid(e) {
+  var p = currentPoolCache && currentPoolCache.pool; if (!p) return true;
+  var list = p.slots[e.g ? 4 : e.rarity] || [];
+  return list.indexOf(e.id) >= 0;
 }
 function readEntries() {
   return rollEntries.map(function (v) { var e = entryInfo(v); return e.g ? { type: 'g', id: e.id } : { type: 'roll', rarity: e.rarity, id: e.id }; });
@@ -704,6 +712,8 @@ function seek() {
   out.innerHTML = '';
   if (!pool.exist) { st.innerHTML = '<div class="msg err">このガチャはデータが無いため検索できません。</div>'; return; }
   if (!entries.length) { st.innerHTML = '<div class="msg err">引いた結果を1つ以上選んでください。</div>'; return; }
+  var invalid = rollEntries.map(entryInfo).filter(function (e) { return !entryValid(e); });
+  if (invalid.length) { st.innerHTML = '<div class="msg err">選んでいるガチャ「' + esc(shortName(info.name, 30)) + '」の排出テーブルに無いキャラが入っています: ' + invalid.map(function (e) { return esc(nm(e.id)); }).join('、') + '。引いたガチャを上で選び直すか、該当キャラを × で消してください。</div>'; return; }
   var primary = BC.makeSearch(entries, pool, null);
   active = { workers: [], cancelled: false, running: true };
   $('#seekBtn').disabled = true; $('#stopBtn').disabled = false;
@@ -1050,7 +1060,8 @@ $('#customGacha').addEventListener('change', function () { state.custom = +this.
 $('#customRate').addEventListener('change', function () { state.ratePreset = this.value; var pp = null; PRESETS.forEach(function (x) { if (x.key === state.ratePreset) pp = x; }); if (pp && pp.rare != null) state.rates = { rare: pp.rare, supa: pp.supa, uber: pp.uber }; rerenderAll(); });
 ['#cRare', '#cSupa', '#cUber'].forEach(function (id) { $(id).addEventListener('change', function () {
   var r = Math.max(0, parseInt($('#cRare').value, 10) || 0), s = Math.max(0, parseInt($('#cSupa').value, 10) || 0), u = Math.max(0, parseInt($('#cUber').value, 10) || 0);
-  if (r + s + u > 10000) { toast('排出率の合計が10000を超えています'); return; }
+  if (s + u > 10000) { toast('激レア+超激レアが10000を超えています。値を見直してください'); renderCustom(); return; }
+  if (r + s + u > 10000) { r = 10000 - s - u; toast('合計が10000を超えたので、レアを ' + r + ' に調整しました'); }
   state.rates = { rare: r, supa: s, uber: u }; state.ratePreset = 'custom'; rerenderAll();
 }); });
 $$('.tab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.getAttribute('data-tab')); }); });
