@@ -9,6 +9,7 @@ godfat/battle-cats-rolls (Apache-2.0) が公開している日本版データ bu
   python3 build.py --fetch    # 最新の bc-jp.yaml を GitLab から取得してから生成
 """
 import json
+import math
 import os
 import re
 import sys
@@ -30,11 +31,80 @@ def fetch():
         f.write(r.read())
 
 
+ABILITY_FLAT = [('wave_level', 0.5), ('surge_level', 0.5), ('explosion_chance', 0.4), ('conjure', 0.3), ('strengthen_modifier', 0.3),
+                ('zombie_killer', 0.15), ('soul_strike', 0.1), ('break_barrier_chance', 0.15), ('break_shield_chance', 0.15),
+                ('colossus_slayer', 0.2), ('behemoth_slayer', 0.2), ('sage_slayer', 0.2), ('survive_chance', 0.1), ('dodge_chance', 0.15),
+                ('metal_killer', 0.2), ('extra_money', 0.05), ('base_destroyer', 0.05), ('witch_slayer', 0.05), ('eva_angel_slayer', 0.05)]
+ABILITY_CHANCE = [('freeze_chance', 0.35), ('slow_chance', 0.2), ('knockback_chance', 0.15), ('weaken_chance', 0.2),
+                  ('curse_chance', 0.15), ('critical_chance', 0.3), ('savage_blow_chance', 0.25)]
+CONTROL = {'freeze_chance', 'slow_chance', 'knockback_chance', 'weaken_chance', 'curse_chance'}
+
+
+def perf_score(c):
+    """ステータスから機械的に出す性能スコア(目安)。形態ごとに計算して最大を取る。"""
+    best = None
+    for st in c.get('stat') or []:
+        if not st or 'health' not in st:
+            continue
+        dmg = sum(v for k, v in st.items() if k.startswith('damage_'))
+        cycle = max(st.get('attack_duration', 60), st.get('attack_time_0', 30)) + st.get('attack_cooldown', 0)
+        dps = dmg * 30.0 / max(cycle, 1)
+        traits = sum(1 for k in st if k.startswith('against_') and k != 'against_only')
+        tf = min(traits, 3) / 3.0
+        mult = 1.0
+        if st.get('insane_damage'):
+            mult += 1.6 * tf
+        elif st.get('massive_damage'):
+            mult += 1.0 * tf
+        elif st.get('strong'):
+            mult += 0.5 * tf
+        hp = st['health'] * (1 + (0.6 * tf if st.get('strong') else 0) + (1.0 * tf if st.get('resistant') else 0) + (1.6 * tf if st.get('insane_resistant') else 0))
+        rng = st.get('range', 100)
+        if st.get('long_range_0'):
+            rng = max(rng, st.get('long_range_0', 0) + st.get('long_range_offset_0', 0))
+        bonus = sum(w for k, w in ABILITY_FLAT if st.get(k))
+        for k, w in ABILITY_CHANCE:
+            if st.get(k):
+                bonus += w * min(st[k], 100) / 100.0 * ((0.5 + 0.5 * tf) if k in CONTROL else 1)
+        bonus += 0.05 * sum(1 for k in st if k.startswith('immune_'))
+        if st.get('area_effect'):
+            bonus += 0.3
+        if st.get('kamikaze'):
+            bonus -= 1.0
+        cost = max(st.get('cost', 3000), 1)
+        cd = max(st.get('production_cooldown', 2000), 1)
+        score = 10 * math.log10(dps * mult + 1) + 6 * math.log10(hp + 1) + 0.9 * (rng / 100.0) + 3 * bonus - 1.5 * math.log10(cost) - 1.0 * math.log10(cd)
+        best = score if best is None else max(best, score)
+    return best
+
+
+def tiers_for(doc):
+    """ガチャに入っている超激レア/伝説レアの性能スコアを順位で S/A/B/C に分ける"""
+    in_gacha = set()
+    for g in doc['gacha'].values():
+        in_gacha.update(g.get('cats') or [])
+    scored = []
+    for cid, c in doc['cats'].items():
+        if c.get('rarity', 0) >= 4 and cid in in_gacha:
+            s = perf_score(c)
+            if s is not None:
+                scored.append((s, cid))
+    scored.sort(reverse=True)
+    n = len(scored)
+    out = {}
+    for rank, (s, cid) in enumerate(scored):
+        q = rank / max(n, 1)
+        tier = 'S' if q < 0.10 else 'A' if q < 0.30 else 'B' if q < 0.65 else 'C'
+        out[cid] = (tier, round(s, 1))
+    return out
+
+
 def convert(doc):
+    tiers = tiers_for(doc)
     cats = {}
     for cid, c in doc['cats'].items():
         names = [n for n in (c.get('name') or []) if n]
-        cats[int(cid)] = [c.get('rarity', 0), names]
+        cats[int(cid)] = [c.get('rarity', 0), names] + (list(tiers[cid]) if cid in tiers else [])
 
     # コラボ判定: キャラ説明の「○○から参戦」「コラボ」や、ガチャ/イベント名の「コラボ」から判断する
     collab_title_of = {}

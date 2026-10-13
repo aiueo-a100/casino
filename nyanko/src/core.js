@@ -429,11 +429,126 @@ var BC = (function () {
     return { D: D, best: best, nodes: nodes, steps: steps, after: after, chainOf: chainOf, moveTo: moveTo, g: g };
   }
 
+  // ---- 複数ガチャをまたぐ最適化 ----
+  // シードは全ガチャ共通なので、1回ごとに「どのガチャで引くか」を選べる。
+  // 状態 = (使った乱数の数 k, 直前に引いたキャラ, 使ったチケット数, 使った回数) で動的計画法。
+  //   opt: { seed, last, banners: [{ pool, g }], maxRolls, allowMulti, platTickets,
+  //          value: function(id, rarity, isGuaranteed) -> 数値, platValue }
+  //   戻り値: { best: 最終状態(prev を辿ると手順), unitBest: Map(id -> { rolls, state }), K }
+  function planMulti(opt) {
+    var seed0 = opt.seed >>> 0, banners = opt.banners, maxRolls = Math.max(0, opt.maxRolls | 0);
+    var allowMulti = !!opt.allowMulti, plats = Math.max(0, opt.platTickets | 0);
+    var valueOf = opt.value || function (id, rarity) { return rarity >= 4 ? 1 : 0; };
+    var platValue = opt.platValue == null ? 1 : opt.platValue;
+    var K = 2 * maxRolls + 3 * plats + 64;
+    var seq = new Array(K + 2);
+    seq[0] = seed0;
+    for (var i = 1; i <= K + 1; i++) seq[i] = advance(seq[i - 1]);
+
+    function rollOne(b, k, last) {
+      if (k + 2 > K) return null;
+      var score = seq[k + 1] % BASE, rar = rarityOf(score, b.pool.rates), list = b.pool.slots[rar];
+      if (!list.length) return { k: k + 2, id: -1, rarity: rar, reroll: false };
+      var slot = seq[k + 2] % list.length, id = list[slot], nk = k + 2, rr = false;
+      if (rar === RARE && id === last && id > 0) {
+        var idx = [], dupes = 0, j;
+        for (j = 0; j < list.length; j++) { idx.push(j); if (list[j] === id) dupes++; }
+        var s = slot, nid = id;
+        for (var tt = 1; tt <= dupes; tt++) {
+          nk++;
+          if (nk > K) return null;
+          idx.splice(s, 1);
+          s = seq[nk] % idx.length;
+          nid = list[idx[s]];
+          if (nid !== id) break;
+        }
+        id = nid; rr = true;
+      }
+      return { k: nk, id: id, rarity: rar, reroll: rr };
+    }
+    function rollMulti(b, k, last) {
+      var cats = [], cur = k, l = last;
+      for (var i2 = 0; i2 < b.g - 1; i2++) {
+        var r = rollOne(b, cur, l);
+        if (!r) return null;
+        cats.push(r); cur = r.k; l = r.rarity === RARE ? r.id : 0;
+      }
+      var ub = b.pool.slots[UBER];
+      if (!ub.length || cur + 1 > K) return null;
+      cats.push({ k: cur + 1, id: ub[seq[cur + 1] % ub.length], rarity: UBER, reroll: false, guaranteed: true });
+      return { k: cur + 1, cats: cats };
+    }
+
+    var byK = new Array(K + 2), unitBest = new Map(), total = 0;
+    function relax(st) {
+      var m = byK[st.k] || (byK[st.k] = new Map());
+      var key = (st.last * 8 + st.plat) * 512 + st.rolls;
+      var cur = m.get(key);
+      if (!cur || st.value > cur.value || (st.value === cur.value && st.count > cur.count)) { m.set(key, st); if (!cur) total++; }
+    }
+    function noteUnits(st) {
+      st.move.cats.forEach(function (c) {
+        if (c.rarity < 4 || c.id < 0) return;
+        var u = unitBest.get(c.id);
+        if (!u || st.rolls < u.rolls || (st.rolls === u.rolls && st.value > u.state.value)) unitBest.set(c.id, { rolls: st.rolls, state: st });
+      });
+    }
+    relax({ k: 0, last: opt.last | 0, plat: 0, rolls: 0, value: 0, count: 0, prev: null, move: null });
+    for (var k = 0; k <= K; k++) {
+      var m = byK[k];
+      if (!m) continue;
+      m.forEach(function (st) {
+        for (var bi = 0; bi < banners.length; bi++) {
+          var b = banners[bi];
+          if (!b.pool.exist) continue;
+          if (st.rolls + 1 <= maxRolls) {
+            var r = rollOne(b, st.k, st.last);
+            if (r) {
+              var v = r.id >= 0 ? valueOf(r.id, r.rarity, false) : 0;
+              var ns = { k: r.k, last: r.rarity === RARE ? r.id : 0, plat: st.plat, rolls: st.rolls + 1, value: st.value + v, count: st.count + (r.rarity >= 4 ? 1 : 0),
+                prev: st, move: { b: bi, type: 'single', cats: [r] } };
+              relax(ns); noteUnits(ns);
+            }
+          }
+          var mc = b.g === 15 ? 14 : 10;
+          if (allowMulti && b.g && st.rolls + mc <= maxRolls) {
+            var mr = rollMulti(b, st.k, st.last);
+            if (mr) {
+              var mv = 0, mcnt = 0;
+              mr.cats.forEach(function (c) { if (c.id >= 0) { mv += valueOf(c.id, c.rarity, !!c.guaranteed); if (c.rarity >= 4) mcnt++; } });
+              var ms = { k: mr.k, last: 0, plat: st.plat, rolls: st.rolls + mc, value: st.value + mv, count: st.count + mcnt,
+                prev: st, move: { b: bi, type: 'multi', cats: mr.cats } };
+              relax(ms); noteUnits(ms);
+            }
+          }
+        }
+        if (st.plat < plats && st.k + 2 <= K) {
+          relax({ k: st.k + 2, last: 0, plat: st.plat + 1, rolls: st.rolls, value: st.value + platValue, count: st.count + 1,
+            prev: st, move: { b: -1, type: 'plat', cats: [] } });
+        }
+      });
+    }
+    var best = null;
+    for (k = 0; k <= K + 1; k++) {
+      if (!byK[k]) continue;
+      byK[k].forEach(function (st) {
+        if (st.rolls > maxRolls) return;
+        if (!best || st.value > best.value || (st.value === best.value && (st.count > best.count || (st.count === best.count && st.rolls < best.rolls)))) best = st;
+      });
+    }
+    return { best: best, unitBest: unitBest, K: K, states: total, seq: seq };
+  }
+  function multiSteps(state) {
+    var out = [], s = state;
+    while (s && s.prev) { out.unshift(s.move); s = s.prev; }
+    return out;
+  }
+
   return {
     RARE: RARE, SUPA: SUPA, UBER: UBER, LEGEND: LEGEND, BASE: BASE, MAX_SEED: MAX_SEED,
     advance: advance, retreat: retreat, rarityOf: rarityOf, makePool: makePool, tracks: tracks,
     catLabel: catLabel, compilePlan: compilePlan, verify: verify, makeSearch: makeSearch,
-    seekRange: seekRange, simulate: simulate, plan: plan
+    seekRange: seekRange, simulate: simulate, plan: plan, planMulti: planMulti, multiSteps: multiSteps
   };
 })();
 if (typeof module !== 'undefined') module.exports = BC;

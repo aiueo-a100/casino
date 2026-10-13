@@ -223,6 +223,21 @@
   .sh-sub { font-size:13px; color:var(--mute); margin-top:4px; }
   .toast { position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); background:#1b2230; color:#fff; padding:10px 16px; border-radius:10px; font-size:14px; z-index:60; box-shadow:0 6px 20px rgba(0,0,0,.25); max-width:92vw; }
   footer { text-align:center; font-size:12px; color:var(--mute); padding:16px; }
+  .mb-list { display:flex; flex-direction:column; gap:4px; margin-top:6px; }
+  .mb { display:flex; gap:8px; align-items:flex-start; font-size:13.5px; cursor:pointer; }
+  .mb input { margin-top:5px; }
+  .mb .mb-name { color:var(--fg); }
+  .tier { display:inline-block; min-width:1.5em; text-align:center; font-weight:800; border-radius:4px; padding:0 4px; font-size:11.5px; color:#fff; vertical-align:middle; }
+  .tier.S { background:#d97706; } .tier.A { background:#dc2626; } .tier.B { background:#2563eb; } .tier.C { background:#6b7280; } .tier.X { background:#9ca3af; }
+  .mplan { border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-top:10px; background:#fff; }
+  .mplan h3 { margin:0 0 6px; color:var(--fg); font-size:15px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .mplan .tot { font-size:13px; color:var(--mute); margin-top:6px; }
+  ol.steps .bn { display:inline-block; background:#1b2230; color:#fff; border-radius:4px; padding:0 6px; font-size:11.5px; margin-right:4px; vertical-align:middle; max-width:14em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  ol.steps li .mstep-act { margin-left:auto; flex:0 0 auto; }
+  table.rating { width:100%; border-collapse:collapse; font-size:13px; }
+  table.rating td { padding:3px 4px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  table.rating select { width:auto; padding:2px 4px; font-size:13px; }
+  .unit-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:4px 0; border-bottom:1px dashed var(--line); font-size:13.5px; }
   .help h2 { margin-top:4px; }
   .help ol, .help ul { padding-left:1.4em; }
   .help li { margin:4px 0; }
@@ -305,6 +320,22 @@
 
   <section data-tab="table" class="tabpane" hidden>
     <div class="card eval" id="evalBox"></div>
+    <div class="card" id="multiCard" hidden>
+      <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">複数ガチャで最適ルート <span class="chip blue">自動計算</span></h2>
+      <div class="note">シードは全ガチャ共通なので、1回ごとに引くガチャを変えられます。チェックしたガチャの中で、予算内に<b>超激レア・伝説レアをなるべく多く</b>、または<b>評価の高いキャラ</b>を取れる引き方(順番とガチャ)を計算します。</div>
+      <div id="multiBanners" class="mb-list"></div>
+      <div class="ctrl-grid" style="margin-top:10px">
+        <div class="sm"><label for="mRolls">予算(単発換算)</label><input id="mRolls" type="number" min="1" max="120" value="30"></div>
+        <div class="sm"><label for="mPlat">プラチナ/レジェンドチケット</label><input id="mPlat" type="number" min="0" max="5" value="0"></div>
+        <div><label>&nbsp;</label><label class="check" style="margin:0"><input type="checkbox" id="mMulti" checked> 11連(確定枠あり)も使う(=単発10回分)</label></div>
+        <div class="ctrl-btns"><button class="btn primary" id="mRun">計算する</button></div>
+      </div>
+      <div id="multiOut"></div>
+      <details class="plain" style="margin-top:10px"><summary>キャラの評価一覧(自動スコア。自分で変えられます)</summary>
+        <div class="note">ステータス(DPS・体力・射程・能力・コスト)から機械的に出した<b>目安</b>で、攻略サイトの評価とは異なることがあります。評価重視の計算では S=4点、A=3点、B=2点、C=1点、伝説レアは+2点として扱い、「×」にしたキャラは0点(不要)になります。変更はこのブラウザに保存されます。</div>
+        <div id="ratingList"></div>
+      </details>
+    </div>
     <div class="card">
       <div class="ctrl-grid">
         <div><label for="seed">シード(現在)</label><div class="inline-row"><input id="seed" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="例: 1234567890"><button class="btn sm" id="showBtn">表示</button></div></div>
@@ -344,6 +375,16 @@
         <li><b>評価と取り方</b>: テーブル上のカードに、次の30回の超激レアの数をそのガチャの平均と比べた評価(大当たり/かなり良い/良い/普通/やや悪い/悪い)と、「一番の当たり」(伝説レア → 狙いのキャラ → 一番近い超激レア)までの最短の取り方が出ます。「狙いのキャラ」を選ぶと、そのキャラまでの取り方も出ます。</li>
         <li><b>シードの保存</b>: このブラウザに自動保存されます。別の端末で使うときのために、上部のシードの数字をメモしておくと安心です(数字を「シード(現在)」に入れれば同じテーブルが出ます)。</li>
       </ol>
+    </div>
+    <div class="card">
+      <h2>複数ガチャで最適ルート(自動計算)</h2>
+      <ul>
+        <li>開催中(と2週間以内に始まる)ガチャにチェックを入れ、予算(単発換算の回数。レアチケット+ネコカン÷150)を入れて「計算する」を押すと、<b>どの順番でどのガチャを引けば超激レア・伝説レアを一番多く取れるか</b>(数重視)と、<b>評価の高いキャラを優先した引き方</b>(評価重視)、<b>届く範囲で一番評価が良いキャラ</b>とその取り方が出ます。</li>
+        <li>計算は、シードが全ガチャ共通であることと、レア被りの引き直し・11連の確定枠(半回し)の仕組みをそのまま使って、予算内の全ての引き方の中から最良のものを選んでいます(総当たりと一致することを検証済み)。</li>
+        <li>手順の「ここまで引いた」を押すと、その手順まで実際に引いたことにして位置を進めます(ガチャをまたいでいても大丈夫です)。残りの手順は自動で再計算されます。</li>
+        <li>キャラの評価はステータスから機械的に出した目安です。「キャラの評価一覧」で自分の好みに変えられます(欲しくないキャラは × に)。</li>
+        <li>注意: 「今後」のガチャを含めた場合、そのガチャが始まるまで引けません。順番通りに引く必要があるので、始まる前に他のガチャを引いてしまうと計算がずれます。</li>
+      </ul>
     </div>
     <div class="card">
       <h2>AとBのトラック、R(被り)とG(確定枠)</h2>
@@ -389,7 +430,7 @@
 var $ = function (s) { return document.querySelector(s); };
 var $$ = function (s, root) { return Array.prototype.slice.call((root || document).querySelectorAll(s)); };
 var CATS = {};
-Object.keys(DATA.cats).forEach(function (id) { CATS[id] = { id: +id, rarity: DATA.cats[id][0], name: DATA.cats[id][1] }; });
+Object.keys(DATA.cats).forEach(function (id) { var a = DATA.cats[id]; CATS[id] = { id: +id, rarity: a[0], name: a[1], tier: a[2] || null, score: a[3] == null ? null : a[3] }; });
 var EVENTS = DATA.events, GACHA = DATA.gacha;
 var EV_BY_KEY = {}, LATEST_EVENT_OF = {};
 EVENTS.forEach(function (e) { EV_BY_KEY[e.k] = e; LATEST_EVENT_OF[e.id] = e; });
@@ -439,7 +480,7 @@ function normalizeName(s) { return String(s).normalize('NFKC').replace(/[\s　]+
 
 // ---- 状態 ----
 var state = { event: null, custom: null, rates: { rare: 6970, supa: 2500, uber: 500 }, ratePreset: 'regular', g: 'auto',
-  seed: 0, last: 0, count: 100, find: 0, form: 0, plat: false, dim: false };
+  seed: 0, last: 0, count: 100, find: 0, form: 0, plat: false, dim: false, multi: { rolls: 30, multi: true, plat: 0, on: {}, done: false } };
 var history = [];
 var rowsCache = null, labelMap = {}, currentPoolCache = null, lastPlan = null, lastSummary = null, currentTab = null;
 var rollEntries = []; // 'rarity:id' または 'g:id'(確定枠)
@@ -806,7 +847,7 @@ function renderTable() {
   rowsCache = null; labelMap = {}; lastSummary = null;
   if (!state.seed) {
     wrap.innerHTML = '<div class="card"><b>シードが未設定です。</b><div class="note">「シードを調べる」タブで見つけるか、分かっている場合は上の「シード(現在)」に入力して「表示」を押してください。</div></div>';
-    renderEval(); renderStatus(); return;
+    renderEval(); renderStatus(); $('#multiCard').hidden = true; return;
   }
   if (!p.exist) { wrap.innerHTML = '<div class="msg err">このガチャはデータが無いため表示できません。</div>'; renderEval(); renderStatus(); return; }
   var rows = BC.tracks({ seed: state.seed, pool: p, count: state.count, last: state.last, guaranteedRolls: info.g });
@@ -838,6 +879,7 @@ function renderTable() {
   $('#pathInfo').innerHTML = 'セルを押すと「ここまで引いた」などの操作ができます。次に引く位置: <b>' + (s ? BC.catLabel(s) : '1A') + '</b>(' + esc(nm(s ? s.id : -1)) + ')';
   renderEval();
   renderStatus();
+  renderMultiCard();
 }
 function elFor(label) {
   var wrap = $('#tablewrap');
@@ -1050,6 +1092,184 @@ function markPlan(label) {
   var el = elFor(label);
   if (el && el.scrollIntoView) setTimeout(function () { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 50);
 }
+
+// ---- 複数ガチャで最適ルート ----
+var TIER_W = { S: 4, A: 3, B: 2, C: 1, X: 0 };
+var ratingOverride = {};
+try { ratingOverride = JSON.parse(localStorage.getItem('nyanko-rating') || '{}') || {}; } catch (e) {}
+function tierOf(id) { if (ratingOverride[id]) return ratingOverride[id]; var c = CATS[id]; return (c && c.tier) || (c && c.rarity === 5 ? 'A' : 'C'); }
+function tierChip(id) { var tr = tierOf(id); return '<span class="tier ' + tr + '" title="評価(自動スコア' + (CATS[id] && CATS[id].score != null ? ' ' + CATS[id].score : '') + ')">' + (tr === 'X' ? '×' : tr) + '</span>'; }
+function prizeValue(id, rarity) { if (rarity < 4) return 0; var w = TIER_W[tierOf(id)] || 0; return w ? w + (rarity === 5 ? 2 : 0) : 0; }
+function countValue(id, rarity) { return rarity === 5 ? 1.5 : rarity === 4 ? 1 : 0; }
+function addDays(s, n) { var d = new Date(s + 'T00:00:00'); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function bannerShort(e) {
+  var x = collabTitle(e.id); if (x && x !== 'コラボ') return shortName(x, 12);
+  var m = /[「『]([^」』]+)[」』]/.exec(e.n); if (m) return shortName(m[1], 12);
+  return rateTag(e) + ' ' + shortName(e.n, 8);
+}
+function candidateBanners() {
+  var t = todayStr(), lim = addDays(t, 14), seen = {}, out = [];
+  if (state.event !== 'custom') { var cur = EV_BY_KEY[state.event]; if (cur && !cur.p && GACHA[cur.id]) { out.push(cur); seen[cur.id] = 1; } }
+  EVENTS.forEach(function (e) { if (e.p || seen[e.id] || !GACHA[e.id]) return; if (e.e < t || e.s > lim) return; seen[e.id] = 1; out.push(e); });
+  return out;
+}
+function bannerChecked(e) {
+  var on = state.multi.on || {};
+  if (on[e.k] != null) return !!on[e.k];
+  var t = todayStr();
+  return e.k === state.event || (e.s <= t && t <= e.e);
+}
+function renderMultiCard() {
+  var card = $('#multiCard');
+  if (!state.seed || !currentPoolCache.pool.exist) { card.hidden = true; return; }
+  card.hidden = false;
+  var t = todayStr();
+  $('#multiBanners').innerHTML = candidateBanners().map(function (e) {
+    var upcoming = e.s > t;
+    return '<label class="mb"><input type="checkbox" data-key="' + esc(e.k) + '"' + (bannerChecked(e) ? ' checked' : '') + '><span>' + collabChip(e.id) + '<span class="chip ' + tagClass(e) + '">' + esc(rateTag(e)) + '</span>' + (e.g ? '<span class="chip">' + (e.g === 11 ? '11連確定' : 'ステップアップ') + '</span>' : '') + ' <span class="gdate">' + (upcoming ? '今後 ' : '') + mmdd(e.s) + '〜' + mmdd(e.e) + '</span> <span class="mb-name">' + esc(shortName(e.n, 44)) + '</span></span></label>';
+  }).join('') || '<div class="note">開催中のガチャがデータにありません。</div>';
+  $('#mRolls').value = state.multi.rolls; $('#mPlat').value = state.multi.plat; $('#mMulti').checked = !!state.multi.multi;
+  renderRatingList();
+  if (state.multi.done) runMulti(); else $('#multiOut').innerHTML = '';
+}
+function selectedBanners() {
+  var info = currentPoolCache;
+  return candidateBanners().filter(bannerChecked).map(function (e) {
+    var g = e.k === state.event ? info.g : e.g;
+    return { e: e, pool: e.k === state.event ? info.pool : BC.makePool(GACHA[e.id].c, CATS, e), g: g, label: bannerShort(e) };
+  }).filter(function (b) { return b.pool.exist; });
+}
+function renderRatingList() {
+  var ids = [], seen = {};
+  selectedBanners().forEach(function (b) { [5, 4].forEach(function (r) { b.pool.slots[r].forEach(function (id) { if (!seen[id]) { seen[id] = 1; ids.push(id); } }); }); });
+  ids.sort(function (a, c) { var ta = TIER_W[tierOf(a)] + (CATS[a].rarity === 5 ? 2 : 0), tc = TIER_W[tierOf(c)] + (CATS[c].rarity === 5 ? 2 : 0); return tc - ta || ((CATS[c].score || 0) - (CATS[a].score || 0)); });
+  $('#ratingList').innerHTML = ids.length ? '<table class="rating">' + ids.map(function (id) {
+    var c = CATS[id];
+    return '<tr><td>' + rch(c.rarity) + '</td><td><b class="' + RCLS[c.rarity] + 'txt">' + esc(nm(id)) + '</b></td><td>' + tierChip(id) + ' <small>' + (c.score != null ? c.score : '-') + '</small></td><td><select class="rsel" data-id="' + id + '">' + ['S', 'A', 'B', 'C', 'X'].map(function (tr) { return '<option value="' + tr + '"' + (tierOf(id) === tr ? ' selected' : '') + '>' + (tr === 'X' ? '×(不要)' : tr) + '</option>'; }).join('') + '</select></td></tr>';
+  }).join('') + '</table>' : '<div class="note">チェックしたガチャに超激レア・伝説レアがありません。</div>';
+}
+function chainStates(st) { var out = [], s = st; while (s && s.prev) { out.unshift(s); s = s.prev; } return out; }
+function planSummary(states, banners) {
+  var singles = 0, multis = 0, plats = 0, byTier = { S: 0, A: 0, B: 0, C: 0, X: 0 }, ubers = 0, legends = 0, food = 0;
+  states.forEach(function (s) {
+    var m = s.move;
+    if (m.type === 'single') { singles++; food += 150; } else if (m.type === 'multi') { multis++; food += multiCost(banners[m.b].g); } else { plats++; ubers++; }
+    m.cats.forEach(function (c) { if (c.rarity === 5) { legends++; byTier[tierOf(c.id)]++; } else if (c.rarity === 4) { ubers++; byTier[tierOf(c.id)]++; } });
+  });
+  return { singles: singles, multis: multis, plats: plats, byTier: byTier, ubers: ubers, legends: legends, food: food };
+}
+function planStepsHtml(states, banners, seq, withActs) {
+  var groups = [];
+  states.forEach(function (s) {
+    var m = s.move, last = groups[groups.length - 1];
+    if (last && m.type === 'single' && last.type === 'single' && last.b === m.b) { last.states.push(s); return; }
+    groups.push({ type: m.type, b: m.b, states: [s] });
+  });
+  return '<ol class="steps">' + groups.map(function (g, i) {
+    var lastSt = g.states[g.states.length - 1], bn = g.b >= 0 ? '<span class="bn" title="' + esc(banners[g.b].e.n) + '">' + esc(banners[g.b].label) + '</span>' : '';
+    var title, detail, cls = '';
+    if (g.type === 'single') {
+      title = bn + '単発 ×' + g.states.length;
+      detail = g.states.map(function (s) { var c = s.move.cats[0]; return catTxt(c); }).join(' → ');
+    } else if (g.type === 'multi') {
+      var gg = banners[g.b].g, cats = g.states[0].move.cats; cls = 'm';
+      title = bn + gg + '連(確定枠あり)';
+      detail = cats.map(function (c) { return catTxt(c); }).join(' → ');
+    } else { cls = 'p'; title = 'プラチナ/レジェンドチケット ×1'; detail = '位置を1つ進める(出る超激レアはそのガチャ次第)'; }
+    var lastCat = null; g.states.forEach(function (s) { if (s.move.cats.length) lastCat = s.move.cats[s.move.cats.length - 1]; });
+    var act = withActs ? '<button class="btn sm mstep-act" data-k="' + lastSt.k + '" data-last="' + (lastCat ? lastCat.id : 0) + '">ここまで引いた</button>' : '';
+    return '<li><span class="stp ' + cls + '">' + (i + 1) + '</span><div style="flex:1;min-width:0"><div class="st-t">' + title + '</div><div class="st-d">' + detail + '</div></div>' + act + '</li>';
+  }).join('') + '</ol>';
+}
+function catTxt(c) {
+  if (c.id < 0) return '(該当なし)';
+  var r = CATS[c.id] ? CATS[c.id].rarity : c.rarity;
+  var s = esc(nm(c.id)) + (c.reroll ? '<small>(被り引き直し)</small>' : '') + (c.guaranteed ? '<small>(確定枠)</small>' : '');
+  if (r >= 4) return '<b class="' + RCLS[r] + 'txt">★' + s + '</b>' + tierChip(c.id);
+  return s;
+}
+function planText(states, banners) {
+  var lines = [], i = 0, groups = [];
+  states.forEach(function (s) { var m = s.move, last = groups[groups.length - 1]; if (last && m.type === 'single' && last.type === 'single' && last.b === m.b) { last.states.push(s); return; } groups.push({ type: m.type, b: m.b, states: [s] }); });
+  groups.forEach(function (g) {
+    i++;
+    var bn = g.b >= 0 ? '【' + banners[g.b].label + '】' : '';
+    if (g.type === 'single') lines.push(i + '. ' + bn + '単発×' + g.states.length + ': ' + g.states.map(function (s) { var c = s.move.cats[0]; return (c.rarity >= 4 ? '★' : '') + nm(c.id); }).join('→'));
+    else if (g.type === 'multi') lines.push(i + '. ' + bn + banners[g.b].g + '連: ' + g.states[0].move.cats.map(function (c) { return (c.rarity >= 4 ? '★' : '') + nm(c.id); }).join('→'));
+    else lines.push(i + '. プラチナ/レジェンドチケット×1');
+  });
+  return lines.join('\n');
+}
+var lastMulti = null;
+function runMulti() {
+  var out = $('#multiOut');
+  state.multi.rolls = Math.max(1, Math.min(120, parseInt($('#mRolls').value, 10) || 30));
+  state.multi.plat = Math.max(0, Math.min(5, parseInt($('#mPlat').value, 10) || 0));
+  state.multi.multi = $('#mMulti').checked;
+  state.multi.done = true; save();
+  var banners = selectedBanners();
+  if (!banners.length) { out.innerHTML = '<div class="msg warn">ガチャを1つ以上チェックしてください。</div>'; return; }
+  var common = { seed: state.seed, last: state.last, banners: banners, maxRolls: state.multi.rolls, allowMulti: state.multi.multi, platTickets: state.multi.plat, platValue: 2 };
+  var P1 = BC.planMulti(Object.assign({ value: prizeValue }, common));
+  var P2 = BC.planMulti(Object.assign({ value: countValue, platValue: 1 }, common));
+  lastMulti = { P1: P1, P2: P2, banners: banners };
+  var h = '';
+  // 一番評価が良いキャラ
+  var units = [];
+  P1.unitBest.forEach(function (u, id) { if (u.rolls <= state.multi.rolls && CATS[id]) units.push({ id: id, u: u }); });
+  units.sort(function (a, b) { var va = prizeValue(a.id, CATS[a.id].rarity), vb = prizeValue(b.id, CATS[b.id].rarity); return vb - va || ((CATS[b.id].score || 0) - (CATS[a.id].score || 0)) || a.u.rolls - b.u.rolls; });
+  if (units.length) {
+    h += '<div class="mplan"><h3><span class="chip gold">届く範囲で評価が高いキャラ</span><small>予算 ' + state.multi.rolls + '回以内</small></h3>';
+    h += units.slice(0, 5).map(function (x, i) { var c = CATS[x.id]; return '<div class="unit-row">' + rch(c.rarity) + '<b class="' + RCLS[c.rarity] + 'txt">' + esc(nm(x.id)) + '</b>' + tierChip(x.id) + '<span class="note" style="margin:0">' + x.u.rolls + '回(単発換算)で到達</span><button class="btn sm showUnit" data-id="' + x.id + '">取り方</button></div>'; }).join('');
+    h += '<div id="unitPlan"></div></div>';
+  } else h += '<div class="msg warn">予算内に届く超激レア・伝説レアがありません。予算を増やすか、別のガチャをチェックしてください。</div>';
+  function planCard(title, chipCls, P, key) {
+    if (!P.best || P.best.value <= 0) return '<div class="mplan"><h3><span class="chip ' + chipCls + '">' + title + '</span></h3><div class="note">予算内では超激レア以上が取れません。</div></div>';
+    var sts = chainStates(P.best), sm = planSummary(sts, banners);
+    var tot = '超激レア <b>' + sm.ubers + '体</b>' + (sm.legends ? '・伝説レア <b>' + sm.legends + '体</b>' : '') + '(S' + sm.byTier.S + ' A' + sm.byTier.A + ' B' + sm.byTier.B + ' C' + sm.byTier.C + ')　使用: ' + [sm.singles ? '単発' + sm.singles + '回' : '', sm.multis ? '11連' + sm.multis + '回' : '', sm.plats ? 'チケット' + sm.plats + '枚' : ''].filter(Boolean).join(' + ') + '(ネコカン換算 ' + fmt(sm.food) + '個 ／ 単発換算 ' + P.best.rolls + '回)';
+    return '<div class="mplan"><h3><span class="chip ' + chipCls + '">' + title + '</span><button class="btn ghost sm copyPlan" data-key="' + key + '">手順をコピー</button></h3>' + planStepsHtml(sts, banners, P.seq, true) + '<div class="tot">' + tot + '</div></div>';
+  }
+  var same = P1.best && P2.best && JSON.stringify(chainStates(P1.best).map(function (s) { return [s.move.b, s.move.type, s.k]; })) === JSON.stringify(chainStates(P2.best).map(function (s) { return [s.move.b, s.move.type, s.k]; }));
+  h += planCard('数重視: 超激レア以上を一番多く取る', 'blue', P2, 'P2');
+  if (same) h += '<div class="note">評価重視でも同じ手順になります。</div>'; else h += planCard('評価重視: 評価の高いキャラを優先', 'gold', P1, 'P1');
+  out.innerHTML = h;
+}
+function showUnitPlan(id) {
+  if (!lastMulti) return;
+  var u = lastMulti.P1.unitBest.get(id); if (!u) return;
+  var sts = chainStates(u.state), sm = planSummary(sts, lastMulti.banners);
+  $('#unitPlan').innerHTML = '<div style="margin-top:8px"><b class="' + RCLS[CATS[id].rarity] + 'txt">' + esc(nm(id)) + '</b> までの取り方(' + u.rolls + '回・ネコカン換算 ' + fmt(sm.food) + '個):</div>' + planStepsHtml(sts, lastMulti.banners, lastMulti.P1.seq, true);
+}
+function applyMultiStep(k, lastId) {
+  if (!lastMulti) return;
+  var seq = lastMulti.P1.seq, s = seq[k];
+  if (s == null) return;
+  pushHistory();
+  state.seed = s >>> 0; state.last = lastId | 0;
+  save(); syncTableInputs(); renderTable();
+  toast('手順をここまで引いたことにして進めました。残りの手順を再計算しました。新しいシード: ' + state.seed);
+  $('#multiCard').scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+$('#multiBanners').addEventListener('change', function (e) { var cb = e.target.closest('input[type=checkbox]'); if (!cb) return; state.multi.on = state.multi.on || {}; state.multi.on[cb.getAttribute('data-key')] = cb.checked; save(); renderRatingList(); if (state.multi.done) runMulti(); });
+$('#mRun').addEventListener('click', runMulti);
+$('#ratingList').addEventListener('change', function (e) {
+  var sel = e.target.closest('select.rsel'); if (!sel) return;
+  var id = sel.getAttribute('data-id'), v = sel.value, c = CATS[id], def = (c && c.tier) || (c && c.rarity === 5 ? 'A' : 'C');
+  if (v === def) delete ratingOverride[id]; else ratingOverride[id] = v;
+  try { localStorage.setItem('nyanko-rating', JSON.stringify(ratingOverride)); } catch (e2) {}
+  renderRatingList(); if (state.multi.done) runMulti(); renderEval();
+});
+$('#multiOut').addEventListener('click', function (e) {
+  var b = e.target.closest('button.showUnit'); if (b) { showUnitPlan(+b.getAttribute('data-id')); return; }
+  var a = e.target.closest('button.mstep-act'); if (a) { applyMultiStep(+a.getAttribute('data-k'), +a.getAttribute('data-last')); return; }
+  var c = e.target.closest('button.copyPlan');
+  if (c && lastMulti) {
+    var P = lastMulti[c.getAttribute('data-key')], txt = planText(chainStates(P.best), lastMulti.banners);
+    var done = function (ok) { toast(ok ? '手順をコピーしました' : 'コピーできませんでした'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { done(true); }, function () { done(false); });
+    else { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (e3) {} document.body.removeChild(ta); done(ok); }
+  }
+});
 
 // ---- イベント登録 ----
 function rerenderAll() { save(); renderGachaButton(); renderTable(); }
