@@ -10,6 +10,7 @@ godfat/battle-cats-rolls (Apache-2.0) が公開している日本版データ bu
 """
 import json
 import os
+import re
 import sys
 import urllib.request
 
@@ -35,9 +36,40 @@ def convert(doc):
         names = [n for n in (c.get('name') or []) if n]
         cats[int(cid)] = [c.get('rarity', 0), names]
 
+    # コラボ判定: キャラ説明の「○○から参戦」「コラボ」や、ガチャ/イベント名の「コラボ」から判断する
+    collab_title_of = {}
+    for cid, c in doc['cats'].items():
+        descs = ' '.join(x for x in (c.get('desc') or []) if x)
+        m = re.search(r'[「『]([^」』]+)[」』](?:シリーズ)?(?:より|から)(?:の|神さまの力で)?参戦', descs) \
+            or re.search(r'^([^「」『』！!。、]{2,40}?)(?:シリーズ)?(?:より|から)(?:の|神さまの力で)?参戦', descs) \
+            or re.search(r'[「『]?([^\s「」『』]+?)[」』]?に登場するキャラクター[\s　]*コラボ', descs)
+        if m:
+            collab_title_of[cid] = m.group(1)
+        elif 'コラボ' in descs and c.get('rarity', 0) >= 4:
+            collab_title_of[cid] = ''
+    names_of_gacha = {}
+    for e in doc['events'].values():
+        names_of_gacha.setdefault(e['id'], []).append(e.get('name') or '')
+
     gacha = {}
     for gid, g in doc['gacha'].items():
         entry = {'c': list(g.get('cats') or [])}
+        ubers = [i for i in entry['c'] if i in doc['cats'] and doc['cats'][i].get('rarity', 0) >= 4]
+        hits = [collab_title_of[i] for i in ubers if i in collab_title_of]
+        names = names_of_gacha.get(gid, []) + [g.get('name') or '']
+        by_name = any('コラボ' in n for n in names)
+        if (ubers and len(hits) * 2 >= len(ubers)) or by_name:
+            # 作品名はキャラ説明文から取るのを優先(ガチャ名の「」はキャラ名のことが多い)
+            # 一番新しいキャラ(ID が大きい)の作品名を使う(同じ作品でも表記が新しくなることがある)
+            named = [(i, collab_title_of[i]) for i in sorted(ubers, reverse=True) if collab_title_of.get(i)]
+            title = named[0][1] if named else ''
+            if not title:
+                for n in names:
+                    mm = re.search(r'[「『]([^」』]+)[」』]', n)
+                    if mm and 'コラボ' in n:
+                        title = mm.group(1)
+                        break
+            entry['x'] = title or 'コラボ'
         if g.get('name'):
             entry['n'] = g['name']
         if g.get('rate'):
