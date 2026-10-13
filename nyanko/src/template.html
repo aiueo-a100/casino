@@ -8,7 +8,7 @@
   /* レイアウト: 上部に固定の「ガチャ・シード・評価」バー、下はタブ(調べる / テーブル / 使い方) */
   :root {
     --bg:#eef1f6; --panel:#ffffff; --line:#dfe4ec; --line2:#c9d1dd; --fg:#1b2230; --mute:#66728a;
-    --primary:#2b6cf0; --primary-dk:#1f55c4; --primary-soft:#e8f0ff;
+    --primary:#2b6cf0; --primary-dk:#1f55c4; --primary-soft:#e8f0ff; --mute:#4d5870;
     --rare-bg:#f6f7fa; --rare-bd:#d3d9e3; --rare-fg:#4b5565;
     --supa-bg:#e9f1ff; --supa-bd:#9dbcff; --supa-fg:#1d4ed8;
     --uber-bg:#fff0e0; --uber-bg2:#ffd9b0; --uber-bd:#f97316; --uber-fg:#9a3412;
@@ -20,12 +20,12 @@
   * { box-sizing:border-box; }
   [hidden] { display:none !important; }
   html { -webkit-text-size-adjust:100%; }
-  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.6 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif; }
   .wrap { max-width:1080px; margin:0 auto; padding-inline:16px; }
-  h2 { font-size:17px; margin:0 0 10px; }
+  h2 { font-size:18px; margin:0 0 10px; }
   h3 { font-size:14px; margin:14px 0 6px; color:var(--mute); font-weight:600; letter-spacing:.02em; }
   a { color:var(--primary); }
-  small, .note { color:var(--mute); font-size:12.5px; }
+  small, .note { color:var(--mute); font-size:13.5px; }
   .note { margin:6px 0; }
   .spacer { flex:1; }
 
@@ -46,13 +46,13 @@
   .gpick { flex:1 1 300px; min-width:0; display:flex; align-items:center; gap:8px; text-align:left; background:#fff; border:1px solid var(--line2); border-radius:9px; padding:6px 10px; font:inherit; cursor:pointer; }
   .gpick:hover { border-color:var(--primary); }
   .gpick .gdate { font-size:12px; color:var(--mute); white-space:nowrap; }
-  .gpick .gname { flex:1; min-width:0; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .gpick .gname { flex:1; min-width:0; font-size:15px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .gpick .chev { color:var(--primary); font-size:12.5px; font-weight:600; white-space:nowrap; }
   #gsel { flex:0 1 150px; }
-  .sb-info { font-size:13.5px; gap:4px 14px; }
+  .sb-info { font-size:15px; gap:4px 14px; }
   .sb-info .kv b { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:14px; }
   .sb-info .kv { white-space:nowrap; }
-  @media (max-width:640px) { .gpick { flex-basis:100%; flex-wrap:wrap; row-gap:2px; } .gpick .gname { order:3; flex-basis:100%; white-space:normal; font-size:13px; line-height:1.35; max-height:2.7em; overflow:hidden; } .gpick .chev { margin-left:auto; } #gsel { flex:1 1 130px; } .sb-info { font-size:12.5px; gap:3px 10px; } .sb-info .kv b { font-size:13px; } }
+  @media (max-width:640px) { .gpick { flex-basis:100%; } .gpick .gname { font-size:14.5px; white-space:normal; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; } .sb-info { font-size:14px; gap:3px 10px; } }
 
   /* 部品 */
   select, input[type=text], input[type=number], textarea { font:inherit; padding:7px 9px; border:1px solid var(--line2); border-radius:8px; background:#fff; color:var(--fg); max-width:100%; }
@@ -67,8 +67,8 @@
   .btn.lg { padding:12px 22px; font-size:16px; border-radius:11px; }
   .btn.block { display:block; width:100%; text-align:left; margin-top:8px; }
   .btn:disabled { opacity:.45; cursor:default; }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-block:12px; box-shadow:var(--shadow); }
-  .chip { display:inline-block; font-size:11px; font-weight:600; border-radius:999px; padding:1px 8px; background:#eef1f6; color:#425066; vertical-align:middle; white-space:nowrap; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-block:14px; box-shadow:var(--shadow); }
+  .chip { display:inline-block; font-size:12px; font-weight:700; border-radius:999px; padding:2px 9px; background:#eef1f6; color:#425066; vertical-align:middle; white-space:nowrap; }
   .chip.gold { background:#fff1c2; color:#7a4b00; }
   .chip.blue { background:var(--primary-soft); color:var(--primary-dk); }
   .chip.tag-fest { background:#ffe3c2; color:#9a3412; } .chip.tag-collab { background:#d1fae5; color:#065f46; } .chip.tag-leg { background:#eadcff; color:#5b21b6; } .chip.tag-plat { background:#1b2230; color:#fff; } .chip.tag-norm { background:#e6eaf1; color:#425066; }
@@ -77,7 +77,7 @@
   .msg.warn { background:var(--warn-bg); color:var(--warn-fg); }
   .msg.err { background:var(--bad-bg); color:var(--bad-fg); }
   .raretxt { color:var(--rare-fg); } .supatxt { color:var(--supa-fg); } .ubertxt { color:var(--uber-fg); } .legendtxt { color:var(--legend-fg); }
-  .rchip { display:inline-block; font-size:10.5px; font-weight:700; border-radius:4px; padding:0 5px; line-height:16px; color:#fff; vertical-align:middle; }
+  .rchip { display:inline-block; font-size:11.5px; font-weight:700; border-radius:4px; padding:0 6px; line-height:18px; color:#fff; vertical-align:middle; }
   .rchip.r2 { background:#8b96a8; } .rchip.r3 { background:#3b82f6; } .rchip.r4 { background:#ea580c; } .rchip.r5 { background:#7c3aed; }
   .badge { display:inline-block; font-size:10.5px; border:1px solid #c92a2a; color:#c92a2a; border-radius:4px; padding:0 4px; line-height:15px; vertical-align:middle; background:#fff; }
   .badge.dbl { border-color:#6d28d9; color:#6d28d9; }
@@ -189,10 +189,10 @@
   .cell.r5 { background:linear-gradient(135deg, var(--legend-bg), var(--legend-bg2)); border-color:var(--legend-bd); border-width:2px 2px 2px 6px; box-shadow:0 2px 10px rgba(124,58,237,.3); }
   .c-top { display:flex; align-items:center; gap:5px; flex-wrap:wrap; font-size:12px; }
   .pos { font-family:ui-monospace,Menlo,Consolas,monospace; font-weight:700; color:var(--mute); font-size:12px; }
-  .cell .nm { font-size:14px; line-height:1.35; word-break:break-all; color:var(--rare-fg); }
+  .cell .nm { font-size:15.5px; line-height:1.35; word-break:break-all; color:var(--rare-fg); }
   .cell.r3 .nm { color:var(--supa-fg); }
-  .cell.r4 .nm { font-weight:800; font-size:16px; color:var(--uber-fg); }
-  .cell.r5 .nm { font-weight:800; font-size:16px; color:var(--legend-fg); }
+  .cell.r4 .nm { font-weight:800; font-size:17px; color:var(--uber-fg); }
+  .cell.r5 .nm { font-weight:800; font-size:17px; color:var(--legend-fg); }
   .cell.r4 .nm::before { content:"★ "; color:#ea580c; }
   .cell.r5 .nm::before { content:"★★ "; color:#7c3aed; }
   .rows.dim .cell.r2, .rows.dim .cell.r3 { opacity:.5; }
@@ -212,7 +212,7 @@
   .found .nm { text-decoration:underline; text-decoration-color:#15803d; text-decoration-thickness:3px; }
   .legendbox { font-size:12.5px; color:var(--mute); margin:12px 0; display:flex; gap:6px 14px; flex-wrap:wrap; }
   .legendbox .sw { display:inline-block; width:12px; height:12px; border-radius:3px; vertical-align:middle; margin-right:3px; border:1px solid #bbb; }
-  @media (max-width:640px) { .cell .nm { font-size:13.5px; } .cell.r4 .nm, .cell.r5 .nm { font-size:15px; } .cell { padding:4px 6px 5px 7px; } .trow, .thead { gap:5px; } }
+  @media (max-width:640px) { #homeBox .h-strip .sc { font-size:14px; padding:4px 6px; gap:5px; } #homeBox .h-strip .sc small { font-size:12px; } .cell .nm { font-size:14.5px; } .cell.r4 .nm, .cell.r5 .nm { font-size:16px; } .cell { padding:5px 7px 6px 8px; } .trow, .thead { gap:5px; } }
 
   /* シート(セルを押したときの操作) */
   .backdrop { position:fixed; inset:0; background:rgba(16,24,40,.35); z-index:40; }
@@ -234,20 +234,30 @@
   .mplan .tot { font-size:13px; color:var(--mute); margin-top:6px; }
   ol.steps .bn { display:inline-block; background:#1b2230; color:#fff; border-radius:4px; padding:0 6px; font-size:11.5px; margin-right:4px; vertical-align:middle; max-width:14em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   ol.steps li .mstep-act { margin-left:auto; flex:0 0 auto; }
+  ol.brief { margin:6px 0 2px; padding-left:1.4em; font-size:15px; }
+  ol.brief li { margin:3px 0; }
+  ol.brief .bn, ol.steps .bn { display:inline-block; background:#1b2230; color:#fff; border-radius:4px; padding:0 6px; font-size:12px; margin-right:4px; vertical-align:middle; max-width:14em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   table.rating { width:100%; border-collapse:collapse; font-size:13px; }
   table.rating td { padding:3px 4px; border-bottom:1px solid var(--line); vertical-align:middle; }
   table.rating select { width:auto; padding:2px 4px; font-size:13px; }
   .unit-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:4px 0; border-bottom:1px dashed var(--line); font-size:13.5px; }
-  .rec-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:6px; }
+  .rec-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:8px; margin-top:8px; }
+  .rec-row .btn { padding:12px 14px; font-size:16px; }
+  .reco { font-size:15.5px; }
+  .reco li { margin:6px 0; }
+  .reco ul { padding-left:1.2em; margin:6px 0; }
+  .quiet { color:var(--mute); font-size:13.5px; }
   .h-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13px; color:var(--mute); }
   .h-label { font-size:12.5px; color:var(--mute); margin-top:10px; }
-  .h-big { font-size:22px; font-weight:800; display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:2px 0 4px; }
-  .h-strip { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
-  .h-strip .sc { font-size:12.5px; border:1px solid var(--rare-bd); background:var(--rare-bg); color:var(--rare-fg); border-radius:6px; padding:1px 6px; }
+  .h-big { font-size:26px; font-weight:800; display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:2px 0 6px; line-height:1.3; }
+  .h-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .h-head .spacer { flex:1; }
+  .h-strip { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:6px; margin-top:6px; }
+  .h-strip .sc { font-size:15px; border:1px solid var(--rare-bd); background:var(--rare-bg); color:var(--rare-fg); border-radius:8px; padding:4px 8px; display:flex; gap:6px; align-items:center; }
   .h-strip .sc.r3 { background:var(--supa-bg); border-color:var(--supa-bd); color:var(--supa-fg); }
   .h-strip .sc.r4 { background:var(--uber-bg2); border-color:var(--uber-bd); color:var(--uber-fg); font-weight:700; }
   .h-strip .sc.r5 { background:var(--legend-bg2); border-color:var(--legend-bd); color:var(--legend-fg); font-weight:700; }
-  .h-strip .sc small { color:var(--mute); margin-right:2px; }
+  .h-strip .sc small { color:var(--mute); font-size:12.5px; white-space:nowrap; flex:0 0 auto; }
   .stepper { display:inline-flex; align-items:center; gap:4px; }
   .stepper input { width:4em; text-align:center; }
   .stepper button { font:inherit; font-size:18px; width:36px; height:36px; border-radius:8px; border:1px solid var(--line2); background:#fff; cursor:pointer; }
@@ -284,6 +294,7 @@
 
 <main class="wrap">
   <section class="card" id="gachaDetails" hidden>
+    <div id="seedLine" style="margin-bottom:8px"></div>
     <div class="grid2" style="margin-bottom:8px">
       <div><label for="gsel">確定枠(11連)の扱い</label><select id="gsel"><option value="auto">自動(イベントの設定に従う)</option><option value="0">なし</option><option value="11">11連確定あり</option><option value="15">15連ステップアップ</option></select></div>
     </div>
@@ -305,21 +316,19 @@
   <section data-tab="home" class="tabpane" hidden>
     <div id="homeBox"></div>
     <div class="card" id="recordCard" hidden>
-      <h2>引いたら記録する</h2>
-      <div class="note">ゲームで引いたら、ここで記録すると位置(シード)が進みます。出るはずのキャラも確認できます。</div>
+      <h2>ゲームで引いたら記録</h2>
       <div class="rec-row">
         <button class="btn primary" id="recSingle">単発を引いた</button>
         <button class="btn" id="recMulti">11連を引いた</button>
-        <button class="btn" id="recPlat">プラチナ/レジェンドチケットを使った</button>
-        <button class="btn ghost sm" id="undoBtn2" disabled>1つ戻す</button>
+        <button class="btn" id="recPlat">プラチナ・レジェンドチケット</button>
       </div>
-      <div class="note">出たキャラが予測と違った → <button class="btn ghost sm" id="mismatchBtn">対処法を見る</button></div>
+      <div class="h-head" style="margin-top:8px"><button class="btn ghost sm" id="undoBtn2" disabled>1つ戻す</button><span class="spacer"></span><button class="btn ghost sm" id="mismatchBtn">出たキャラが違うときは</button></div>
     </div>
     <div class="card" id="multiCard" hidden>
-      <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">おすすめの引き方 <span class="chip blue">複数ガチャ・自動計算</span></h2>
-      <div class="note" id="multiMeta"></div>
+      <h2>おすすめ</h2>
+      <div class="quiet" id="multiMeta"></div>
       <div id="multiOut"></div>
-      <details class="plain" id="multiSettings" style="margin-top:10px"><summary>対象のガチャ・予算を変える</summary>
+      <details class="plain" id="multiSettings" style="margin-top:10px"><summary>設定: 対象のガチャ・予算</summary>
         <div class="note">シードは全ガチャ共通なので、1回ごとに引くガチャを変えられます。チェックしたガチャの中で、予算内に<b>超激レア・伝説レアをなるべく多く</b>、または<b>評価の高いキャラ</b>を取れる引き方(順番とガチャ)を計算します。</div>
         <div id="multiBanners" class="mb-list"></div>
         <div class="ctrl-grid" style="margin-top:10px">
@@ -340,10 +349,10 @@
   <section data-tab="seek" class="tabpane" hidden>
     <div class="card">
       <h2>引いた結果からシードを見つける</h2>
-      <ol class="howto">
-        <li>上の「ガチャ」で、<b>実際に引いたガチャ</b>を選びます(超ネコ祭と通常では排出率が違います)。</li>
-        <li>レアチケットまたはネコカン150で引いた結果を、<b>引いた順に</b>選びます。7〜10体あるとほぼ1つに決まります。</li>
-        <li>11連を引いたときは、1〜10体目を普通に選び、<b>11体目の超激レアは「確定枠」</b>から選びます(15連ステップアップは最後の1体)。</li>
+      <ol class="howto" style="font-size:15px">
+        <li>上の「ガチャ」を、<b>実際に引いたガチャ</b>にする</li>
+        <li>単発(レアチケット/ネコカン150)で引いた結果を<b>引いた順に</b>選ぶ(7〜10体)</li>
+        <li>11連なら10体目まで普通に選び、<b>11体目は「確定枠」</b>から選ぶ</li>
       </ol>
       <div class="rolls-head"><span>引いた順</span><span class="note" style="margin:0">(間違えたら × で消して選び直し)</span><span class="spacer"></span><button class="btn ghost sm" id="quickToggle">名前を文字で入力</button></div>
       <div class="chips" id="rollChips"></div>
@@ -370,21 +379,22 @@
 
   <section data-tab="table" class="tabpane" hidden>
     <div class="card eval" id="evalBox"></div>
-    <div class="card">
-      <div class="ctrl-grid">
+    <details class="card plain" id="tableSettings" style="padding-top:12px;padding-bottom:12px"><summary>表示の設定・シードの入力</summary>
+      <div class="ctrl-grid" style="margin-top:10px">
         <div><label for="seed">シード(現在)</label><div class="inline-row"><input id="seed" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="例: 1234567890"><button class="btn sm" id="showBtn">表示</button></div></div>
         <div><label for="last">直前に引いたキャラ(レア被り判定)</label><select id="last"></select></div>
         <div><label for="find">狙いのキャラ(当たり扱い)</label><select id="find"></select></div>
         <div class="sm"><label for="count">行数</label><input id="count" type="number" min="1" max="999" value="100"></div>
         <div class="sm"><label for="nameForm">名前</label><select id="nameForm"><option value="0">第1形態</option><option value="1">第2形態</option><option value="2">第3形態</option><option value="3">第4形態</option></select></div>
-        <div class="ctrl-btns"><button class="btn sm" id="undoBtn" disabled>1つ戻す</button><button class="btn sm" id="copyBtn">シードをコピー</button></div>
+        <div class="ctrl-btns"><button class="btn sm" id="copyBtn">シードをコピー</button></div>
       </div>
       <div class="checks">
         <label class="check"><input type="checkbox" id="dimRares"> 超激レア以上だけ目立たせる(レア・激レアを薄く)</label>
-        <label class="check"><input type="checkbox" id="usePlat"> 取り方にプラチナ/レジェンドチケットを使う手も考える</label>
+        <label class="check"><input type="checkbox" id="showSub"> 被り時・11連の確定枠の情報もセルに表示</label>
+        <label class="check"><input type="checkbox" id="usePlat"> 取り方の計算で、プラチナ/レジェンドチケットを使う手も考える</label>
       </div>
-    </div>
-    <div class="note" id="pathInfo"></div>
+    </details>
+    <div class="h-head" style="margin:8px 0"><div class="note" id="pathInfo" style="flex:1;min-width:0"></div><button class="btn sm" id="undoBtn" disabled>1つ戻す</button></div>
     <div id="tablewrap"></div>
     <div class="legendbox">
       <span><span class="sw" style="background:var(--rare-bg)"></span>レア</span>
@@ -404,8 +414,8 @@
       <ol>
         <li><b>最初の1回だけ: シードを見つける</b>。上の「ガチャ」で引くガチャを選び、そのガチャを単発(レアチケット/ネコカン150)で7〜10回引いて、出たキャラを「シードを調べる」で順番に入力して検索します。候補が1つなら「このシードで始める」。複数なら、あと1〜2回引いて追加して再検索。</li>
         <li><b>合っているか確かめる</b>: ホームに「次の1回で出るキャラ」が出ます。実際に1回引いて同じなら正解です。</li>
-        <li><b>ふだんの使い方(ホーム)</b>: ①「次の1回で出るキャラ」とその後の並びを見る → ②「おすすめの引き方」で、どのガチャを何回引くと超激レアが取れるかを見る → ③ゲームで引く → ④「引いたら記録する」で、どのガチャで何回引いたか(または11連・チケット)を記録して位置を進める。出たキャラの確認もそこでできます。</li>
-        <li><b>テーブル</b>タブでは全ての位置を一覧で見られ、セルを押して「ここまで引いた」でも位置を進められます。間違えたら「1つ戻す」。</li>
+        <li><b>ふだんの使い方(ホーム)</b>: ①「次に引くと出るキャラ」とその後の並びを見る → ②「おすすめ」で、どのガチャを何回引くと超激レアが取れるかを見る → ③ゲームで引く → ④「ゲームで引いたら記録」で、どのガチャで何回引いたか(または11連・チケット)を記録して位置を進める。出たキャラの確認もそこでできます。</li>
+        <li><b>テーブル</b>タブでは全ての位置を一覧で見られ、セルを押して「ここまで引いた」でも位置を進められます。間違えたら「1つ戻す」。シードの数字の入力・コピーや、行数・表示の設定は「表示の設定・シードの入力」を開くと出ます。</li>
         <li><b>評価と取り方</b>: テーブル上のカードに、次の30回の超激レアの数をそのガチャの平均と比べた評価(大当たり/かなり良い/良い/普通/やや悪い/悪い)と、「一番の当たり」(伝説レア → 狙いのキャラ → 一番近い超激レア)までの最短の取り方が出ます。「狙いのキャラ」を選ぶと、そのキャラまでの取り方も出ます。</li>
         <li><b>シードの保存</b>: このブラウザに自動保存されます。別の端末で使うときのために、上部のシードの数字をメモしておくと安心です(数字を「シード(現在)」に入れれば同じテーブルが出ます)。</li>
       </ol>
@@ -413,7 +423,7 @@
     <div class="card">
       <h2>複数ガチャで最適ルート(自動計算)</h2>
       <ul>
-        <li>開催中(と2週間以内に始まる)ガチャにチェックを入れ、予算(単発換算の回数。レアチケット+ネコカン÷150)を入れて「計算する」を押すと、<b>どの順番でどのガチャを引けば超激レア・伝説レアを一番多く取れるか</b>(数重視)と、<b>評価の高いキャラを優先した引き方</b>(評価重視)、<b>届く範囲で一番評価が良いキャラ</b>とその取り方が出ます。</li>
+        <li>開催中(と2週間以内に始まる)ガチャにチェックを入れ、予算(単発換算の回数。レアチケット+ネコカン÷150)を入れて「計算する」を押すと、<b>一番近い超激レア以上</b>と、<b>どの順番でどのガチャを引けば超激レア・伝説レアを一番多く取れるか</b>(予算内で一番多く取る)、<b>評価の高いキャラを優先した引き方</b>、<b>届く範囲で一番評価が良いキャラ</b>とその取り方が出ます。各手順の「キャラごとの手順を見る」を開くと、1回ごとに出るキャラも確認できます。</li>
         <li>計算は、シードが全ガチャ共通であることと、レア被りの引き直し・11連の確定枠(半回し)の仕組みをそのまま使って、予算内の全ての引き方の中から最良のものを選んでいます(総当たりと一致することを検証済み)。</li>
         <li>手順の「ここまで引いた」を押すと、その手順まで実際に引いたことにして位置を進めます(ガチャをまたいでいても大丈夫です)。残りの手順は自動で再計算されます。</li>
         <li>キャラの評価はステータスから機械的に出した目安です。「キャラの評価一覧」で自分の好みに変えられます(欲しくないキャラは × に)。</li>
@@ -499,7 +509,7 @@ function presetFor(r) { for (var i = 0; i < PRESETS.length; i++) { var p = PRESE
 function rateTag(r) { var p = presetFor(r); return p ? p.tag : (pct(r.uber) + '超激'); }
 function tagClass(r) { var p = presetFor(r); return p ? p.cls : (r.uber >= 700 ? 'tag-fest' : 'tag-norm'); }
 function collabTitle(gid) { var g = GACHA[gid]; return g && g.x ? g.x : null; }
-function collabChip(gid) { var x = collabTitle(gid); return x ? '<span class="chip tag-collab">コラボ' + (x !== 'コラボ' ? ': ' + esc(x) : '') + '</span>' : ''; }
+function collabChip(gid, bare) { var x = collabTitle(gid); return x ? '<span class="chip tag-collab">コラボ' + (x !== 'コラボ' && !bare ? ': ' + esc(x) : '') + '</span>' : ''; }
 function shortName(s, n) { s = (s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n) + '…' : s; }
 function gachaDisplayName(id) { var e = LATEST_EVENT_OF[id]; return e ? e.n : ((GACHA[id] && GACHA[id].n) || '(名称不明)'); }
 function nm(id, form) {
@@ -514,7 +524,7 @@ function normalizeName(s) { return String(s).normalize('NFKC').replace(/[\s　]+
 
 // ---- 状態 ----
 var state = { event: null, custom: null, rates: { rare: 6970, supa: 2500, uber: 500 }, ratePreset: 'regular', g: 'auto',
-  seed: 0, last: 0, count: 100, find: 0, form: 0, plat: false, dim: false, multi: { rolls: 30, multi: true, plat: 0, on: {}, done: false } };
+  seed: 0, last: 0, count: 100, find: 0, form: 0, plat: false, dim: false, sub: false, multi: { rolls: 30, multi: true, plat: 0, on: {}, done: false } };
 var history = [];
 var rowsCache = null, labelMap = {}, currentPoolCache = null, lastPlan = null, lastSummary = null, currentTab = null;
 var rollEntries = []; // 'rarity:id' または 'g:id'(確定枠)
@@ -592,8 +602,8 @@ function updateSbHeight() { var h = $('#sb').offsetHeight; document.documentElem
 // ---- ガチャ選択(固定バーのボタン + 選択シート)と詳細 ----
 function renderGachaButton() {
   var b = $('#gachaBtn'), h = '';
-  if (state.event === 'custom') h = '<span class="chip tag-norm">カスタム</span>' + collabChip(state.custom) + '<span class="gname">' + esc(shortName(gachaDisplayName(state.custom), 60)) + '</span>';
-  else { var e = EV_BY_KEY[state.event]; h = collabChip(e.id) + '<span class="chip ' + tagClass(e) + '">' + esc(rateTag(e)) + '</span><span class="gdate">' + mmdd(e.s) + '〜' + mmdd(e.e) + '</span><span class="gname">' + esc(e.n) + '</span>'; }
+  if (state.event === 'custom') h = '<span class="chip tag-norm">カスタム</span><span class="gname">' + esc(shortName(gachaDisplayName(state.custom), 24)) + '</span>';
+  else { var e = EV_BY_KEY[state.event]; h = collabChip(e.id, true) + '<span class="chip ' + tagClass(e) + '">' + esc(rateTag(e)) + '</span><span class="gname">' + esc(bannerShort(e, true)) + '</span><span class="gdate">' + mmdd(e.s) + '〜' + mmdd(e.e) + '</span>'; }
   b.innerHTML = h + '<span class="chev">変更 ▾</span>';
   $('#gsel').value = String(state.g);
   renderCustom();
@@ -602,9 +612,9 @@ function renderGachaButton() {
 function openGachaPicker() {
   var g = groupedEvents();
   function row(e) {
-    return '<button class="ev-row' + (e.k === state.event ? ' sel' : '') + '" data-key="' + esc(e.k) + '" data-n="' + esc(normalizeName(e.n + ' ' + (collabTitle(e.id) ? 'コラボ ' + collabTitle(e.id) : ''))) + '"><span class="ev-date">' + mmdd(e.s) + '<br>〜' + mmdd(e.e) + '</span><span class="ev-main">' + collabChip(e.id) + '<span class="chip ' + tagClass(e) + '">' + esc(rateTag(e)) + '</span>' +
+    return '<button class="ev-row' + (e.k === state.event ? ' sel' : '') + '" data-key="' + esc(e.k) + '" data-n="' + esc(normalizeName(e.n + ' ' + (collabTitle(e.id) ? 'コラボ ' + collabTitle(e.id) : ''))) + '"><span class="ev-date">' + mmdd(e.s) + '<br>〜' + mmdd(e.e) + '</span><span class="ev-main">' + collabChip(e.id) + (e.p ? '' : '<span class="chip ' + tagClass(e) + '">' + esc(rateTag(e)) + '</span>') +
       (e.g ? '<span class="chip">' + (e.g === 11 ? '11連確定' : 'ステップアップ') + '</span>' : '') + (e.p ? '<span class="chip tag-plat">' + { platinum: 'プラチナ', legend: 'レジェンド', 'dl-100m': '1億DL' }[e.p] + '</span>' : '') +
-      '<span class="ev-name">' + esc(e.n) + '</span></span></button>';
+      '<span class="ev-name"><b>' + esc(bannerShort(e)) + '</b><br><span class="quiet">' + esc(e.n) + '</span></span></span></button>';
   }
   var h = '<div class="pk-head"><b>ガチャを選ぶ</b><span class="spacer"></span><button class="btn ghost sm" data-act="close">閉じる</button></div>';
   h += '<input type="text" class="pk-search" id="gSearch" placeholder="名前で絞り込み(例: 超ネコ祭、ルーノ)" autocomplete="off">';
@@ -648,15 +658,16 @@ function renderEventInfo() {
 function renderStatus() {
   var box = $('#sbInfo'), info = currentPoolCache, h = '';
   if (!state.seed) {
-    h = '<span class="kv">シード: <b>未設定</b></span><span class="note" style="margin:0">「シードを調べる」タブで見つけるか、分かっていれば「テーブル・評価」タブで入力してください。</span>';
+    h = '<span class="kv">シード <b>未設定</b></span><span class="quiet">ホームの案内に沿って見つけてください</span>';
   } else {
     var s = startCat();
-    h += '<span class="kv">シード <b>' + state.seed + '</b> <button class="btn ghost sm" id="sbCopy" title="コピー">コピー</button></span>';
-    if (s) h += '<span class="nextcat">次に引く: <b>' + BC.catLabel(s) + '</b> ' + rch(s.rarity) + ' <b class="' + RCLS[s.rarity] + 'txt">' + esc(nm(s.id)) + '</b></span>';
-    if (lastSummary && lastSummary.verdict) h += '<span class="kv">評価: ' + gradeChip(lastSummary.verdict) + '</span>';
+    if (s) h += '<span class="nextcat">次に引く: ' + rch(s.rarity) + ' <b class="' + RCLS[s.rarity] + 'txt">' + esc(nm(s.id)) + '</b></span>';
+    if (lastSummary && lastSummary.verdict) h += '<span class="kv">' + gradeChip(lastSummary.verdict) + '</span>';
     if (!info.pool.exist) h += '<span class="chip">データ無し</span>';
   }
   box.innerHTML = h;
+  var sl = $('#seedLine');
+  if (sl) sl.innerHTML = state.seed ? 'シード: <b style="font-family:ui-monospace,Menlo,Consolas,monospace">' + state.seed + '</b> <button class="btn ghost sm" id="sbCopy">コピー</button> <span class="quiet">(他の端末で使うときはこの数字をメモ)</span>' : 'シード: 未設定';
   var c = $('#sbCopy'); if (c) c.onclick = copySeed;
   updateSbHeight();
 }
@@ -850,7 +861,7 @@ function renderFindSelect() {
 function syncTableInputs() {
   $('#seed').value = state.seed ? String(state.seed) : '';
   $('#count').value = state.count; $('#nameForm').value = String(state.form);
-  $('#usePlat').checked = !!state.plat; $('#dimRares').checked = !!state.dim;
+  $('#usePlat').checked = !!state.plat; $('#dimRares').checked = !!state.dim; $('#showSub').checked = !!state.sub;
   renderLastSelect(); renderFindSelect();
   $('#undoBtn').disabled = !history.length;
   var u2 = $('#undoBtn2'); if (u2) u2.disabled = !history.length;
@@ -895,15 +906,15 @@ function renderTable() {
     h += '<div class="nm">' + esc(nm(cat.id)) + '</div>';
     if (cat.rerolled) {
       var rr = cat.rerolled, rl = BC.catLabel(rr); labelMap[rl] = rr;
-      h += '<div class="c-sub rr" data-label="' + rl + '"><span class="k">被り時</span><span>' + esc(nm(rr.id)) + '</span><span class="nx">→' + (rr.next ? BC.catLabel(rr.next) : '?') + '</span></div>';
+      if (state.sub) h += '<div class="c-sub rr" data-label="' + rl + '"><span class="k">被り時</span><span>' + esc(nm(rr.id)) + '</span><span class="nx">→' + (rr.next ? BC.catLabel(rr.next) : '?') + '</span></div>';
     }
     if (g && cat.guaranteed) {
       var gc = cat.guaranteed, gl = BC.catLabel(gc); labelMap[gl] = gc;
-      h += '<div class="c-sub gg" data-label="' + gl + '"><span class="k">' + g + '連</span><span class="gnm">' + esc(nm(gc.id)) + '</span><span class="nx">→' + (gc.next ? BC.catLabel(gc.next) : '?') + '</span></div>';
+      if (state.sub) h += '<div class="c-sub gg" data-label="' + gl + '"><span class="k">' + g + '連</span><span class="gnm">' + esc(nm(gc.id)) + '</span><span class="nx">→' + (gc.next ? BC.catLabel(gc.next) : '?') + '</span></div>';
     }
     if (g && cat.rerolled && cat.rerolled.guaranteed) {
       var rg = cat.rerolled.guaranteed, rgl = BC.catLabel(rg); labelMap[rgl] = rg;
-      h += '<div class="c-sub gg" data-label="' + rgl + '"><span class="k">被り時' + g + '連</span><span class="gnm">' + esc(nm(rg.id)) + '</span><span class="nx">→' + (rg.next ? BC.catLabel(rg.next) : '?') + '</span></div>';
+      if (state.sub) h += '<div class="c-sub gg" data-label="' + rgl + '"><span class="k">被り時' + g + '連</span><span class="gnm">' + esc(nm(rg.id)) + '</span><span class="nx">→' + (rg.next ? BC.catLabel(rg.next) : '?') + '</span></div>';
     }
     return h + '</div>';
   }
@@ -911,7 +922,7 @@ function renderTable() {
   wrap.innerHTML = '<div class="thead"><div class="th">A <small>あなたのトラック</small></div><div class="th b">B <small>もう一方のトラック</small></div></div><div class="rows' + (state.dim ? ' dim' : '') + '" id="rows">' + body + '</div>';
   var s = startCat();
   if (s) { var el = elFor(BC.catLabel(s)); if (el) { el.classList.add('nextpos'); if (el.classList.contains('cell')) el.insertAdjacentHTML('afterbegin', '<span class="nexttag">▶ 次に引く</span>'); } }
-  $('#pathInfo').innerHTML = 'セルを押すと「ここまで引いた」などの操作ができます。次に引く位置: <b>' + (s ? BC.catLabel(s) : '1A') + '</b>(' + esc(nm(s ? s.id : -1)) + ')';
+  $('#pathInfo').innerHTML = '次に引く位置: <b>' + (s ? BC.catLabel(s) : '1A') + '</b>(' + esc(nm(s ? s.id : -1)) + ')。セルを押すと操作メニューが出ます。';
   renderEval();
   renderStatus();
   renderMultiCard();
@@ -1136,18 +1147,18 @@ function renderHome() {
   $('#recordCard').hidden = !state.seed || !rowsCache;
   $('#homeFoot').hidden = !state.seed;
   if (!state.seed) {
-    box.innerHTML = '<div class="card"><h2>はじめに(シードを見つける)</h2><ol class="howto"><li>上の「ガチャ」で、これから引くガチャを選びます。</li><li>そのガチャをレアチケットかネコカン(単発)で <b>7〜10回</b>引いて、出たキャラを順番にメモします。</li><li>「シードを調べる」で順番に入力して検索すると、あなたのシード(乱数の位置)が分かります。</li></ol><div class="seek-actions"><button class="btn primary lg" id="goSeek">シードを調べる</button><button class="btn" id="goTable">シードを知っている(数字を入力)</button></div><div class="note">一度見つければ、以後はこのホームで「引いたら記録」していくだけです。</div></div>';
+    box.innerHTML = '<div class="card"><h2>はじめに: シードを見つける</h2><ol class="howto" style="font-size:15.5px"><li>上の「ガチャ」で、これから引くガチャを選ぶ</li><li>そのガチャを単発で <b>7〜10回</b>引いて、出たキャラを順番にメモ</li><li>「シード検索」で順番に入力して検索</li></ol><div class="seek-actions"><button class="btn primary lg" id="goSeek">シード検索へ</button><button class="btn" id="goTable">シードの数字を知っている</button></div></div>';
     $('#goSeek').onclick = function () { showTab('seek'); };
-    $('#goTable').onclick = function () { showTab('table'); $('#seed').focus(); };
+    $('#goTable').onclick = function () { showTab('table'); var d = $('#tableSettings'); if (d) d.open = true; $('#seed').focus(); };
     return;
   }
   if (!rowsCache) { box.innerHTML = '<div class="card"><div class="msg err">このガチャはデータが無いため表示できません。上の「ガチャ」で別のガチャを選んでください。</div></div>'; return; }
   var nx = nextCatsOnCurrent(10), first = nx[0], sm = lastSummary;
-  var h = '<div class="card"><div class="h-row"><span>今のガチャ:</span>' + collabChip(info.gachaId) + (info.event ? '<span class="chip ' + tagClass(info.event) + '">' + esc(rateTag(info.event)) + '</span>' : '') + '<span>' + esc(shortName(info.name, 26)) + '</span><button class="btn ghost sm" id="homeGacha">変更</button></div>';
-  h += '<div class="h-label">次の1回で出るキャラ(このガチャ)</div>';
+  var bname = info.event ? bannerShort(info.event) : shortName(info.name, 20);
+  var h = '<div class="card"><div class="h-head"><span class="quiet">次に引くと出るキャラ(' + esc(bname) + ')</span><span class="spacer"></span><button class="btn ghost sm" id="homeGacha">ガチャを変更</button></div>';
   h += '<div class="h-big ' + RCLS[first.rarity] + 'txt">' + (first.rarity >= 4 ? '★ ' : '') + esc(nm(first.id)) + rch(first.rarity) + (first.rarity >= 4 ? tierChip(first.id) : '') + festBadge(first) + '</div>';
-  h += '<div class="h-label">その後、単発で続けた場合</div><div class="h-strip">' + nx.slice(1).map(function (c, i) { return '<span class="sc r' + c.rarity + '"><small>' + (i + 2) + '</small>' + esc(nm(c.id)) + (c.rarity >= 4 ? '★' : '') + '</span>'; }).join('') + '</div>';
-  if (sm && sm.verdict) h += '<div class="h-row" style="margin-top:8px">この位置の評価: ' + gradeChip(sm.verdict) + '<span>' + esc(sm.verdict.why) + (sm.first ? '。最初の超激レア以上は ' + sm.first + '回目' : '') + '</span></div>';
+  h += '<div class="quiet">そのまま単発で続けると</div><div class="h-strip">' + nx.slice(1).map(function (c, i) { return '<span class="sc r' + c.rarity + '"><small>' + (i + 2) + '回目</small><span>' + (c.rarity >= 4 ? '★' : '') + esc(nm(c.id)) + '</span></span>'; }).join('') + '</div>';
+  if (sm && sm.verdict) h += '<div class="h-head" style="margin-top:10px">' + gradeChip(sm.verdict) + '<span class="quiet">' + esc(sm.verdict.why) + (sm.first ? '。最初の超激レア以上は<b>' + sm.first + '回目</b>' : '') + '</span></div>';
   h += '</div>';
   box.innerHTML = h;
   $('#homeGacha').onclick = openGachaPicker;
@@ -1180,7 +1191,7 @@ function openRecordSheet(kind) {
   var cands = candidateBanners();
   var title = kind === 'single' ? '単発を引いた' : kind === 'multi' ? '11連を引いた' : 'プラチナ/レジェンドチケットを使った';
   var h = '<div class="pk-head"><b>' + title + '</b><span class="spacer"></span><button class="btn ghost sm" data-act="close">閉じる</button></div>';
-  if (kind !== 'plat') h += '<label for="recBanner">どのガチャで引きましたか?</label><select id="recBanner">' + cands.map(function (e) { return '<option value="' + esc(e.k) + '"' + (e.k === state.event ? ' selected' : '') + '>' + esc(shortName(e.n, 40)) + '</option>'; }).join('') + '</select>';
+  if (kind !== 'plat') h += '<label for="recBanner">どのガチャで引きましたか?</label><select id="recBanner">' + cands.map(function (e) { return '<option value="' + esc(e.k) + '"' + (e.k === state.event ? ' selected' : '') + '>' + esc(bannerShort(e)) + ' (' + mmdd(e.s) + '〜' + mmdd(e.e) + ')</option>'; }).join('') + '</select>';
   if (kind === 'single') h += '<div style="margin-top:8px"><label>何回引きましたか?</label><div class="stepper"><button type="button" data-step="-1">−</button><input id="recCount" type="number" min="1" max="60" value="1"><button type="button" data-step="1">+</button></div></div>';
   h += '<div class="preview" id="recPreview"></div>';
   h += '<button class="btn primary block" data-act="recApply">記録する(位置を進める)</button><button class="btn ghost block" data-act="close">キャンセル</button>';
@@ -1227,10 +1238,18 @@ function tierChip(id) { var tr = tierOf(id); return '<span class="tier ' + tr + 
 function prizeValue(id, rarity) { if (rarity < 4) return 0; var w = TIER_W[tierOf(id)] || 0; return w ? w + (rarity === 5 ? 2 : 0) : 0; }
 function countValue(id, rarity) { return rarity === 5 ? 1.5 : rarity === 4 ? 1 : 0; }
 function addDays(s, n) { var d = new Date(s + 'T00:00:00'); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
-function bannerShort(e) {
+var FEST_RE = /(超極ネコ祭|超ネコ祭|極ネコ祭|超選抜祭|超国王祭|超絶祭)/;
+// ガチャの短い呼び名: コラボ作品名 / 「」内の目玉キャラ / 一番新しい超激レア。noTag なら祭の名前を付けない
+function bannerShort(e, noTag) {
   var x = collabTitle(e.id); if (x && x !== 'コラボ') return shortName(x, 12);
-  var m = /[「『]([^」』]+)[」』]/.exec(e.n); if (m) return shortName(m[1], 12);
-  return rateTag(e) + ' ' + shortName(e.n, 8);
+  var n = e.n || '', fm = FEST_RE.exec(n), fest = fm ? fm[1] : null;
+  var units = (n.match(/[「『][^」』]+[」』]/g) || []).map(function (s) { return s.slice(1, -1); }).filter(function (s) { return !FEST_RE.test(s); });
+  var unit = units[0];
+  if (!unit) { var g = GACHA[e.id], best = null; (g ? g.c : []).forEach(function (id) { var c = CATS[id]; if (c && c.rarity >= 4 && (best == null || id > best)) best = id; }); if (best != null) unit = nm(best); }
+  var tag = fest || (tagClass(e) !== 'tag-norm' ? rateTag(e) : null);
+  if (noTag) return unit ? shortName(unit, 12) : (tag || shortName(n, 12));
+  if (tag && unit) return tag + '(' + shortName(unit, 10) + ')';
+  return tag || (unit ? shortName(unit, 12) : shortName(n, 12));
 }
 function candidateBanners() {
   var t = todayStr(), lim = addDays(t, 14), seen = {}, out = [];
@@ -1325,6 +1344,21 @@ function planText(states, banners) {
   });
   return lines.join('\n');
 }
+// 手順の要約: 1行=1まとまり(どのガチャで何回引くと、どの超激レアが出るか)
+function planBrief(states, banners) {
+  var groups = [];
+  states.forEach(function (s) { var m = s.move, last = groups[groups.length - 1]; if (last && m.type === 'single' && last.type === 'single' && last.b === m.b) { last.states.push(s); return; } groups.push({ type: m.type, b: m.b, states: [s] }); });
+  var lines = groups.map(function (g) {
+    var prizes = [], n = 0;
+    g.states.forEach(function (s) { s.move.cats.forEach(function (c) { n++; if (c.rarity >= 4) prizes.push({ c: c, at: n }); }); });
+    var got = prizes.length ? ' → ' + prizes.map(function (p) { return '<b class="' + RCLS[p.c.rarity] + 'txt">★' + esc(nm(p.c.id)) + '</b>' + (g.type === 'single' && g.states.length > 1 ? '<span class="quiet">(' + p.at + '回目)</span>' : ''); }).join('、') : ' <span class="quiet">(超激レアなし・位置合わせ)</span>';
+    var bn = g.b >= 0 ? '<span class="bn">' + esc(banners[g.b].label) + '</span>' : '';
+    if (g.type === 'single') return bn + '単発 ×' + g.states.length + got;
+    if (g.type === 'multi') return bn + banners[g.b].g + '連' + got;
+    return 'プラチナ/レジェンドチケット ×1';
+  });
+  return '<ol class="brief">' + lines.map(function (l) { return '<li>' + l + '</li>'; }).join('') + '</ol>';
+}
 var lastMulti = null;
 function runMulti() {
   var out = $('#multiOut');
@@ -1339,25 +1373,27 @@ function runMulti() {
   var P1 = BC.planMulti(Object.assign({ value: prizeValue }, common));
   var P2 = BC.planMulti(Object.assign({ value: countValue, platValue: 1 }, common));
   lastMulti = { P1: P1, P2: P2, banners: banners };
-  var h = '';
-  // 一番評価が良いキャラ
+  var h = '<ul class="reco">';
   var units = [];
   P1.unitBest.forEach(function (u, id) { if (u.rolls <= state.multi.rolls && CATS[id]) units.push({ id: id, u: u }); });
-  units.sort(function (a, b) { var va = prizeValue(a.id, CATS[a.id].rarity), vb = prizeValue(b.id, CATS[b.id].rarity); return vb - va || ((CATS[b.id].score || 0) - (CATS[a.id].score || 0)) || a.u.rolls - b.u.rolls; });
-  if (units.length) {
-    h += '<div class="mplan"><h3><span class="chip gold">届く範囲で評価が高いキャラ</span><small>予算 ' + state.multi.rolls + '回以内</small></h3>';
-    h += units.slice(0, 5).map(function (x, i) { var c = CATS[x.id]; return '<div class="unit-row">' + rch(c.rarity) + '<b class="' + RCLS[c.rarity] + 'txt">' + esc(nm(x.id)) + '</b>' + tierChip(x.id) + '<span class="note" style="margin:0">' + x.u.rolls + '回(単発換算)で到達</span><button class="btn sm showUnit" data-id="' + x.id + '">取り方</button></div>'; }).join('');
-    h += '<div id="unitPlan"></div></div>';
-  } else h += '<div class="msg warn">予算内に届く超激レア・伝説レアがありません。予算を増やすか、別のガチャをチェックしてください。</div>';
-  function planCard(title, chipCls, P, key) {
-    if (!P.best || P.best.value <= 0) return '<div class="mplan"><h3><span class="chip ' + chipCls + '">' + title + '</span></h3><div class="note">予算内では超激レア以上が取れません。</div></div>';
+  var byNear = units.slice().sort(function (a, b) { return a.u.rolls - b.u.rolls || prizeValue(b.id, CATS[b.id].rarity) - prizeValue(a.id, CATS[a.id].rarity); });
+  var byVal = units.slice().sort(function (a, b) { return prizeValue(b.id, CATS[b.id].rarity) - prizeValue(a.id, CATS[a.id].rarity) || ((CATS[b.id].score || 0) - (CATS[a.id].score || 0)) || a.u.rolls - b.u.rolls; });
+  function unitLine(x) { var c = CATS[x.id], bl = x.u.state.move.b >= 0 ? banners[x.u.state.move.b].label : ''; return rch(c.rarity) + ' <b class="' + RCLS[c.rarity] + 'txt">' + esc(nm(x.id)) + '</b>' + tierChip(x.id) + ' <span class="quiet">' + (bl ? esc(bl) + 'のガチャで ' : '') + '<b>' + x.u.rolls + '回目</b></span> <button class="btn ghost sm showUnit" data-id="' + x.id + '">取り方</button>'; }
+  if (!units.length) h += '<li>予算 ' + state.multi.rolls + '回以内に届く超激レア・伝説レアはありません。</li>';
+  else {
+    var near = byNear.filter(function (x) { return x.u.rolls === byNear[0].u.rolls; }).slice(0, 3);
+    h += '<li><b>一番近い超激レア以上</b>(' + near[0].u.rolls + '回目):<ul>' + near.map(function (x) { return '<li>' + unitLine(x) + '</li>'; }).join('') + '</ul></li>';
+    if (byVal[0] && near.indexOf(byVal[0]) < 0) h += '<li><b>評価が一番高い</b>: ' + unitLine(byVal[0]) + '</li>';
+  }
+  function planLi(title, P, key) {
+    if (!P.best || P.best.value <= 0) return '';
     var sts = chainStates(P.best), sm = planSummary(sts, banners);
-    var tot = '超激レア <b>' + sm.ubers + '体</b>' + (sm.legends ? '・伝説レア <b>' + sm.legends + '体</b>' : '') + '(S' + sm.byTier.S + ' A' + sm.byTier.A + ' B' + sm.byTier.B + ' C' + sm.byTier.C + ')　使用: ' + [sm.singles ? '単発' + sm.singles + '回' : '', sm.multis ? '11連' + sm.multis + '回' : '', sm.plats ? 'チケット' + sm.plats + '枚' : ''].filter(Boolean).join(' + ') + '(ネコカン換算 ' + fmt(sm.food) + '個 ／ 単発換算 ' + P.best.rolls + '回)';
-    return '<div class="mplan"><h3><span class="chip ' + chipCls + '">' + title + '</span><button class="btn ghost sm copyPlan" data-key="' + key + '">手順をコピー</button></h3>' + planStepsHtml(sts, banners, P.seq, true) + '<div class="tot">' + tot + '</div></div>';
+    return '<li class="plan-' + key + '"><b>' + title + '</b>: 超激レア <b>' + sm.ubers + '体</b>' + (sm.legends ? '・伝説 <b>' + sm.legends + '体</b>' : '') + ' <span class="quiet">(単発換算 ' + P.best.rolls + '回・ネコカン換算 ' + fmt(sm.food) + '個)</span>' + planBrief(sts, banners) + '<details class="plain" style="margin-top:4px"><summary>キャラごとの手順を見る</summary>' + planStepsHtml(sts, banners, P.seq, true) + '<button class="btn ghost sm copyPlan" data-key="' + key + '">手順をコピー</button></details></li>';
   }
   var same = P1.best && P2.best && JSON.stringify(chainStates(P1.best).map(function (s) { return [s.move.b, s.move.type, s.k]; })) === JSON.stringify(chainStates(P2.best).map(function (s) { return [s.move.b, s.move.type, s.k]; }));
-  h += planCard('数重視: 超激レア以上を一番多く取る', 'blue', P2, 'P2');
-  if (same) h += '<div class="note">評価重視でも同じ手順になります。</div>'; else h += planCard('評価重視: 評価の高いキャラを優先', 'gold', P1, 'P1');
+  h += planLi('予算内で一番多く取る', P2, 'P2');
+  if (!same) h += planLi('評価の高いキャラを優先', P1, 'P1');
+  h += '</ul><div id="unitPlan"></div>';
   out.innerHTML = h;
 }
 function showUnitPlan(id) {
@@ -1426,6 +1462,7 @@ $('#undoBtn').addEventListener('click', function () { var h = history.pop(); if 
 $('#copyBtn').addEventListener('click', copySeed);
 $('#usePlat').addEventListener('change', function () { state.plat = this.checked; save(); renderEval(); });
 $('#dimRares').addEventListener('change', function () { state.dim = this.checked; save(); var r = $('#rows'); if (r) r.classList.toggle('dim', state.dim); });
+$('#showSub').addEventListener('change', function () { state.sub = this.checked; save(); renderTable(); });
 $('#tablewrap').addEventListener('click', function (e) {
   var el = e.target.closest('.cell'); if (!el) return;
   var sub = e.target.closest('.c-sub');
