@@ -37,7 +37,7 @@
   .tabs { display:flex; gap:2px; margin-left:auto; }
   .tab { background:transparent; color:#c4cbda; border:0; border-bottom:3px solid transparent; padding:10px 14px; font:inherit; font-weight:600; cursor:pointer; }
   .tab[aria-selected="true"] { color:#fff; border-bottom-color:#ffb37c; }
-  @media (max-width:640px) { .tabs { width:100%; margin-left:0; } .tab { flex:1; padding:9px 4px; font-size:13.5px; } .brand { padding-bottom:4px; font-size:14.5px; gap:6px; } .brand .sub { display:none; } }
+  @media (max-width:640px) { .tabs { width:100%; margin-left:0; } .tab { flex:1; padding:9px 2px; font-size:13px; white-space:nowrap; } .brand { padding-bottom:4px; font-size:14.5px; gap:6px; } .brand .sub { display:none; } }
 
   /* 固定バー */
   .sb { position:sticky; top:0; z-index:30; background:var(--panel); border-bottom:1px solid var(--line); box-shadow:0 2px 6px rgba(16,24,40,.06); }
@@ -238,6 +238,21 @@
   table.rating td { padding:3px 4px; border-bottom:1px solid var(--line); vertical-align:middle; }
   table.rating select { width:auto; padding:2px 4px; font-size:13px; }
   .unit-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:4px 0; border-bottom:1px dashed var(--line); font-size:13.5px; }
+  .rec-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:6px; }
+  .h-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13px; color:var(--mute); }
+  .h-label { font-size:12.5px; color:var(--mute); margin-top:10px; }
+  .h-big { font-size:22px; font-weight:800; display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:2px 0 4px; }
+  .h-strip { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+  .h-strip .sc { font-size:12.5px; border:1px solid var(--rare-bd); background:var(--rare-bg); color:var(--rare-fg); border-radius:6px; padding:1px 6px; }
+  .h-strip .sc.r3 { background:var(--supa-bg); border-color:var(--supa-bd); color:var(--supa-fg); }
+  .h-strip .sc.r4 { background:var(--uber-bg2); border-color:var(--uber-bd); color:var(--uber-fg); font-weight:700; }
+  .h-strip .sc.r5 { background:var(--legend-bg2); border-color:var(--legend-bd); color:var(--legend-fg); font-weight:700; }
+  .h-strip .sc small { color:var(--mute); margin-right:2px; }
+  .stepper { display:inline-flex; align-items:center; gap:4px; }
+  .stepper input { width:4em; text-align:center; }
+  .stepper button { font:inherit; font-size:18px; width:36px; height:36px; border-radius:8px; border:1px solid var(--line2); background:#fff; cursor:pointer; }
+  .preview { margin-top:8px; font-size:13.5px; }
+  .preview ol { margin:4px 0; padding-left:1.5em; }
   .help h2 { margin-top:4px; }
   .help ol, .help ul { padding-left:1.4em; }
   .help li { margin:4px 0; }
@@ -250,8 +265,9 @@
   <div class="wrap top-in">
     <div class="brand"><span>🐾 にゃんこ大戦争 ガチャシード検索</span><span class="sub">非公式・日本版・データ __BUILT__</span></div>
     <nav class="tabs" role="tablist">
-      <button class="tab" role="tab" data-tab="seek">シードを調べる</button>
-      <button class="tab" role="tab" data-tab="table">テーブル・評価</button>
+      <button class="tab" role="tab" data-tab="home">ホーム</button>
+      <button class="tab" role="tab" data-tab="seek">シード検索</button>
+      <button class="tab" role="tab" data-tab="table">テーブル</button>
       <button class="tab" role="tab" data-tab="help">使い方</button>
     </nav>
   </div>
@@ -261,17 +277,16 @@
   <div class="wrap">
     <div class="sb-row">
       <button class="gpick" id="gachaBtn" aria-haspopup="dialog" title="ガチャを選ぶ"></button>
-      <select id="gsel" aria-label="確定枠">
-        <option value="auto">確定枠: 自動</option><option value="0">確定枠: なし</option><option value="11">11連確定</option><option value="15">15連ステップアップ</option>
-      </select>
-      <button class="btn ghost sm" id="detailsBtn" aria-expanded="false">詳細</button>
     </div>
-    <div class="sb-row sb-info" id="sbInfo"></div>
+    <div class="sb-row sb-info"><button class="btn ghost sm" id="detailsBtn" aria-expanded="false" title="排出率・排出テーブル・確定枠の設定">詳細</button><span id="sbInfo" style="display:contents"></span></div>
   </div>
 </div>
 
 <main class="wrap">
   <section class="card" id="gachaDetails" hidden>
+    <div class="grid2" style="margin-bottom:8px">
+      <div><label for="gsel">確定枠(11連)の扱い</label><select id="gsel"><option value="auto">自動(イベントの設定に従う)</option><option value="0">なし</option><option value="11">11連確定あり</option><option value="15">15連ステップアップ</option></select></div>
+    </div>
     <div id="customBox" hidden>
       <div class="grid2">
         <div><label for="customGacha">ガチャ(ID: 名前)</label><select id="customGacha"></select></div>
@@ -285,6 +300,41 @@
       </div>
     </div>
     <div id="eventInfo"></div>
+  </section>
+
+  <section data-tab="home" class="tabpane" hidden>
+    <div id="homeBox"></div>
+    <div class="card" id="recordCard" hidden>
+      <h2>引いたら記録する</h2>
+      <div class="note">ゲームで引いたら、ここで記録すると位置(シード)が進みます。出るはずのキャラも確認できます。</div>
+      <div class="rec-row">
+        <button class="btn primary" id="recSingle">単発を引いた</button>
+        <button class="btn" id="recMulti">11連を引いた</button>
+        <button class="btn" id="recPlat">プラチナ/レジェンドチケットを使った</button>
+        <button class="btn ghost sm" id="undoBtn2" disabled>1つ戻す</button>
+      </div>
+      <div class="note">出たキャラが予測と違った → <button class="btn ghost sm" id="mismatchBtn">対処法を見る</button></div>
+    </div>
+    <div class="card" id="multiCard" hidden>
+      <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">おすすめの引き方 <span class="chip blue">複数ガチャ・自動計算</span></h2>
+      <div class="note" id="multiMeta"></div>
+      <div id="multiOut"></div>
+      <details class="plain" id="multiSettings" style="margin-top:10px"><summary>対象のガチャ・予算を変える</summary>
+        <div class="note">シードは全ガチャ共通なので、1回ごとに引くガチャを変えられます。チェックしたガチャの中で、予算内に<b>超激レア・伝説レアをなるべく多く</b>、または<b>評価の高いキャラ</b>を取れる引き方(順番とガチャ)を計算します。</div>
+        <div id="multiBanners" class="mb-list"></div>
+        <div class="ctrl-grid" style="margin-top:10px">
+          <div class="sm"><label for="mRolls">予算(単発換算)</label><input id="mRolls" type="number" min="1" max="120" value="30"></div>
+          <div class="sm"><label for="mPlat">プラチナ/レジェンドチケット</label><input id="mPlat" type="number" min="0" max="5" value="0"></div>
+          <div><label>&nbsp;</label><label class="check" style="margin:0"><input type="checkbox" id="mMulti" checked> 11連(確定枠あり)も使う(=単発10回分)</label></div>
+          <div class="ctrl-btns"><button class="btn primary" id="mRun">この設定で計算</button></div>
+        </div>
+      </details>
+      <details class="plain" style="margin-top:6px"><summary>キャラの評価一覧(自動スコア。自分で変えられます)</summary>
+        <div class="note">ステータス(DPS・体力・射程・能力・コスト)から機械的に出した<b>目安</b>で、攻略サイトの評価とは異なることがあります。評価重視の計算では S=4点、A=3点、B=2点、C=1点、伝説レアは+2点として扱い、「×」にしたキャラは0点(不要)になります。変更はこのブラウザに保存されます。</div>
+        <div id="ratingList"></div>
+      </details>
+    </div>
+    <div class="note" id="homeFoot" hidden>細かい位置を見たいときは「テーブル」タブへ。</div>
   </section>
 
   <section data-tab="seek" class="tabpane" hidden>
@@ -320,22 +370,6 @@
 
   <section data-tab="table" class="tabpane" hidden>
     <div class="card eval" id="evalBox"></div>
-    <div class="card" id="multiCard" hidden>
-      <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">複数ガチャで最適ルート <span class="chip blue">自動計算</span></h2>
-      <div class="note">シードは全ガチャ共通なので、1回ごとに引くガチャを変えられます。チェックしたガチャの中で、予算内に<b>超激レア・伝説レアをなるべく多く</b>、または<b>評価の高いキャラ</b>を取れる引き方(順番とガチャ)を計算します。</div>
-      <div id="multiBanners" class="mb-list"></div>
-      <div class="ctrl-grid" style="margin-top:10px">
-        <div class="sm"><label for="mRolls">予算(単発換算)</label><input id="mRolls" type="number" min="1" max="120" value="30"></div>
-        <div class="sm"><label for="mPlat">プラチナ/レジェンドチケット</label><input id="mPlat" type="number" min="0" max="5" value="0"></div>
-        <div><label>&nbsp;</label><label class="check" style="margin:0"><input type="checkbox" id="mMulti" checked> 11連(確定枠あり)も使う(=単発10回分)</label></div>
-        <div class="ctrl-btns"><button class="btn primary" id="mRun">計算する</button></div>
-      </div>
-      <div id="multiOut"></div>
-      <details class="plain" style="margin-top:10px"><summary>キャラの評価一覧(自動スコア。自分で変えられます)</summary>
-        <div class="note">ステータス(DPS・体力・射程・能力・コスト)から機械的に出した<b>目安</b>で、攻略サイトの評価とは異なることがあります。評価重視の計算では S=4点、A=3点、B=2点、C=1点、伝説レアは+2点として扱い、「×」にしたキャラは0点(不要)になります。変更はこのブラウザに保存されます。</div>
-        <div id="ratingList"></div>
-      </details>
-    </div>
     <div class="card">
       <div class="ctrl-grid">
         <div><label for="seed">シード(現在)</label><div class="inline-row"><input id="seed" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="例: 1234567890"><button class="btn sm" id="showBtn">表示</button></div></div>
@@ -368,10 +402,10 @@
     <div class="card">
       <h2>使い方</h2>
       <ol>
-        <li><b>ガチャを選ぶ</b>: 画面上部のガチャ名を押して、実際に引いた(引く予定の)イベントを選びます。「詳細」で排出率と排出テーブルが見られます。</li>
-        <li><b>シードを調べる</b>: 「＋ 次のキャラを選ぶ」で、7〜10回引いた結果を順番に選んで「シードを検索」。候補が1つなら「このシードでテーブルを見る」を押します。複数のときは、あと1〜2回引いて結果を追加し、再検索してください。</li>
-        <li><b>合っているか確かめる</b>: 結果に「次に引く: ○○」と出ます。実際に1回引いて同じキャラが出れば正解です(違えばガチャの選択や入力順を見直してください)。</li>
-        <li><b>テーブルを読む</b>: Aの一番上(▶次)が次に引けるキャラです。実際に引いたら、そのセルを押して「ここまで引いた」を選ぶと位置(シード)が進みます。11連を引いたときはセルを押して「11連を引いた」を選びます。間違えたら「1つ戻す」。</li>
+        <li><b>最初の1回だけ: シードを見つける</b>。上の「ガチャ」で引くガチャを選び、そのガチャを単発(レアチケット/ネコカン150)で7〜10回引いて、出たキャラを「シードを調べる」で順番に入力して検索します。候補が1つなら「このシードで始める」。複数なら、あと1〜2回引いて追加して再検索。</li>
+        <li><b>合っているか確かめる</b>: ホームに「次の1回で出るキャラ」が出ます。実際に1回引いて同じなら正解です。</li>
+        <li><b>ふだんの使い方(ホーム)</b>: ①「次の1回で出るキャラ」とその後の並びを見る → ②「おすすめの引き方」で、どのガチャを何回引くと超激レアが取れるかを見る → ③ゲームで引く → ④「引いたら記録する」で、どのガチャで何回引いたか(または11連・チケット)を記録して位置を進める。出たキャラの確認もそこでできます。</li>
+        <li><b>テーブル</b>タブでは全ての位置を一覧で見られ、セルを押して「ここまで引いた」でも位置を進められます。間違えたら「1つ戻す」。</li>
         <li><b>評価と取り方</b>: テーブル上のカードに、次の30回の超激レアの数をそのガチャの平均と比べた評価(大当たり/かなり良い/良い/普通/やや悪い/悪い)と、「一番の当たり」(伝説レア → 狙いのキャラ → 一番近い超激レア)までの最短の取り方が出ます。「狙いのキャラ」を選ぶと、そのキャラまでの取り方も出ます。</li>
         <li><b>シードの保存</b>: このブラウザに自動保存されます。別の端末で使うときのために、上部のシードの数字をメモしておくと安心です(数字を「シード(現在)」に入れれば同じテーブルが出ます)。</li>
       </ol>
@@ -787,7 +821,7 @@ function seek() {
       html += '<div class="card result"><div>候補' + (i + 1) + '　<span class="note" style="margin:0">現在のシード(最後の1体を引いた後)</span><br><span class="seedv">' + f.end + '</span></div>';
       if (f.run) html += '<div class="note">1体目は、直前に引いていた「' + esc(nm(f.prevId)) + '」との被りによる引き直しで出たものとして一致しました。</div>';
       html += '<div style="margin-top:6px">' + quickVerdict(f.end, lastEntry.id, info) + '</div>';
-      html += '<div class="acts"><button class="btn primary useSeed" data-seed="' + f.end + '" data-last="' + lastEntry.id + '">このシードでテーブルを見る</button>' +
+      html += '<div class="acts"><button class="btn primary useSeed" data-seed="' + f.end + '" data-last="' + lastEntry.id + '">このシードで始める(ホームへ)</button>' +
         '<button class="btn sm useSeed" data-seed="' + f.seed + '" data-last="' + (f.prevId || 0) + '" title="入力した結果が1Aから順に並ぶはずです">引く前の状態で確認</button></div></div>';
     });
     out.innerHTML = html;
@@ -795,7 +829,7 @@ function seek() {
       b.onclick = function () {
         pushHistory();
         state.seed = (+b.getAttribute('data-seed')) >>> 0; state.last = +b.getAttribute('data-last');
-        save(); syncTableInputs(); renderTable(); showTab('table');
+        save(); syncTableInputs(); renderTable(); showTab('home');
       };
     });
   });
@@ -819,6 +853,7 @@ function syncTableInputs() {
   $('#usePlat').checked = !!state.plat; $('#dimRares').checked = !!state.dim;
   renderLastSelect(); renderFindSelect();
   $('#undoBtn').disabled = !history.length;
+  var u2 = $('#undoBtn2'); if (u2) u2.disabled = !history.length;
 }
 function readTableInputs() {
   var sv = ($('#seed').value || '').replace(/[^\d]/g, '');
@@ -847,9 +882,9 @@ function renderTable() {
   rowsCache = null; labelMap = {}; lastSummary = null;
   if (!state.seed) {
     wrap.innerHTML = '<div class="card"><b>シードが未設定です。</b><div class="note">「シードを調べる」タブで見つけるか、分かっている場合は上の「シード(現在)」に入力して「表示」を押してください。</div></div>';
-    renderEval(); renderStatus(); $('#multiCard').hidden = true; return;
+    renderEval(); renderStatus(); $('#multiCard').hidden = true; renderHome(); return;
   }
-  if (!p.exist) { wrap.innerHTML = '<div class="msg err">このガチャはデータが無いため表示できません。</div>'; renderEval(); renderStatus(); return; }
+  if (!p.exist) { wrap.innerHTML = '<div class="msg err">このガチャはデータが無いため表示できません。</div>'; renderEval(); renderStatus(); $('#multiCard').hidden = true; renderHome(); return; }
   var rows = BC.tracks({ seed: state.seed, pool: p, count: state.count, last: state.last, guaranteedRolls: info.g });
   rowsCache = rows;
   var g = info.g;
@@ -880,6 +915,7 @@ function renderTable() {
   renderEval();
   renderStatus();
   renderMultiCard();
+  renderHome();
 }
 function elFor(label) {
   var wrap = $('#tablewrap');
@@ -1093,6 +1129,95 @@ function markPlan(label) {
   if (el && el.scrollIntoView) setTimeout(function () { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 50);
 }
 
+// ---- ホーム(今の状況・記録) ----
+function nextCatsOnCurrent(n) { var c = startCat(), out = []; while (c && out.length < n) { out.push(c); c = c.next; } return out; }
+function renderHome() {
+  var box = $('#homeBox'), info = currentPoolCache;
+  $('#recordCard').hidden = !state.seed || !rowsCache;
+  $('#homeFoot').hidden = !state.seed;
+  if (!state.seed) {
+    box.innerHTML = '<div class="card"><h2>はじめに(シードを見つける)</h2><ol class="howto"><li>上の「ガチャ」で、これから引くガチャを選びます。</li><li>そのガチャをレアチケットかネコカン(単発)で <b>7〜10回</b>引いて、出たキャラを順番にメモします。</li><li>「シードを調べる」で順番に入力して検索すると、あなたのシード(乱数の位置)が分かります。</li></ol><div class="seek-actions"><button class="btn primary lg" id="goSeek">シードを調べる</button><button class="btn" id="goTable">シードを知っている(数字を入力)</button></div><div class="note">一度見つければ、以後はこのホームで「引いたら記録」していくだけです。</div></div>';
+    $('#goSeek').onclick = function () { showTab('seek'); };
+    $('#goTable').onclick = function () { showTab('table'); $('#seed').focus(); };
+    return;
+  }
+  if (!rowsCache) { box.innerHTML = '<div class="card"><div class="msg err">このガチャはデータが無いため表示できません。上の「ガチャ」で別のガチャを選んでください。</div></div>'; return; }
+  var nx = nextCatsOnCurrent(10), first = nx[0], sm = lastSummary;
+  var h = '<div class="card"><div class="h-row"><span>今のガチャ:</span>' + collabChip(info.gachaId) + (info.event ? '<span class="chip ' + tagClass(info.event) + '">' + esc(rateTag(info.event)) + '</span>' : '') + '<span>' + esc(shortName(info.name, 26)) + '</span><button class="btn ghost sm" id="homeGacha">変更</button></div>';
+  h += '<div class="h-label">次の1回で出るキャラ(このガチャ)</div>';
+  h += '<div class="h-big ' + RCLS[first.rarity] + 'txt">' + (first.rarity >= 4 ? '★ ' : '') + esc(nm(first.id)) + rch(first.rarity) + (first.rarity >= 4 ? tierChip(first.id) : '') + festBadge(first) + '</div>';
+  h += '<div class="h-label">その後、単発で続けた場合</div><div class="h-strip">' + nx.slice(1).map(function (c, i) { return '<span class="sc r' + c.rarity + '"><small>' + (i + 2) + '</small>' + esc(nm(c.id)) + (c.rarity >= 4 ? '★' : '') + '</span>'; }).join('') + '</div>';
+  if (sm && sm.verdict) h += '<div class="h-row" style="margin-top:8px">この位置の評価: ' + gradeChip(sm.verdict) + '<span>' + esc(sm.verdict.why) + (sm.first ? '。最初の超激レア以上は ' + sm.first + '回目' : '') + '</span></div>';
+  h += '</div>';
+  box.innerHTML = h;
+  $('#homeGacha').onclick = openGachaPicker;
+  $('#undoBtn2').disabled = !history.length;
+}
+// 記録: 単発 n回 / 11連 / チケット を、選んだガチャで引いたことにする
+function bannerTable(e) {
+  if (e.k === state.event) return { rows: rowsCache, g: currentPoolCache.g, pool: currentPoolCache.pool };
+  var pool = BC.makePool(GACHA[e.id].c, CATS, e);
+  return { rows: pool.exist ? BC.tracks({ seed: state.seed, pool: pool, count: 40, last: state.last, guaranteedRolls: e.g }) : null, g: e.g, pool: pool };
+}
+function recordPreview(kind, e, n) {
+  var bt = bannerTable(e); if (!bt.rows) return null;
+  var a = bt.rows[0][0], start = (state.last && a.id === state.last && a.rerolled) ? a.rerolled : a, cats = [];
+  if (kind === 'plat') return { cats: [], seed: a.slotSeed, last: 0, text: 'プラチナ/レジェンドガチャの超激レア1体(そのガチャのテーブルによる)' };
+  if (kind === 'multi' && bt.g && start.guaranteed) {
+    var c = start; for (var i = 0; i < bt.g - 1; i++) { cats.push(c); c = c.next; }
+    cats.push(start.guaranteed);
+    return { cats: cats, seed: start.guaranteed.slotSeed, last: start.guaranteed.id, g: bt.g };
+  }
+  var cnt = kind === 'multi' ? 11 : n, cc = start;
+  for (var j = 0; j < cnt && cc; j++) { cats.push(cc); cc = cc.next; }
+  if (cats.length < cnt) return null;
+  var lastC = cats[cats.length - 1];
+  return { cats: cats, seed: lastC.slotSeed, last: lastC.id, noG: kind === 'multi' };
+}
+var recState = { kind: 'single', n: 1 };
+function openRecordSheet(kind) {
+  recState = { kind: kind, n: kind === 'multi' ? 11 : 1 };
+  var cands = candidateBanners();
+  var title = kind === 'single' ? '単発を引いた' : kind === 'multi' ? '11連を引いた' : 'プラチナ/レジェンドチケットを使った';
+  var h = '<div class="pk-head"><b>' + title + '</b><span class="spacer"></span><button class="btn ghost sm" data-act="close">閉じる</button></div>';
+  if (kind !== 'plat') h += '<label for="recBanner">どのガチャで引きましたか?</label><select id="recBanner">' + cands.map(function (e) { return '<option value="' + esc(e.k) + '"' + (e.k === state.event ? ' selected' : '') + '>' + esc(shortName(e.n, 40)) + '</option>'; }).join('') + '</select>';
+  if (kind === 'single') h += '<div style="margin-top:8px"><label>何回引きましたか?</label><div class="stepper"><button type="button" data-step="-1">−</button><input id="recCount" type="number" min="1" max="60" value="1"><button type="button" data-step="1">+</button></div></div>';
+  h += '<div class="preview" id="recPreview"></div>';
+  h += '<button class="btn primary block" data-act="recApply">記録する(位置を進める)</button><button class="btn ghost block" data-act="close">キャンセル</button>';
+  openSheet(h);
+  updateRecordPreview();
+}
+function updateRecordPreview() {
+  var sel = $('#recBanner'), e = sel ? EV_BY_KEY[sel.value] : (state.event !== 'custom' ? EV_BY_KEY[state.event] : null);
+  var cnt = $('#recCount'); if (cnt) recState.n = Math.max(1, Math.min(60, parseInt(cnt.value, 10) || 1));
+  var pv = $('#recPreview'); if (!pv) return;
+  if (!e) { pv.innerHTML = '<div class="msg warn">カスタムガチャでは記録できません。イベントを選んでください。</div>'; return; }
+  var r = recordPreview(recState.kind, e, recState.n);
+  recState.result = r;
+  if (!r) { pv.innerHTML = '<div class="msg warn">表示範囲を超えています。回数を減らしてください。</div>'; return; }
+  if (recState.kind === 'plat') { pv.innerHTML = '<div>' + r.text + '</div><div class="note">乱数2回分進みます(レア被りは起きません)。</div>'; return; }
+  pv.innerHTML = '<div>出るはずのキャラ' + (r.noG ? '(このガチャに確定枠はないので、単発11回として計算)' : r.g ? '(' + r.g + '連、最後が確定枠)' : '') + ':</div><ol>' + r.cats.map(function (c) { return '<li class="' + RCLS[c.rarity] + 'txt">' + (c.rarity >= 4 ? '<b>★' : '') + esc(nm(c.id)) + (c.rarity >= 4 ? '</b>' : '') + (c.extra && /G$/.test(c.extra) ? '(確定枠)' : '') + (c.extra && /R/.test(c.extra) ? '(被り引き直し)' : '') + '</li>'; }).join('') + '</ol><div class="note">実際に出たキャラと同じなら「記録する」を押してください。違う場合は記録せず、下の「対処法」を見てください。</div>';
+}
+function applyRecord() {
+  var r = recState.result; if (!r) return;
+  pushHistory();
+  state.seed = r.seed >>> 0; state.last = r.last | 0;
+  save(); syncTableInputs(); renderTable(); closeSheet();
+  toast('記録しました。新しいシード: ' + state.seed);
+}
+function openMismatchSheet() {
+  openSheet('<div class="pk-head"><b>出たキャラが予測と違うとき</b><span class="spacer"></span><button class="btn ghost sm" data-act="close">閉じる</button></div>' +
+    '<ul style="padding-left:1.3em;font-size:14px"><li><b>直前に引いたキャラ</b>の設定がずれていると、レア被りの判定が変わって1体ずれます(テーブルタブの「直前に引いたキャラ」)。</li><li>別のガチャ(プラチナ・レジェンド含む)やネコカン以外の方法で引いた分を記録し忘れていませんか。</li><li>ガチャに新しい超激レアが追加されると、超激レアの位置のキャラが入れ替わることがあります(データ更新待ち)。</li><li>それでも合わないときは、<b>直近に引いた7〜10体を順番に入力して再検索</b>してください。現在の位置が正しく出直します。</li></ul>' +
+    '<button class="btn primary block" data-act="goSeek">シードを調べ直す</button><button class="btn ghost block" data-act="close">閉じる</button>');
+}
+$('#recSingle').addEventListener('click', function () { openRecordSheet('single'); });
+$('#recMulti').addEventListener('click', function () { openRecordSheet('multi'); });
+$('#recPlat').addEventListener('click', function () { openRecordSheet('plat'); });
+$('#mismatchBtn').addEventListener('click', openMismatchSheet);
+$('#undoBtn2').addEventListener('click', function () { var h = history.pop(); if (!h) return; state.seed = h.seed; state.last = h.last; save(); syncTableInputs(); renderTable(); toast('1つ前の位置に戻しました'); });
+$('#sheet').addEventListener('change', function (e) { if (e.target.id === 'recBanner' || e.target.id === 'recCount') updateRecordPreview(); });
+$('#sheet').addEventListener('input', function (e) { if (e.target.id === 'recCount') updateRecordPreview(); });
+
 // ---- 複数ガチャで最適ルート ----
 var TIER_W = { S: 4, A: 3, B: 2, C: 1, X: 0 };
 var ratingOverride = {};
@@ -1130,7 +1255,7 @@ function renderMultiCard() {
   }).join('') || '<div class="note">開催中のガチャがデータにありません。</div>';
   $('#mRolls').value = state.multi.rolls; $('#mPlat').value = state.multi.plat; $('#mMulti').checked = !!state.multi.multi;
   renderRatingList();
-  if (state.multi.done) runMulti(); else $('#multiOut').innerHTML = '';
+  runMulti();
 }
 function selectedBanners() {
   var info = currentPoolCache;
@@ -1208,7 +1333,8 @@ function runMulti() {
   state.multi.multi = $('#mMulti').checked;
   state.multi.done = true; save();
   var banners = selectedBanners();
-  if (!banners.length) { out.innerHTML = '<div class="msg warn">ガチャを1つ以上チェックしてください。</div>'; return; }
+  $('#multiMeta').innerHTML = '対象: ' + (banners.length ? banners.map(function (b) { return '<b>' + esc(b.label) + '</b>'; }).join('、') : 'なし') + '　予算: 単発換算 <b>' + state.multi.rolls + '回</b>' + (state.multi.multi ? '(11連も可)' : '') + (state.multi.plat ? '、チケット' + state.multi.plat + '枚' : '');
+  if (!banners.length) { out.innerHTML = '<div class="msg warn">「対象のガチャ・予算を変える」でガチャを1つ以上チェックしてください。</div>'; return; }
   var common = { seed: state.seed, last: state.last, banners: banners, maxRolls: state.multi.rolls, allowMulti: state.multi.multi, platTickets: state.multi.plat, platValue: 2 };
   var P1 = BC.planMulti(Object.assign({ value: prizeValue }, common));
   var P2 = BC.planMulti(Object.assign({ value: countValue, platValue: 1 }, common));
@@ -1251,7 +1377,7 @@ function applyMultiStep(k, lastId) {
   $('#multiCard').scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 $('#multiBanners').addEventListener('change', function (e) { var cb = e.target.closest('input[type=checkbox]'); if (!cb) return; state.multi.on = state.multi.on || {}; state.multi.on[cb.getAttribute('data-key')] = cb.checked; save(); renderRatingList(); if (state.multi.done) runMulti(); });
-$('#mRun').addEventListener('click', runMulti);
+$('#mRun').addEventListener('click', function () { runMulti(); var d = $('#multiSettings'); if (d) d.open = false; $('#multiOut').scrollIntoView({ block: 'start', behavior: 'smooth' }); });
 $('#ratingList').addEventListener('change', function (e) {
   var sel = e.target.closest('select.rsel'); if (!sel) return;
   var id = sel.getAttribute('data-id'), v = sel.value, c = CATS[id], def = (c && c.tier) || (c && c.rarity === 5 ? 'A' : 'C');
@@ -1312,8 +1438,12 @@ $('#sheet').addEventListener('click', function (e) {
   if (pk) { addRoll(pk.getAttribute('data-v')); pk.classList.add('flash'); setTimeout(function () { pk.classList.remove('flash'); }, 350); return; }
   var ev = e.target.closest('button.ev-row');
   if (ev) { state.event = ev.getAttribute('data-key'); closeSheet(); rerenderAll(); return; }
+  var stp = e.target.closest('button[data-step]');
+  if (stp) { var inp = $('#recCount'); if (inp) { inp.value = Math.max(1, Math.min(60, (parseInt(inp.value, 10) || 1) + (+stp.getAttribute('data-step')))); updateRecordPreview(); } return; }
   var b = e.target.closest('button[data-act]'); if (!b) return;
   var act = b.getAttribute('data-act'), label = b.getAttribute('data-label');
+  if (act === 'recApply') { applyRecord(); return; }
+  if (act === 'goSeek') { closeSheet(); showTab('seek'); return; }
   if (act === 'adv') advanceTo(label);
   else if (act === 'path') { closeSheet(); highlight(label); var el = elFor(label); if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
   else closeSheet();
@@ -1329,7 +1459,7 @@ syncTableInputs();
 renderTable();
 save();
 var savedTab = null; try { savedTab = sessionStorage.getItem('nyanko-tab'); } catch (e) {}
-showTab(savedTab || (state.seed ? 'table' : 'seek'));
+showTab(savedTab && savedTab !== 'table' ? savedTab : (state.seed ? 'home' : 'home'));
 updateSbHeight();
 window.addEventListener('hashchange', function () {
   if (location.protocol !== 'file:' || !location.hash) return;
