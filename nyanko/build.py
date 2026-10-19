@@ -190,8 +190,13 @@ def main():
     # </script> がデータ内に現れても壊れないようにする
     data_js = data_js.replace('</', '<\\/')
     core = core.replace('</', '<\\/')
+    # 収録している日程の最終日(プラチナ/レジェンドのような長期イベントは除く)
+    import datetime as _dt
+    today = _dt.date.today().isoformat()
+    until = max((e['e'] for e in data['events'] if (_dt.date.fromisoformat(e['e']) - _dt.date.fromisoformat(e['s'])).days <= 31), default=today)
+    data_js += '\nvar DATA_UNTIL = ' + json.dumps(until) + '; var DATA_BUILT = ' + json.dumps(today) + ';'
     out = tpl.replace('/*__CORE__*/', core).replace('/*__DATA__*/', data_js)
-    out = out.replace('__BUILT__', __import__('datetime').date.today().isoformat())
+    out = out.replace('__BUILT__', today).replace('__UNTIL__', until[5:].replace('-', '/'))
     with open(os.path.join(HERE, 'index.html'), 'w', encoding='utf8') as f:
         f.write(out)
     print('cats %d, gacha %d, events %d, index.html %d bytes' % (

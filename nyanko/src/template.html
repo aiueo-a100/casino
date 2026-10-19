@@ -273,7 +273,7 @@
 <noscript><div class="msg err">JavaScript を有効にしてください。</div></noscript>
 <header class="top">
   <div class="wrap top-in">
-    <div class="brand"><span>🐾 にゃんこ大戦争 ガチャシード検索</span><span class="sub">非公式・日本版・データ __BUILT__</span></div>
+    <div class="brand"><span>🐾 にゃんこ大戦争 ガチャシード検索</span><span class="sub">非公式・日本版・ガチャ日程 〜__UNTIL__ 収録(データ __BUILT__)</span></div>
     <nav class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="home">ホーム</button>
       <button class="tab" role="tab" data-tab="seek">シード検索</button>
@@ -556,7 +556,7 @@ function load() {
 function saveRolls() { try { sessionStorage.setItem('nyanko-rolls', JSON.stringify(rollEntries)); } catch (e) {} }
 function groupedEvents() {
   var t = todayStr(), g = { ongoing: [], upcoming: [], past: [] };
-  EVENTS.forEach(function (e) { if (t <= e.s) g.upcoming.push(e); else if (t <= e.e) g.ongoing.push(e); else g.past.push(e); });
+  EVENTS.forEach(function (e) { if (t < e.s) g.upcoming.push(e); else if (t <= e.e) g.ongoing.push(e); else g.past.push(e); });
   return g;
 }
 function defaultEvent() {
@@ -603,7 +603,7 @@ function updateSbHeight() { var h = $('#sb').offsetHeight; document.documentElem
 function renderGachaButton() {
   var b = $('#gachaBtn'), h = '';
   if (state.event === 'custom') h = '<span class="chip tag-norm">カスタム</span><span class="gname">' + esc(shortName(gachaDisplayName(state.custom), 24)) + '</span>';
-  else { var e = EV_BY_KEY[state.event]; h = collabChip(e.id, true) + '<span class="chip ' + tagClass(e) + '">' + esc(rateTag(e)) + '</span><span class="gname">' + esc(bannerShort(e, true)) + '</span><span class="gdate">' + mmdd(e.s) + '〜' + mmdd(e.e) + '</span>'; }
+  else { var e = EV_BY_KEY[state.event]; h = (e.e < todayStr() ? '<span class="chip">終了</span>' : '') + collabChip(e.id, true) + '<span class="chip ' + tagClass(e) + '">' + esc(rateTag(e)) + '</span><span class="gname">' + esc(bannerShort(e, true)) + '</span><span class="gdate">' + mmdd(e.s) + '〜' + mmdd(e.e) + '</span>'; }
   b.innerHTML = h + '<span class="chev">変更 ▾</span>';
   $('#gsel').value = String(state.g);
   renderCustom();
@@ -614,12 +614,13 @@ function openGachaPicker() {
   function row(e) {
     return '<button class="ev-row' + (e.k === state.event ? ' sel' : '') + '" data-key="' + esc(e.k) + '" data-n="' + esc(normalizeName(e.n + ' ' + (collabTitle(e.id) ? 'コラボ ' + collabTitle(e.id) : ''))) + '"><span class="ev-date">' + mmdd(e.s) + '<br>〜' + mmdd(e.e) + '</span><span class="ev-main">' + collabChip(e.id) + (e.p ? '' : '<span class="chip ' + tagClass(e) + '">' + esc(rateTag(e)) + '</span>') +
       (e.g ? '<span class="chip">' + (e.g === 11 ? '11連確定' : 'ステップアップ') + '</span>' : '') + (e.p ? '<span class="chip tag-plat">' + { platinum: 'プラチナ', legend: 'レジェンド', 'dl-100m': '1億DL' }[e.p] + '</span>' : '') +
-      '<span class="ev-name"><b>' + esc(bannerShort(e)) + '</b><br><span class="quiet">' + esc(e.n) + '</span></span></span></button>';
+      '<span class="ev-name"><b>' + esc(bannerShort(e, true)) + '</b><br><span class="quiet">' + esc(e.n) + '</span></span></span></button>';
   }
   var h = '<div class="pk-head"><b>ガチャを選ぶ</b><span class="spacer"></span><button class="btn ghost sm" data-act="close">閉じる</button></div>';
   h += '<input type="text" class="pk-search" id="gSearch" placeholder="名前で絞り込み(例: 超ネコ祭、ルーノ)" autocomplete="off">';
   if (g.ongoing.length) h += '<div class="pk-sec"><div class="pk-h g">開催中</div>' + g.ongoing.map(row).join('') + '</div>';
   if (g.upcoming.length) h += '<div class="pk-sec"><div class="pk-h r3">今後</div>' + g.upcoming.map(row).join('') + '</div>';
+  h += '<div class="quiet" style="padding:2px 2px 10px">収録している日程は 〜' + mmdd(DATA_UNTIL) + ' まで(godfat 公開データ、' + mmdd(DATA_BUILT) + ' 取得)。これ以降のガチャは次のデータ更新で追加されます。</div>';
   h += '<div class="pk-sec"><div class="pk-h r2">過去</div>' + g.past.slice().reverse().map(row).join('') + '</div>';
   h += '<div class="pk-sec"><button class="ev-row' + (state.event === 'custom' ? ' sel' : '') + '" data-key="custom" data-n="かすたむcustom"><span class="ev-main"><span class="ev-name">カスタム(ガチャIDと排出率を自分で指定)</span></span></button></div>';
   openSheet(h, 'tall');
@@ -644,6 +645,7 @@ function renderEventInfo() {
   html += '<div style="font-weight:700;margin-bottom:4px">' + collabChip(info.gachaId) + ' ' + esc(shortName(info.name, 90)) + '</div>';
   html += '<div class="rates"><span>レア <b>' + pct(r.rare) + '</b></span><span>激レア <b>' + pct(r.supa) + '</b></span><span>超激レア <b>' + pct(r.uber) + '</b></span><span>伝説レア <b>' + pct(r.legend) + '</b></span><span>確定枠: <b>' + gtxt + '</b></span>' +
     (info.event ? '<span>期間: ' + info.event.s + ' 〜 ' + info.event.e + (info.event.p ? '(' + { platinum: 'プラチナガチャ', legend: 'レジェンドガチャ', 'dl-100m': '1億DL記念' }[info.event.p] + ')' : '') + '</span>' : '') + '</div>';
+  if (info.event && info.event.e < todayStr()) html += '<div class="msg warn">このガチャは終了しています。開催中のガチャは上の「変更」から選んでください(日程は 〜' + mmdd(DATA_UNTIL) + ' まで収録)。</div>';
   if (!p.exist) html += '<div class="msg err">このガチャの中身のデータがありません' + (p.missing.length ? '(未知のキャラID: ' + p.missing.join(', ') + ')' : '') + '。別のガチャを選んでください。</div>';
   else {
     html += '<details class="plain pool" style="margin-top:8px"><summary>排出テーブル(レア ' + p.slots[2].length + ' / 激レア ' + p.slots[3].length + ' / 超激レア ' + p.slots[4].length + ' / 伝説レア ' + p.slots[5].length + ')</summary>';
@@ -1261,7 +1263,7 @@ function bannerChecked(e) {
   var on = state.multi.on || {};
   if (on[e.k] != null) return !!on[e.k];
   var t = todayStr();
-  return e.k === state.event || (e.s <= t && t <= e.e);
+  return (e.s <= t && t <= e.e) || (e.k === state.event && t <= e.e);
 }
 function renderMultiCard() {
   var card = $('#multiCard');
@@ -1271,7 +1273,7 @@ function renderMultiCard() {
   $('#multiBanners').innerHTML = candidateBanners().map(function (e) {
     var upcoming = e.s > t;
     return '<label class="mb"><input type="checkbox" data-key="' + esc(e.k) + '"' + (bannerChecked(e) ? ' checked' : '') + '><span>' + collabChip(e.id) + '<span class="chip ' + tagClass(e) + '">' + esc(rateTag(e)) + '</span>' + (e.g ? '<span class="chip">' + (e.g === 11 ? '11連確定' : 'ステップアップ') + '</span>' : '') + ' <span class="gdate">' + (upcoming ? '今後 ' : '') + mmdd(e.s) + '〜' + mmdd(e.e) + '</span> <span class="mb-name">' + esc(shortName(e.n, 44)) + '</span></span></label>';
-  }).join('') || '<div class="note">開催中のガチャがデータにありません。</div>';
+  }).join('') || '<div class="note">開催中のガチャがデータにありません(日程は 〜' + mmdd(DATA_UNTIL) + ' まで収録)。</div>';
   $('#mRolls').value = state.multi.rolls; $('#mPlat').value = state.multi.plat; $('#mMulti').checked = !!state.multi.multi;
   renderRatingList();
   runMulti();
